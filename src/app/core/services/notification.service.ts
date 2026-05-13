@@ -1,12 +1,30 @@
-import { Injectable, inject } from '@angular/core';
-import { ToastService } from './toast.service';
+import { Injectable, signal } from '@angular/core';
+
+export interface Toast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+}
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private readonly toast = inject(ToastService);
+  readonly toasts = signal<Toast[]>([]);
+  private counter = 0;
 
-  success(message: string) { this.toast.success(message); }
-  error(message: string)   { this.toast.error(message); }
-  warning(message: string) { this.toast.warning(message); }
-  info(message: string)    { this.toast.info(message); }
+  success(message: string) { this.add(message, 'success'); }
+  error(message: string)   { this.add(message, 'error'); }
+  info(message: string)    { this.add(message, 'info'); }
+  warning(message: string) { this.add(message, 'warning'); }
+
+  private add(message: string, type: Toast['type']) {
+    const id = ++this.counter;
+    this.toasts.update(t => [...t, { id, message, type }]);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => this.remove(id), 5000);
+  }
+
+  remove(id: number) {
+    this.toasts.update(t => t.filter(toast => toast.id !== id));
+  }
 }
