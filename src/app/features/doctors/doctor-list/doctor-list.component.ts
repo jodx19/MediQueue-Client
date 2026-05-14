@@ -1,82 +1,59 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { DoctorsClient, DoctorSummaryDto } from '../../../core/api/api-facade.service';
-import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { pageEnter, listStagger } from '../../../shared/animations/page-animations';
+import { InteractiveTableComponent, TableColumn } from '../../../shared/components/interactive-table/interactive-table.component';
 
 @Component({
   selector: 'app-doctor-list',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent, LoadingSkeletonComponent, EmptyStateComponent],
-  animations: [pageEnter, listStagger],
+  imports: [CommonModule, InteractiveTableComponent],
   template: `
-    <app-page-header title="Doctors" subtitle="Medical staff management" [hasActions]="false" />
-
-    @if (isLoading()) {
-      <app-loading-skeleton [count]="4" />
-    } @else if (doctors().length === 0) {
-      <app-empty-state title="No doctors registered" message="Doctors are added via the admin panel." />
-    } @else {
-      <div class="doctors-grid" [@listStagger]="doctors().length" @pageEnter>
-        @for (doc of doctors(); track doc.id) {
-          <div class="doctor-card" (click)="openDoctor(doc.id!)" tabindex="0">
-            <div class="doctor-card__avatar">
-              {{ doc.firstName?.charAt(0) }}{{ doc.lastName?.charAt(0) }}
-            </div>
-            <div class="doctor-card__info">
-              <h3 class="doctor-card__name">Dr. {{ doc.firstName }} {{ doc.lastName }}</h3>
-              <p class="doctor-card__specialty">{{ doc.specialization ?? 'General Practice' }}</p>
-              <p class="doctor-card__contact">{{ doc.email }}</p>
-            </div>
-            <div class="doctor-card__arrow">›</div>
-          </div>
-        }
+    <div class="p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.4s_ease-out]">
+      <!-- Header -->
+      <div class="flex justify-between items-end mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-mq-navy mb-1 tracking-tight">Clinical Staff</h1>
+          <p class="text-gray-500 font-medium">Manage doctors, specialists, and schedules.</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn-primary flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Add Doctor
+          </button>
+        </div>
       </div>
-    }
-  `,
-  styles: [`
-    .doctors-grid { display: flex; flex-direction: column; gap: var(--space-3); }
-    .doctor-card {
-      display: flex; align-items: center; gap: var(--space-4);
-      background: var(--color-surface); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: var(--space-5);
-      cursor: pointer; transition: all var(--duration-base);
-      box-shadow: var(--shadow-sm);
-    }
-    .doctor-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-md); transform: translateX(4px); }
-    .doctor-card__avatar {
-      width: 48px; height: 48px; border-radius: var(--radius-full);
-      background: var(--color-accent); color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: var(--text-md); font-weight: 700; flex-shrink: 0;
-    }
-    .doctor-card__info { flex: 1; }
-    .doctor-card__name { font-size: var(--text-base); font-weight: 600; color: var(--color-text-primary); }
-    .doctor-card__specialty { font-size: var(--text-sm); color: var(--color-accent); margin-top: 2px; }
-    .doctor-card__contact { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: 2px; }
-    .doctor-card__arrow { font-size: 22px; color: var(--color-text-tertiary); }
-  `],
+
+      <!-- Table -->
+      <app-interactive-table
+        [data]="doctors()"
+        [columns]="columns()"
+        [loading]="isLoading()"
+        (actionClick)="handleAction($event)"
+      />
+    </div>
+  `
 })
-export class DoctorListComponent implements OnInit {
-  private readonly doctorsClient = inject(DoctorsClient);
-  private readonly router = inject(Router);
-
-  doctors = signal<DoctorSummaryDto[]>([]);
+export class DoctorListComponent {
   isLoading = signal(true);
+  
+  doctors = signal([
+    { id: 'DOC-01', name: 'Dr. Sarah Ahmad', specialty: 'Cardiology', patients: 120, status: 'Active' },
+    { id: 'DOC-02', name: 'Dr. Tarek Youssef', specialty: 'Neurology', patients: 85, status: 'Active' },
+    { id: 'DOC-03', name: 'Dr. Hany Kamal', specialty: 'Pediatrics', patients: 200, status: 'On Leave' },
+  ]);
 
-  async ngOnInit() {
-    try {
-      const result = await this.doctorsClient.getAll();
-      this.doctors.set(result ?? []);
-    } finally {
-      this.isLoading.set(false);
-    }
+  columns = signal<TableColumn<any>[]>([
+    { key: 'name', header: 'Doctor Name', type: 'text' },
+    { key: 'specialty', header: 'Specialty', type: 'text' },
+    { key: 'patients', header: 'Assigned Patients', type: 'number' },
+    { key: 'status', header: 'Status', type: 'badge' },
+    { key: 'actions', header: '', type: 'custom' }
+  ]);
+
+  constructor() {
+    setTimeout(() => this.isLoading.set(false), 600);
   }
 
-  openDoctor(id: string) {
-    this.router.navigate(['/doctors', id]);
+  handleAction(event: any) {
+    console.log('Action:', event);
   }
 }

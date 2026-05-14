@@ -1,24 +1,26 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { 
-  LucideAngularModule, 
-  LayoutDashboard, 
-  Users, 
-  Stethoscope, 
-  Calendar, 
-  Receipt, 
-  Shield, 
-  List, 
-  Clipboard, 
-  Search, 
-  Bell, 
-  ChevronLeft, 
-  ChevronRight, 
-  LogOut, 
-  Menu
+import {
+  LucideAngularModule,
+  LayoutDashboard,
+  Users,
+  Stethoscope,
+  Calendar,
+  Receipt,
+  Shield,
+  ListOrdered,
+  Clipboard,
+  Search,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Menu,
 } from 'lucide-angular';
+import { AuthService } from '../../core/auth/auth.service';
+import { SignalRService } from '../../core/services/signalr.service';
 
 @Component({
   selector: 'app-shell',
@@ -29,26 +31,43 @@ import {
     trigger('pageEnter', [
       transition(':enter', [
         style({ opacity: 0, transform: 'translateY(24px)' }),
-        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' }))
+        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' })),
       ]),
       transition('* => *', [
         style({ opacity: 0, transform: 'translateY(24px)' }),
-        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ]
+        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+    ]),
+  ],
 })
 export class ShellComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly signalR = inject(SignalRService);
+  private readonly router = inject(Router);
+
   collapsed = signal(false);
   mobileMenuOpen = signal(false);
-  
-  // Mock role and SignalR for UI purposes
-  userRole = signal<'Admin' | 'Doctor' | 'Receptionist'>('Admin');
-  signalRConnected = signal(true);
-  notificationCount = signal(3);
+
+  readonly userRole = computed(() => this.auth.userRole());
+  readonly currentUser = this.auth.currentUser;
+  readonly signalRConnected = computed(() => this.signalR.connectionState() === 'connected');
+  readonly notificationCount = this.signalR.notificationCount;
 
   readonly LucideIcons = {
-    LayoutDashboard, Users, Stethoscope, Calendar, Receipt, Shield, List, Clipboard, Search, Bell, ChevronLeft, ChevronRight, LogOut, Menu
+    LayoutDashboard,
+    Users,
+    Stethoscope,
+    Calendar,
+    Receipt,
+    Shield,
+    ListOrdered,
+    Clipboard,
+    Search,
+    Bell,
+    ChevronLeft,
+    ChevronRight,
+    LogOut,
+    Menu,
   };
 
   adminNav = [
@@ -57,33 +76,35 @@ export class ShellComponent implements OnInit {
     { label: 'Doctors', icon: 'Stethoscope', route: '/doctors' },
     { label: 'Appointments', icon: 'Calendar', route: '/appointments' },
     { label: 'Invoices', icon: 'Receipt', route: '/invoices' },
-    { label: 'Super Admin', icon: 'Shield', route: '/super-admin' }
+    { label: 'Super Admin', icon: 'Shield', route: '/super-admin' },
   ];
 
   doctorNav = [
-    { label: 'My Queue', icon: 'List', route: '/doctor/queue' },
-    { label: 'Clinical Visits', icon: 'Clipboard', route: '/clinical-visits' },
-    { label: 'My Patients', icon: 'Users', route: '/patients/list' }
+    { label: 'My Queue', icon: 'ListOrdered', route: '/my-queue' },
+    { label: 'Patients', icon: 'Users', route: '/patients/list' },
   ];
 
   receptionistNav = [
     { label: 'Patients', icon: 'Users', route: '/patients/list' },
     { label: 'Appointments', icon: 'Calendar', route: '/appointments' },
-    { label: 'Invoices', icon: 'Receipt', route: '/invoices' }
+    { label: 'Invoices', icon: 'Receipt', route: '/invoices' },
   ];
 
-  get currentNav() {
-    switch(this.userRole()) {
-      case 'Admin': return this.adminNav;
-      case 'Doctor': return this.doctorNav;
-      case 'Receptionist': return this.receptionistNav;
-      default: return [];
+  readonly currentNav = computed(() => {
+    switch (this.userRole()) {
+      case 'Admin':
+        return this.adminNav;
+      case 'Doctor':
+        return this.doctorNav;
+      case 'Receptionist':
+        return this.receptionistNav;
+      default:
+        return [];
     }
-  }
+  });
 
-  ngOnInit() {
-    // Mock signalR connect
-    // this.signalR.connect();
+  async ngOnInit(): Promise<void> {
+    await this.signalR.connect();
   }
 
   toggleSidebar() {
@@ -94,8 +115,13 @@ export class ShellComponent implements OnInit {
     this.mobileMenuOpen.set(!this.mobileMenuOpen());
   }
 
-  // Used for router animation
   prepareRoute(outlet: any) {
-    return outlet && outlet.activatedRouteData && outlet.activatedRouteData['animation'];
+    return outlet?.activatedRouteData?.['animation'];
+  }
+
+  logout(): void {
+    this.auth.logout();
+    void this.signalR.disconnect();
+    void this.router.navigateByUrl('/login');
   }
 }

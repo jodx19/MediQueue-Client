@@ -1,38 +1,46 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Users, Calendar, TrendingUp, DollarSign, Activity, Clock, ChevronUp, ChevronDown } from 'lucide-angular';
-import { Client as DashboardClient, ClinicStatsDto } from '../../../core/api/mediqueue-api';
-import { NotificationService } from '../../../core/services/notification.service';
-import { firstValueFrom } from 'rxjs';
+import { InteractiveTableComponent, TableColumn } from '../../../shared/components/interactive-table/interactive-table.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, InteractiveTableComponent],
   templateUrl: './dashboard.component.html'
 })
-export class DashboardComponent implements OnInit {
-  private readonly client = inject(DashboardClient);
-  private readonly notifications = inject(NotificationService);
+export class DashboardComponent {
+  // Global Signals representation
+  stats = signal({
+    patientsToday: 42,
+    activeDoctors: 12,
+    revenue: 12450,
+  });
 
-  readonly LucideIcons = { Users, Calendar, TrendingUp, DollarSign, Activity, Clock, ChevronUp, ChevronDown };
+  isLoading = signal(true);
 
-  readonly isLoading = signal(true);
-  readonly stats = signal<ClinicStatsDto | null>(null);
+  // Table Configuration and Signal State
+  recentPatients = signal([
+    { id: '1', name: 'Ahmad Ali', time: '09:00 AM', doctor: 'Dr. Sarah', status: 'Waiting' },
+    { id: '2', name: 'Nour Youssef', time: '09:30 AM', doctor: 'Dr. Tarek', status: 'In Session' },
+    { id: '3', name: 'Mona Kamal', time: '10:00 AM', doctor: 'Dr. Sarah', status: 'Completed' },
+    { id: '4', name: 'Omar Hassan', time: '10:15 AM', doctor: 'Dr. Hany', status: 'Waiting' },
+  ]);
 
-  async ngOnInit(): Promise<void> {
-    await this.loadStats();
+  patientColumns = signal<TableColumn<any>[]>([
+    { key: 'name', header: 'Patient Name', type: 'text' },
+    { key: 'time', header: 'Appointment Time', type: 'text' },
+    { key: 'doctor', header: 'Assigned Doctor', type: 'text' },
+    { key: 'status', header: 'Status', type: 'badge' },
+    { key: 'actions', header: '', type: 'custom' }
+  ]);
+
+  constructor() {
+    // Simulate loading to show skeleton effect
+    setTimeout(() => this.isLoading.set(false), 1200);
   }
 
-  async loadStats(): Promise<void> {
-    this.isLoading.set(true);
-    try {
-      const result = await firstValueFrom(this.client.stats());
-      this.stats.set(result);
-    } catch (err: any) {
-      this.notifications.error('Failed to load dashboard statistics.');
-    } finally {
-      this.isLoading.set(false);
-    }
+  handleAction(event: { action: string; row: any }) {
+    console.log('Action triggered:', event);
+    // In real app: Navigate or open modal based on event.action
   }
 }

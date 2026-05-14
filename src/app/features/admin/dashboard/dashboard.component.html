@@ -1,135 +1,90 @@
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.5s_ease-out]">
   
-  <div class="flex justify-between items-center mb-4">
+  <!-- Header Section -->
+  <div class="flex justify-between items-end mb-8">
     <div>
-      <h1 class="text-2xl font-bold text-[var(--mq-navy)]">Clinic Overview</h1>
-      <p class="text-[var(--mq-slate-500)] text-sm">Welcome back, Admin. Here is today's summary.</p>
+      <h1 class="text-3xl font-bold text-mq-navy mb-1 tracking-tight">Admin Dashboard</h1>
+      <p class="text-gray-500 font-medium">Welcome back! Here is what's happening in the clinic today.</p>
     </div>
     <div class="flex gap-3">
-      <button class="bg-white border border-[var(--mq-slate-200)] px-4 py-2 rounded-xl text-sm font-semibold text-[var(--mq-navy-700)] hover:bg-[var(--mq-slate)] transition-colors">Export Report</button>
-      <button class="bg-[var(--mq-teal)] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[var(--mq-teal-900)] transition-colors shadow-teal-glow">Settings</button>
+      <button class="btn-ghost bg-white border border-gray-200">Export Report</button>
+      <button class="btn-primary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+        New Patient
+      </button>
     </div>
   </div>
 
-  <!-- Metrics Row -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div *ngFor="let m of metrics" class="bg-white p-6 rounded-xl border border-[var(--mq-slate-200)] shadow-sm mq-card">
-      <div class="flex justify-between items-start mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[var(--mq-slate)] flex items-center justify-center text-[var(--mq-teal)]">
-          <lucide-icon [name]="m.icon" class="w-5 h-5"></lucide-icon>
+  <!-- Bento Grid Layout -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    
+    <!-- Primary Revenue Card (Col Span 2) -->
+    <div class="col-span-1 md:col-span-2 bg-gradient-to-br from-mq-navy to-gray-900 rounded-2xl p-6 shadow-xl shadow-mq-navy/10 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]">
+      <!-- Decorative Blur -->
+      <div class="absolute right-0 top-0 w-64 h-64 bg-mq-teal/30 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/3"></div>
+      
+      <div class="relative z-10">
+        <h3 class="text-mq-slate/70 font-medium mb-1">Today's Revenue</h3>
+        <div class="text-4xl font-bold tracking-tight mb-2">
+          @if (isLoading()) { <div class="h-10 w-48 animate-skeleton opacity-30 mt-1"></div> }
+          @else { {{ stats().revenue | currency:'EGP ':'symbol':'1.0-0' }} }
         </div>
-        <div class="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
-             [class.bg-green-100]="m.up" [class.text-green-700]="m.up"
-             [class.bg-red-100]="!m.up" [class.text-red-700]="!m.up">
-          <lucide-icon [name]="m.up ? 'ArrowUpRight' : 'ArrowDownRight'" class="w-3 h-3"></lucide-icon>
-          {{ m.trend }}
-        </div>
+        <p class="text-green-400 text-sm font-medium flex items-center gap-1">
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/></svg>
+          +14.5% from yesterday
+        </p>
       </div>
-      <div>
-        <div class="text-3xl font-bold text-[var(--mq-navy)] mb-1">{{ m.value }}</div>
-        <div class="text-sm font-medium text-[var(--mq-slate-500)]">{{ m.label }}</div>
+
+      <!-- Mock Mini Chart -->
+      <div class="w-full h-12 bg-white/5 rounded-lg mt-4 flex items-end p-2 gap-1.5 relative overflow-hidden z-10">
+        <div class="w-full h-[30%] bg-mq-teal/50 rounded-t-sm hover:h-[40%] transition-all"></div>
+        <div class="w-full h-[50%] bg-mq-teal/50 rounded-t-sm hover:h-[60%] transition-all"></div>
+        <div class="w-full h-[70%] bg-mq-teal/70 rounded-t-sm hover:h-[80%] transition-all"></div>
+        <div class="w-full h-[40%] bg-mq-teal/50 rounded-t-sm hover:h-[50%] transition-all"></div>
+        <div class="w-full h-[90%] bg-mq-teal-light rounded-t-sm shadow-[0_0_12px_rgba(20,184,166,0.9)] hover:h-[100%] transition-all"></div>
+        <div class="w-full h-[60%] bg-mq-teal/50 rounded-t-sm hover:h-[70%] transition-all"></div>
       </div>
     </div>
+
+    <!-- Small Stat Card: Patients -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+      <div class="w-12 h-12 rounded-xl bg-teal-50 text-mq-teal flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <h3 class="text-gray-500 font-medium text-sm mb-1">Patients Today</h3>
+      <div class="text-3xl font-bold text-mq-navy">
+        @if (isLoading()) { <div class="h-8 w-16 animate-skeleton"></div> }
+        @else { {{ stats().patientsToday }} }
+      </div>
+    </div>
+
+    <!-- Small Stat Card: Doctors -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+      <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3 class="text-gray-500 font-medium text-sm mb-1">Active Doctors</h3>
+      <div class="text-3xl font-bold text-mq-navy">
+        @if (isLoading()) { <div class="h-8 w-16 animate-skeleton"></div> }
+        @else { {{ stats().activeDoctors }} }
+      </div>
+    </div>
+
+    <!-- Interactive Table Section (Col Span 4) -->
+    <div class="col-span-1 md:col-span-4 mt-6">
+      <div class="flex justify-between items-center mb-4 px-1">
+        <h2 class="text-xl font-bold text-mq-navy tracking-tight">Recent Appointments</h2>
+        <button class="text-mq-teal font-medium text-sm hover:underline">View All Queue</button>
+      </div>
+      
+      <!-- Reusable Table Component -->
+      <app-interactive-table
+        [data]="recentPatients()"
+        [columns]="patientColumns()"
+        [loading]="isLoading()"
+        (actionClick)="handleAction($event)"
+      />
+    </div>
+
   </div>
-
-  <!-- Charts Row -->
-  <div class="bento-grid">
-    <!-- Revenue Chart -->
-    <div class="bento-wide bg-white p-6 rounded-xl border border-[var(--mq-slate-200)] shadow-sm flex flex-col min-h-[350px]">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h2 class="text-lg font-bold text-[var(--mq-navy)]">Revenue Trend</h2>
-          <p class="text-xs text-[var(--mq-slate-500)]">Last 7 Days</p>
-        </div>
-        <button class="text-[var(--mq-slate-400)] hover:text-[var(--mq-navy)]"><lucide-icon name="MoreHorizontal"></lucide-icon></button>
-      </div>
-      <div class="flex-1 relative w-full h-full min-h-[250px]">
-        <canvas #revenueChart></canvas>
-      </div>
-    </div>
-
-    <!-- Patient Flow -->
-    <div class="bento-narrow bg-white p-6 rounded-xl border border-[var(--mq-slate-200)] shadow-sm flex flex-col min-h-[350px]">
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h2 class="text-lg font-bold text-[var(--mq-navy)]">Patient Flow</h2>
-          <p class="text-xs text-[var(--mq-slate-500)]">By Visit Type</p>
-        </div>
-      </div>
-      <div class="flex-1 relative w-full h-full min-h-[250px] flex items-center justify-center">
-        <canvas #patientFlowChart></canvas>
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-           <div class="text-center mt-[-30px]">
-             <div class="text-2xl font-bold text-[var(--mq-navy)]">342</div>
-             <div class="text-xs text-[var(--mq-slate-400)]">Total</div>
-           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tables Row -->
-  <div class="bento-grid">
-    <!-- Recent Appointments -->
-    <div class="bento-wide bg-white rounded-xl border border-[var(--mq-slate-200)] shadow-sm overflow-hidden">
-      <div class="p-6 border-b border-[var(--mq-slate-200)] flex justify-between items-center bg-[var(--mq-slate)]/50">
-        <h2 class="text-lg font-bold text-[var(--mq-navy)]">Recent Appointments</h2>
-        <a href="#" class="text-sm font-semibold text-[var(--mq-teal)] hover:underline">View All</a>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-white text-[var(--mq-slate-500)] text-xs uppercase tracking-wider border-b border-[var(--mq-slate-200)]">
-              <th class="p-4 font-semibold">Patient</th>
-              <th class="p-4 font-semibold">Doctor</th>
-              <th class="p-4 font-semibold">Date & Time</th>
-              <th class="p-4 font-semibold">Status</th>
-              <th class="p-4 font-semibold text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let apt of recentAppointments" class="border-b border-[var(--mq-slate-100)] hover:bg-[var(--mq-slate)]/50 transition-colors group">
-              <td class="p-4 font-medium text-[var(--mq-navy)] relative">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[var(--mq-teal)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                {{ apt.patient }}
-              </td>
-              <td class="p-4 text-[var(--mq-slate-600)] text-sm">{{ apt.doctor }}</td>
-              <td class="p-4 text-[var(--mq-slate-600)] text-sm">{{ apt.date }}</td>
-              <td class="p-4">
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full"
-                      [class.bg-green-100]="apt.status === 'Completed'" [class.text-green-700]="apt.status === 'Completed'"
-                      [ngClass]="{'bg-[var(--mq-teal)]/20': apt.status === 'In Progress'}" [ngClass]="{'text-[var(--mq-teal-900)]': apt.status === 'In Progress'}"
-                      [class.bg-yellow-100]="apt.status === 'Waiting'" [class.text-yellow-700]="apt.status === 'Waiting'"
-                      [ngClass]="{'bg-[var(--mq-slate-200)]': apt.status === 'Scheduled'}" [ngClass]="{'text-[var(--mq-slate-700)]': apt.status === 'Scheduled'}">
-                  {{ apt.status }}
-                </span>
-              </td>
-              <td class="p-4 text-right">
-                <button class="text-[var(--mq-teal)] hover:text-[var(--mq-teal-900)] font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity">Details</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Top Doctors -->
-    <div class="bento-narrow bg-white rounded-xl border border-[var(--mq-slate-200)] shadow-sm flex flex-col">
-      <div class="p-6 border-b border-[var(--mq-slate-200)] bg-[var(--mq-slate)]/50">
-        <h2 class="text-lg font-bold text-[var(--mq-navy)]">Top Doctors</h2>
-        <p class="text-xs text-[var(--mq-slate-500)]">By patient volume this month</p>
-      </div>
-      <div class="p-4 flex-1 flex flex-col justify-center space-y-4">
-        <div *ngFor="let doc of topDoctors; let i = index" class="flex items-center gap-4 p-3 rounded-lg hover:bg-[var(--mq-slate)] transition-colors">
-          <div class="w-8 h-8 rounded-full bg-[var(--mq-navy-800)] text-white flex items-center justify-center font-bold text-sm">{{ i + 1 }}</div>
-          <div class="flex-1">
-            <div class="font-bold text-[var(--mq-navy)] text-sm">{{ doc.name }}</div>
-            <div class="text-xs text-[var(--mq-slate-500)]">{{ doc.specialty }}</div>
-          </div>
-          <div class="text-sm font-bold text-[var(--mq-teal)]">{{ doc.patients }} pt</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
