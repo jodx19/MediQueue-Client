@@ -1,50 +1,43 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate, stagger, query } from '@angular/animations';
-import { LucideAngularModule, Activity, AlertCircle, Clock, CheckCircle2, User, Save, RefreshCw } from 'lucide-angular';
 
 @Component({
   selector: 'app-clinical-visits-dashboard',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
-  templateUrl: './clinical-visits-dashboard.component.html',
-  animations: [
-    trigger('staggerList', [
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateX(-10px)' }),
-          stagger(50, [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ]
+  imports: [CommonModule],
+  templateUrl: './clinical-visits-dashboard.component.html'
 })
 export class ClinicalVisitsDashboardComponent {
-  readonly LucideIcons = { Activity, AlertCircle, Clock, CheckCircle2, User, Save, RefreshCw };
-
+  // Signals for state management
+  activeTab = signal<'S' | 'O' | 'A' | 'P'>('S');
+  
   queue = signal([
-    { id: 1, name: 'Omar Tarek', reason: 'Fever & Cough', status: 'In Visit', time: '10:00 AM', active: true },
-    { id: 2, name: 'Sara Ali', reason: 'Follow up', status: 'Waiting', time: '10:30 AM', active: false },
-    { id: 3, name: 'Khaled Hassan', reason: 'Hypertension', status: 'Waiting', time: '11:00 AM', active: false },
+    { id: '1', name: 'Ahmad Ali', time: '09:00 AM', reason: 'High Fever', status: 'In Session', age: 45, gender: 'M' },
+    { id: '2', name: 'Nour Youssef', time: '09:30 AM', reason: 'Routine Checkup', status: 'Waiting', age: 32, gender: 'F' },
+    { id: '3', name: 'Mona Kamal', time: '10:00 AM', reason: 'Back Pain', status: 'Waiting', age: 58, gender: 'F' },
   ]);
 
-  saveStatus = signal<'Saved' | 'Saving...' | 'Unsaved'>('Saved');
+  selectedPatient = signal<any>(this.queue()[0]);
 
-  // Quick SOAP form signals
-  subjective = signal('Patient complains of fever for 3 days...');
-  objective = signal('Temp: 38.5C, BP: 120/80, HR: 95');
-  assessment = signal('Viral Pharyngitis');
-  plan = signal('Paracetamol 500mg SOS, Rest, Fluids.');
+  // Form State (Mock using signals for UI showcase)
+  subjective = signal('');
+  objective = signal({ hr: 82, bpSystolic: 120, bpDiastolic: 80, temp: 38.5, weight: 75 });
+  assessment = signal('');
+  plan = signal('');
 
-  onInput(type: 'S' | 'O' | 'A' | 'P', value: string) {
-    this.saveStatus.set('Saving...');
-    // Mock auto-save debounce
-    setTimeout(() => this.saveStatus.set('Saved'), 1000);
+  selectPatient(patient: any) {
+    this.selectedPatient.set(patient);
+    // Reset tabs when a new patient is selected
+    this.activeTab.set('S');
   }
 
-  selectPatient(id: number) {
-    this.queue.update(q => q.map(p => ({ ...p, active: p.id === id })));
+  saveNote() {
+    console.log('Saved SOAP Note', {
+      S: this.subjective(),
+      O: this.objective(),
+      A: this.assessment(),
+      P: this.plan()
+    });
+    // Integration point: Call NSwag API client to save SOAP note
   }
 }

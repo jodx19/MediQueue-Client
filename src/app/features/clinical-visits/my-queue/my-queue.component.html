@@ -1,0 +1,56 @@
+<div class="min-h-full bg-mq-navy p-6" @pageEnter>
+  <header class="page-header !mb-6">
+    <div>
+      <h1 class="page-title flex items-center gap-2">
+        <lucide-icon name="ListOrdered" class="h-7 w-7 text-mq-teal-400" />
+        Today's Queue
+      </h1>
+      <p class="page-sub">{{ todayLabel() }} · {{ waitingCount() }} appointment(s) loaded</p>
+    </div>
+    <button type="button" class="btn-ghost text-mq-teal-400 border-mq-700" (click)="load()">Retry</button>
+  </header>
+
+  @if (loading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="h-20 rounded-2xl skeleton"></div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="glass p-6 text-rose-300 text-sm">{{ error() }}</div>
+  } @else if (appointments().length === 0) {
+    <div class="glass p-10 text-center text-mq-s400">
+      No appointments scheduled for today in this view. Ensure the API returns today's list for your clinic (doctor filter may be required on the server).
+    </div>
+  } @else {
+    <div class="grid gap-4" @listStagger>
+      @for (appt of appointments(); track appt.id; let idx = $index) {
+        <div
+          class="mq-card-dark p-5 flex flex-wrap items-center justify-between gap-4 border border-mq-700"
+          [class.ring-2]="idx === 0"
+          [class.ring-mq-teal]="idx === 0"
+          [class.shadow-teal-glow-sm]="idx === 0">
+          <div class="flex items-center gap-4">
+            <div
+              class="w-10 h-10 rounded-xl bg-mq-teal/20 text-mq-teal-400 font-bold flex items-center justify-center">
+              {{ idx + 1 }}
+            </div>
+            <div>
+              <div class="text-white font-semibold">{{ appt.patientName || 'Patient' }}</div>
+              <div class="text-mq-s400 text-sm">
+                {{ appt.scheduledAt | date: 'shortTime' }} · {{ appt.visitType ?? 'Visit' }}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge-info">Status {{ appt.status }}</span>
+            <button type="button" class="btn-primary flex items-center gap-2" (click)="startVisit(appt)">
+              <lucide-icon name="Play" class="h-4 w-4" />
+              Start visit
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

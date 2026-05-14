@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel, HttpTransportType } from '@microsoft/signalr';
 import { AuthService } from '../auth/auth.service';
 import { NotificationService } from './notification.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SignalRService {
@@ -18,7 +19,7 @@ export class SignalRService {
     this.connectionState.set('connecting');
 
     this.hub = new HubConnectionBuilder()
-      .withUrl('/hubs/clinic', {
+      .withUrl(environment.signalrHubUrl, {
         accessTokenFactory: () => this.auth.getToken() ?? '',
         transport: HttpTransportType.WebSockets,
       })

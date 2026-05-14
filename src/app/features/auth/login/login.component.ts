@@ -1,254 +1,133 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { fadeSlideIn } from '../../../shared/animations/page-animations';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  animations: [fadeSlideIn],
   template: `
-    <div class="login-wrapper">
-      <a routerLink="/" class="back-link">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Back to Home
-      </a>
-      <!-- Background decoration -->
-      <div class="login-bg"></div>
-
-      <!-- Brand -->
-      <div class="login-brand" @fadeSlideIn>
-        <div class="logo-mark">
-          <svg width="48" height="48" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="10" fill="var(--color-accent)"/>
-            <path d="M20 8C14 8 10 13 10 20C10 27 14 32 20 32C26 32 30 27 30 20"
-                  stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="28" cy="12" r="3" fill="white"/>
-          </svg>
-        </div>
-        <h1 class="brand-name">MediQueue</h1>
-        <p class="brand-subtitle">Electronic Medical Records System</p>
+    <div class="min-h-screen bg-mq-slate flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden animate-[fadeIn_0.5s_ease-out]">
+      <!-- Background Ambient Blurs -->
+      <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-mq-teal/20 blur-[120px] rounded-full"></div>
+        <div class="absolute top-[60%] -right-[10%] w-[40%] h-[60%] bg-blue-400/10 blur-[120px] rounded-full"></div>
       </div>
 
-      <!-- Card -->
-      <div class="login-card" @fadeSlideIn>
-        <h2 class="card-title">Sign In</h2>
-        <p class="card-subtitle">Staff accounts are managed by your administrator</p>
-
-        @if (errorMessage()) {
-          <div class="error-banner" role="alert">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+      <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <a routerLink="/" class="flex justify-center mb-2 hover:scale-105 transition-transform">
+          <div class="w-16 h-16 rounded-2xl bg-mq-navy flex items-center justify-center shadow-lg shadow-mq-navy/30 relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-12 h-12 bg-mq-teal/40 blur-md rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none" class="relative z-10">
+              <path d="M20 8C14 8 10 13 10 20C10 27 14 32 20 32C26 32 30 27 30 20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="28" cy="12" r="4" fill="#14B8A6"/>
             </svg>
-            {{ errorMessage() }}
           </div>
-        }
+        </a>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-mq-navy tracking-tight">
+          Welcome back
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-500 font-medium">
+          Sign in to your MediQueue workspace.
+        </p>
+      </div>
 
-        <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate>
-          <div class="field-group">
-            <label class="field-label" for="email">Email Address</label>
-            <input
-              id="email" type="email" class="field-input"
-              placeholder="doctor@mediqueue.com"
-              [(ngModel)]="email" name="email"
-              required autocomplete="email"
-            />
-          </div>
+      <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div class="bg-white py-8 px-4 shadow-2xl shadow-mq-navy/5 sm:rounded-3xl sm:px-10 border border-gray-100">
+          <form class="space-y-6" (ngSubmit)="login()">
+            
+            @if (errorMsg()) {
+              <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium text-center animate-[fadeIn_0.3s_ease-out]">
+                {{ errorMsg() }}
+              </div>
+            }
 
-          <div class="field-group">
-            <label class="field-label" for="password">Password</label>
-            <div class="input-wrapper">
-              <input
-                id="password"
-                [type]="showPassword() ? 'text' : 'password'"
-                class="field-input with-action"
-                placeholder="••••••••"
-                [(ngModel)]="password" name="password"
-                required autocomplete="current-password"
-              />
-              <button type="button" class="input-action-btn"
-                (click)="showPassword.set(!showPassword())">
-                {{ showPassword() ? 'Hide' : 'Show' }}
+            <div>
+              <label for="email" class="block text-sm font-bold text-gray-700">Email address</label>
+              <div class="mt-2 relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                </div>
+                <input id="email" name="email" type="email" autocomplete="email" required [(ngModel)]="email"
+                  class="appearance-none block w-full pl-10 px-3 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mq-teal/50 focus:border-mq-teal sm:text-sm transition-all font-medium text-gray-900">
+              </div>
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-bold text-gray-700">Password</label>
+              <div class="mt-2 relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <input id="password" name="password" type="password" autocomplete="current-password" required [(ngModel)]="password"
+                  class="appearance-none block w-full pl-10 px-3 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mq-teal/50 focus:border-mq-teal sm:text-sm transition-all font-medium text-gray-900">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-mq-teal focus:ring-mq-teal border-gray-300 rounded cursor-pointer transition-colors">
+                <label for="remember-me" class="ml-2 block text-sm text-gray-900 font-medium cursor-pointer">
+                  Remember me
+                </label>
+              </div>
+
+              <div class="text-sm">
+                <a href="#" class="font-bold text-mq-teal hover:text-mq-teal-dark transition-colors">
+                  Forgot password?
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <button type="submit" [disabled]="loading()"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-mq-teal/30 text-sm font-bold text-white bg-mq-teal hover:bg-mq-teal-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-mq-teal transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none">
+                @if(loading()) {
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Authenticating...
+                } @else {
+                  Sign in securely
+                }
               </button>
             </div>
-          </div>
-
-          <button
-            type="submit" id="btn-login" class="btn-primary btn-full"
-            [disabled]="isLoading() || !email || !password"
-          >
-            @if (isLoading()) {
-              <span class="spinner"></span>
-              Signing in...
-            } @else {
-              Sign In
-            }
-          </button>
-        </form>
-
-        <div class="login-hint">
-          <p>Your account is created by the clinic administrator.</p>
-          <div class="patient-redirect">
-            Are you a patient? <a routerLink="/register-patient">Register here</a>
-          </div>
+            
+            <div class="mt-6 text-center border-t border-gray-100 pt-6">
+              <p class="text-xs text-gray-400 font-medium">Use demo credentials: admin&#64;mediqueue.com / password</p>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  `,
-  styles: [`
-    .login-wrapper {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-6);
-      position: relative;
-      background: var(--color-bg);
-    }
-    .back-link {
-      position: absolute; top: var(--space-6); left: var(--space-6);
-      display: inline-flex; align-items: center; gap: var(--space-2);
-      color: var(--color-text-secondary); text-decoration: none;
-      font-size: var(--text-sm); font-weight: 500; transition: color var(--duration-fast);
-      z-index: 10;
-    }
-    .back-link:hover { color: var(--color-accent); }
-    .login-bg {
-      position: fixed; inset: 0; z-index: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,102,204,0.08), transparent);
-      pointer-events: none;
-    }
-    .login-brand {
-      text-align: center; margin-bottom: var(--space-8);
-      position: relative; z-index: 1;
-    }
-    .logo-mark { margin-bottom: var(--space-4); display: inline-block; }
-    .brand-name {
-      font-size: var(--text-2xl); font-weight: 700;
-      color: var(--color-text-primary); letter-spacing: -0.5px;
-    }
-    .brand-subtitle {
-      font-size: var(--text-sm); color: var(--color-text-secondary);
-      margin-top: var(--space-1);
-    }
-    .login-card {
-      width: 100%; max-width: 420px;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-8);
-      box-shadow: var(--shadow-lg);
-      position: relative; z-index: 1;
-    }
-    .card-title {
-      font-size: var(--text-xl); font-weight: 700;
-      color: var(--color-text-primary); letter-spacing: -0.4px;
-      margin-bottom: var(--space-1);
-    }
-    .card-subtitle {
-      font-size: var(--text-sm); color: var(--color-text-secondary);
-      margin-bottom: var(--space-6);
-    }
-    .error-banner {
-      display: flex; align-items: center; gap: var(--space-2);
-      background: var(--color-danger-bg);
-      color: var(--color-danger);
-      border: 1px solid rgba(255,59,48,0.2);
-      border-radius: var(--radius-md);
-      padding: var(--space-3) var(--space-4);
-      font-size: var(--text-sm);
-      margin-bottom: var(--space-5);
-    }
-    .field-group { margin-bottom: var(--space-4); }
-    .field-label {
-      display: block; font-size: var(--text-sm); font-weight: 500;
-      color: var(--color-text-primary); margin-bottom: var(--space-2);
-    }
-    .field-input {
-      width: 100%; padding: var(--space-3) var(--space-4);
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      font-size: var(--text-base); font-family: var(--font-family);
-      background: var(--color-surface); color: var(--color-text-primary);
-      outline: none; transition: border-color var(--duration-fast);
-      box-sizing: border-box;
-    }
-    .field-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light); }
-    .field-input.with-action { padding-right: 70px; }
-    .input-wrapper { position: relative; }
-    .input-action-btn {
-      position: absolute; right: var(--space-3); top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      font-size: var(--text-xs); color: var(--color-accent); font-weight: 600;
-    }
-    .btn-primary {
-      display: inline-flex; align-items: center; justify-content: center;
-      gap: var(--space-2);
-      background: var(--color-accent); color: white;
-      border: none; border-radius: var(--radius-md);
-      padding: var(--space-3) var(--space-6);
-      font-size: var(--text-base); font-weight: 600;
-      cursor: pointer; transition: all var(--duration-fast) var(--ease-smooth);
-    }
-    .btn-primary:hover:not(:disabled) { background: var(--color-accent-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-full { width: 100%; margin-top: var(--space-2); }
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .login-hint {
-      margin-top: var(--space-8);
-      text-align: center;
-      font-size: var(--text-xs);
-      color: var(--color-text-tertiary);
-    }
-    .patient-redirect {
-      margin-top: var(--space-2);
-      a {
-        color: var(--color-accent);
-        text-decoration: none;
-        font-weight: 600;
-      }
-      a:hover { text-decoration: underline; }
-    }
-  `],
+  `
 })
 export class LoginComponent {
-  private readonly authService = inject(AuthService);
+  authService = inject(AuthService);
+  router = inject(Router);
 
   email = '';
   password = '';
-  isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
-  showPassword = signal(false);
+  loading = signal(false);
+  errorMsg = signal('');
 
-  async onSubmit() {
-    if (!this.email || !this.password) return;
-
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
+  async login() {
+    this.loading.set(true);
+    this.errorMsg.set('');
 
     try {
       await this.authService.login(this.email, this.password);
-    } catch (err: any) {
-      const detail = err?.error?.detail ?? 'Invalid email or password.';
-      this.errorMessage.set(detail);
+      const role = this.authService.userRole();
+      const home: Record<string, string> = {
+        Admin: '/dashboard',
+        Doctor: '/my-queue',
+        Receptionist: '/appointments',
+      };
+      await this.router.navigateByUrl(home[role ?? ''] ?? '/dashboard');
+    } catch {
+      this.errorMsg.set('Invalid credentials or server error. Please try again.');
     } finally {
-      this.isLoading.set(false);
+      this.loading.set(false);
     }
   }
 }
