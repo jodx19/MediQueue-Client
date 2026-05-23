@@ -122,6 +122,6 @@ export class ShellComponent implements OnInit {
   logout(): void {
     this.auth.logout();
     void this.signalR.disconnect();
-    void this.router.navigateByUrl('/login');
+    void this.router.navigateByUrl('/auth/login');
   }
 }

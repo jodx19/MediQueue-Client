@@ -7,8 +7,9 @@ function roleHome(role: string | null | undefined): string {
     Admin: '/dashboard',
     Doctor: '/my-queue',
     Receptionist: '/appointments',
+    Patient: '/my-portal',
   };
-  return map[role ?? ''] ?? '/login';
+  return map[role ?? ''] ?? '/auth/login';
 }
 
 export const roleGuard: CanActivateFn = (route) => {
@@ -18,7 +19,7 @@ export const roleGuard: CanActivateFn = (route) => {
   const allowed = (route.data['roles'] as string[] | undefined) ?? [];
 
   if (!auth.isLoggedIn()) {
-    return router.createUrlTree(['/login']);
+    return router.createUrlTree(['/auth/login']);
   }
 
   if (allowed.length === 0 || auth.hasRole(...allowed)) {

@@ -27,8 +27,8 @@ import { RouterLink } from '@angular/router';
           <span class="text-2xl font-bold tracking-tight text-white">MediQueue</span>
         </div>
         <div class="flex gap-4 items-center">
-          <a routerLink="/register" class="text-sm font-bold text-gray-300 hover:text-white transition-colors">Patient Portal</a>
-          <a routerLink="/login" class="btn-neon !text-sm !px-6">Staff Login</a>
+          <a routerLink="/auth/patient-login" class="text-sm font-bold text-gray-300 hover:text-white transition-colors">Patient Portal</a>
+          <a routerLink="/auth/login" class="btn-neon !text-sm !px-6">Staff Login</a>
         </div>
       </nav>
 
@@ -49,12 +49,15 @@ import { RouterLink } from '@angular/router';
         </p>
         
         <div class="flex flex-col sm:flex-row justify-center gap-4 w-full">
-          <a routerLink="/login" class="btn-primary !px-8 !py-4 !text-lg !font-bold flex items-center justify-center gap-2">
-            Enter Dashboard
+          <a routerLink="/auth/login" class="btn-primary !px-8 !py-4 !text-lg !font-bold flex items-center justify-center gap-2">
+            Staff Login
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </a>
-          <a routerLink="/register" class="px-8 py-4 rounded-xl border border-white/20 hover:bg-white/10 text-white font-bold text-lg transition-all text-center">
-            I am a Patient
+          <a routerLink="/book" class="btn-primary !px-8 !py-4 !text-lg !font-bold flex items-center justify-center gap-2 !bg-white/10 !border !border-white/20 hover:!bg-white/20">
+            Book an Appointment
+          </a>
+          <a routerLink="/auth/patient-login" class="px-8 py-4 rounded-xl border border-white/20 hover:bg-white/10 text-white font-bold text-lg transition-all text-center">
+            Patient Sign In
           </a>
         </div>
       </main>

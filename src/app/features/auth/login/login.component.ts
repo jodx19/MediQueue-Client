@@ -117,13 +117,7 @@ export class LoginComponent {
 
     try {
       await this.authService.login(this.email, this.password);
-      const role = this.authService.userRole();
-      const home: Record<string, string> = {
-        Admin: '/dashboard',
-        Doctor: '/my-queue',
-        Receptionist: '/appointments',
-      };
-      await this.router.navigateByUrl(home[role ?? ''] ?? '/dashboard');
+      await this.router.navigateByUrl(this.authService.getRoleHome());
     } catch {
       this.errorMsg.set('Invalid credentials or server error. Please try again.');
     } finally {

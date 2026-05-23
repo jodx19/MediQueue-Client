@@ -35,7 +35,7 @@
           <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--mq-navy-800)]" [class.bg-green-500]="signalRConnected()" [class.bg-red-500]="!signalRConnected()"></div>
         </div>
         <div *ngIf="!collapsed()" class="flex-1 min-w-0">
-          <div class="text-sm font-bold truncate text-white">{{ currentUser()?.name || currentUser()?.email || 'User' }}</div>
+          <div class="text-sm font-bold truncate text-white">{{ currentUser()?.firstName || currentUser()?.email || 'User' }}</div>
           <div class="text-xs text-[var(--mq-slate-400)] truncate">{{ userRole() }}</div>
         </div>
       </div>
