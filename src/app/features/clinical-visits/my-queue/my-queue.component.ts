@@ -37,7 +37,7 @@ export class MyQueueComponent {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const list = await firstValueFrom(this.api.today(undefined));
+      const list = (await firstValueFrom(this.api.today(undefined) as any)) as AppointmentDto[];
       this.appointments.set(list ?? []);
     } catch (e: any) {
       const detail = e?.error?.detail ?? e?.message ?? 'Failed to load queue';

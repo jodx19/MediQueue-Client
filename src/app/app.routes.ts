@@ -81,6 +81,20 @@ export const routes: Routes = [
         title: 'Dashboard',
       },
       {
+        path: 'reports',
+        loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        title: 'Reports & Analytics',
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/clinic-settings.component').then(m => m.ClinicSettingsComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        title: 'Clinic Settings',
+      },
+      {
         path: 'super-admin',
         loadComponent: () => import('./features/super-admin/super-admin.component').then(m => m.SuperAdminComponent),
         canActivate: [roleGuard],

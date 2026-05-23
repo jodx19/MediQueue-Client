@@ -18,14 +18,17 @@ import {
   ChevronRight,
   LogOut,
   Menu,
+  BarChart3,
+  Settings,
 } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
+import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, NotificationBellComponent],
   templateUrl: './shell.component.html',
   animations: [
     trigger('pageEnter', [
@@ -68,6 +71,8 @@ export class ShellComponent implements OnInit {
     ChevronRight,
     LogOut,
     Menu,
+    BarChart3,
+    Settings,
   };
 
   adminNav = [
@@ -76,6 +81,8 @@ export class ShellComponent implements OnInit {
     { label: 'Doctors', icon: 'Stethoscope', route: '/doctors' },
     { label: 'Appointments', icon: 'Calendar', route: '/appointments' },
     { label: 'Invoices', icon: 'Receipt', route: '/invoices' },
+    { label: 'Reports', icon: 'BarChart3', route: '/reports' },
+    { label: 'Settings', icon: 'Settings', route: '/settings' },
     { label: 'Super Admin', icon: 'Shield', route: '/super-admin' },
   ];
 

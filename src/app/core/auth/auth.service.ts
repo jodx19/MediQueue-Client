@@ -1,6 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Client as AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../api/mediqueue-api';
+import { Client as AuthClient, LoginCommand as LoginRequest, AuthResponseDto, PatientLoginCommand } from '../api/mediqueue-api';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -25,7 +24,6 @@ const ROLE_HOME: Record<string, string> = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly authClient = inject(AuthClient);
-  private readonly http = inject(HttpClient);
 
   private _session = signal<UserSession | null>(this.loadSession());
 
@@ -59,7 +57,10 @@ export class AuthService {
   async patientLogin(mrn: string, dateOfBirth: string): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.post<AuthResponseDto>(`${environment.apiBaseUrl}/api/Auth/patient-login`, { mrn, dateOfBirth: new Date(dateOfBirth).toISOString() })
+        this.authClient.patientLogin(new PatientLoginCommand({
+          mrn: mrn.trim().toUpperCase(),
+          dateOfBirth: new Date(dateOfBirth),
+        }))
       );
 
       const session: UserSession = {
@@ -84,10 +85,7 @@ export class AuthService {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<AuthResponseDto>(`${environment.apiBaseUrl}/api/Auth/refresh-token`, {
-          token: current.token,
-          refreshToken: '',  // Would need to store refresh token separately
-        })
+        this.authClient.refreshToken({ token: current.token, refreshToken: '' } as any)
       );
 
       const updated: UserSession = { ...current, token: response.token!, expiresAt: new Date(response.expiryTime!) };
