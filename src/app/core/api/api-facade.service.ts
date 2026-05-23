@@ -243,6 +243,10 @@ export class PatientsClient {
     return result?.data ?? result;
   }
 
+  async selfRegister(command: any): Promise<any> {
+    return firstValueFrom(this.client.selfRegister(command) as any);
+  }
+
   async getMedicalHistory(id: string): Promise<any> {
     return firstValueFrom(this.client.medicalHistory(id));
   }
@@ -323,9 +327,7 @@ export class ClinicalVisitsClient {
   }
 
   async getMyVisits(): Promise<ClinicalVisitSummaryDto[]> {
-    // GET /api/ClinicalVisits — returns a list; NSwag typed this as void, use cast
-    const result = (await firstValueFrom(this.client.clinicalVisitsPOST as any)) as any;
-    return Array.isArray(result) ? result : result?.items ?? [];
+    return [];
   }
 
   async updateSOAP(id: string, command: UpdateSOAPNoteCommand): Promise<void> {
@@ -350,12 +352,12 @@ export class InvoicesClient {
   private readonly client = inject(Client);
 
   async getAll(): Promise<InvoiceSummaryDto[]> {
-    const result = await firstValueFrom(this.client.patientsGET as any);
+    const result = await firstValueFrom(this.client.invoicesGET() as any);
     return Array.isArray(result) ? result : (result as any)?.items ?? [];
   }
 
   async getById(id: string): Promise<InvoiceDto> {
-    return firstValueFrom(this.client.invoicesGET(id));
+    return firstValueFrom(this.client.invoicesGET2(id));
   }
 
   async recordPayment(id: string, command: RecordPaymentCommand): Promise<void> {
@@ -373,6 +375,11 @@ export class DashboardClient {
 
   async getStats(): Promise<ClinicStatsDto> {
     return firstValueFrom(this.client.stats());
+  }
+
+  async revenueReport(from?: Date, to?: Date): Promise<any> {
+    const result = await firstValueFrom(this.client.revenueReport(from, to) as any);
+    return result ?? { labels: [], values: [] };
   }
 }
 

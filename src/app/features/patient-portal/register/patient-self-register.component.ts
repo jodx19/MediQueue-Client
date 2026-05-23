@@ -104,7 +104,7 @@ export class PatientSelfRegisterComponent {
     this.errorMessage.set(null);
 
     try {
-      const response = await this.patientsClient.register(this.command);
+      const response = await this.patientsClient.selfRegister(this.command);
       const mrn = response?.medicalRecordNumber || response?.mrn || `MQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
       this.successMrn.set(mrn);
     } catch (err: any) {

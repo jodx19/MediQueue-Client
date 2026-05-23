@@ -108,15 +108,15 @@ export class InvoiceListComponent {
       const to = new Date();
 
       const [page, report] = await Promise.all([
-        firstValueFrom(this.api.invoicesList(1, 50, this.statusFilter(), from, to)),
-        firstValueFrom(this.api.revenueReport2(from, to)).catch(() => null),
+        firstValueFrom(this.api.invoicesGET(1, 50, this.statusFilter() as unknown as string, from, to) as any),
+        firstValueFrom(this.api.revenueReport2(from, to) as any).catch(() => null),
       ]);
 
-      this.rows.set(page?.items ?? []);
+      this.rows.set((page as any)?.items ?? []);
       this.stats.set({
-        outstanding: report?.outstandingRevenue ?? 0,
-        collected: report?.collectedRevenue ?? 0,
-        count: report?.invoiceCount ?? page?.totalCount ?? 0,
+        outstanding: (report as any)?.outstandingRevenue ?? 0,
+        collected: (report as any)?.collectedRevenue ?? 0,
+        count: (report as any)?.invoiceCount ?? (page as any)?.totalCount ?? 0,
       });
     } catch (e: any) {
       const detail = e?.error?.detail ?? e?.message ?? 'Failed to load invoices';

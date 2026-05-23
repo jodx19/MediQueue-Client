@@ -1,0 +1,15 @@
+<div class="relative inline-block">
+  <button (click)="toggleDropdown()" class="w-10 h-10 rounded-xl bg-mq-navy/50">
+    <lucide-icon name="bell" [size]="18"/>
+  </button>
+  <div *ngIf="isOpen()" class="absolute right-0 top-12 w-80 bg-mq-800 border border-mq-700 rounded-2xl" [@dropdownAnim]>
+    <div class="px-4 py-3 border-b border-mq-700">
+      <span class="text-white text-sm">Notifications</span>
+    </div>
+    <div class="max-h-80 overflow-y-auto">
+      <div *ngIf="notifications().length === 0" class="p-4 text-center">
+        <p class="text-mq-s400 text-sm">No notifications yet</p>
+      </div>
+    </div>
+  </div>
+</div>

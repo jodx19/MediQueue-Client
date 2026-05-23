@@ -35,7 +35,7 @@
           <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--mq-navy-800)]" [class.bg-green-500]="signalRConnected()" [class.bg-red-500]="!signalRConnected()"></div>
         </div>
         <div *ngIf="!collapsed()" class="flex-1 min-w-0">
-          <div class="text-sm font-bold truncate text-white">{{ currentUser()?.name || currentUser()?.email || 'User' }}</div>
+          <div class="text-sm font-bold truncate text-white">{{ currentUser()?.firstName || currentUser()?.email || 'User' }}</div>
           <div class="text-xs text-[var(--mq-slate-400)] truncate">{{ userRole() }}</div>
         </div>
       </div>
@@ -74,10 +74,7 @@
         </div>
 
         <!-- Notifications -->
-        <button class="relative p-2 text-[var(--mq-navy-700)] hover:text-[var(--mq-teal)] transition-colors">
-          <lucide-icon name="Bell" class="w-6 h-6"></lucide-icon>
-          <span *ngIf="notificationCount() > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--mq-slate)]"></span>
-        </button>
+        <app-notification-bell/>
 
         <!-- Mobile User Avatar -->
         <div class="md:hidden w-8 h-8 rounded-full bg-[var(--mq-navy)] flex items-center justify-center font-bold text-white text-xs relative">

@@ -8,8 +8,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   if (auth.isLoggedIn()) return true;
 
-  // Save current URL for redirect after successful login
-  return router.createUrlTree(['/login'], {
+  return router.createUrlTree(['/auth/login'], {
     queryParams: { returnUrl: state.url },
   });
 };
