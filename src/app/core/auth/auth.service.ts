@@ -1,25 +1,32 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Client as AuthClient, LoginCommand as LoginRequest, AuthResponseDto, PatientLoginCommand } from '../api/mediqueue-api';
+import { AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../api/mediqueue-api';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 
 export interface UserSession {
   token: string;
   email: string;
   role: 'Admin' | 'Doctor' | 'Receptionist' | 'Patient';
-  firstName: string;
-  lastName: string;
+  name: string;
   doctorId?: string;
   patientId?: string;
   expiresAt: Date;
 }
 
-const ROLE_HOME: Record<string, string> = {
-  Admin:        '/dashboard',
-  Doctor:       '/my-queue',
-  Receptionist: '/appointments',
-  Patient:      '/my-portal',
-};
+function decodeJwt(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -38,68 +45,48 @@ export class AuthService {
         this.authClient.login(new LoginRequest({ email, password }))
       );
 
+      const decoded = decodeJwt(response.token!);
+      const doctorId = decoded?.DoctorId || decoded?.doctorId;
+      const patientId = decoded?.PatientId || decoded?.patientId;
+
       const session: UserSession = {
         token:     response.token!,
         email:     response.username || email,
         role:      (response.role as any) || 'Patient',
-        firstName: response.username || 'User',
-        lastName:  '',
+        name:      response.username || 'User',
+        doctorId:  doctorId || undefined,
+        patientId: patientId || undefined,
         expiresAt: new Date(response.expiryTime!),
       };
 
-      this.saveSession(session);
+      sessionStorage.setItem('mq_session', JSON.stringify(session));
+      this._session.set(session);
+      
+      console.log('User logged in successfully:', session.email);
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
   }
 
-  async patientLogin(mrn: string, dateOfBirth: string): Promise<void> {
-    try {
-      const response = await firstValueFrom(
-        this.authClient.patientLogin(new PatientLoginCommand({
-          mrn: mrn.trim().toUpperCase(),
-          dateOfBirth: new Date(dateOfBirth),
-        }))
-      );
+  async loginFromResponse(response: AuthResponseDto): Promise<void> {
+    const decoded = decodeJwt(response.token!);
+    const doctorId = decoded?.DoctorId || decoded?.doctorId;
+    const patientId = decoded?.PatientId || decoded?.patientId;
 
-      const session: UserSession = {
-        token:     response.token!,
-        email:     response.username || '',
-        role:      (response.role as any) || 'Patient',
-        firstName: response.username || 'Patient',
-        lastName:  '',
-        expiresAt: new Date(response.expiryTime!),
-      };
+    const session: UserSession = {
+      token:     response.token!,
+      email:     response.username || 'patient@mediqueue.local',
+      role:      (response.role as any) || 'Patient',
+      name:      response.username || 'Patient',
+      doctorId:  doctorId || undefined,
+      patientId: patientId || undefined,
+      expiresAt: new Date(response.expiryTime!),
+    };
 
-      this.saveSession(session);
-    } catch (error) {
-      console.error('Patient login failed:', error);
-      throw error;
-    }
-  }
-
-  async refreshToken(): Promise<string> {
-    const current = this._session();
-    if (!current) throw new Error('No session');
-
-    try {
-      const response = await firstValueFrom(
-        this.authClient.refreshToken({ token: current.token, refreshToken: '' } as any)
-      );
-
-      const updated: UserSession = { ...current, token: response.token!, expiresAt: new Date(response.expiryTime!) };
-      this.saveSession(updated);
-      return response.token!;
-    } catch {
-      this.logout();
-      throw new Error('Session expired');
-    }
-  }
-
-  private saveSession(session: UserSession): void {
     sessionStorage.setItem('mq_session', JSON.stringify(session));
     this._session.set(session);
+    console.log('User logged in successfully from response:', session.email);
   }
 
   logout(): void {
@@ -116,22 +103,18 @@ export class AuthService {
     return r ? roles.includes(r) : false;
   }
 
-  getRoleHome(): string {
-    return ROLE_HOME[this.userRole() ?? ''] ?? '/auth/login';
-  }
-
   private loadSession(): UserSession | null {
     try {
       const raw = sessionStorage.getItem('mq_session');
       if (!raw) return null;
-
+      
       const s = JSON.parse(raw) as UserSession;
-
+      
       if (new Date(s.expiresAt) < new Date()) {
         sessionStorage.removeItem('mq_session');
         return null;
       }
-
+      
       return s;
     } catch {
       return null;

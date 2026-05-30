@@ -5,10 +5,10 @@
 @layer base {
   :root {
     --mq-navy: #0F172A;
-    --mq-navy-800: #1E293B;
-    --mq-navy-700: #334155;
+    --mq-800: #1E293B;
+    --mq-700: #334155;
     --mq-teal: #0D9488;
-    --mq-teal-400: #2DD4BF;
+    --mq-t400: #2DD4BF;
     --mq-teal-900: #042F2E;
     --mq-slate: #F8FAFC;
     --mq-slate-200: #E2E8F0;
@@ -26,14 +26,14 @@
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: var(--mq-navy-800);
+    background: var(--mq-800);
   }
   ::-webkit-scrollbar-thumb {
     background: var(--mq-teal);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--mq-teal-400);
+    background: var(--mq-t400);
   }
 }
 

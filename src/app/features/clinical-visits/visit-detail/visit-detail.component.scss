@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  background-color: var(--navy);
+}
+
+.mq-card-dark {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 24px;
+}
+
+.mq-input {
+  @apply w-full px-4 py-3 rounded-xl bg-mq-navy/50 border border-mq-700 text-white text-sm
+         focus:outline-none focus:border-mq-teal focus:ring-2 focus:ring-mq-teal/20 transition-all;
+}
+
+.mq-label {
+  @apply block text-[10px] font-bold text-mq-s400 uppercase tracking-widest mb-2;
+}
+
+.badge-info {
+  @apply bg-mq-teal/10 text-mq-t400 px-3 py-1 rounded-full font-bold;
+}
+
+.badge-success {
+  @apply bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-bold;
+}
+
+textarea.mq-input {
+  @apply resize-none leading-relaxed;
+  &::placeholder {
+    @apply text-mq-600 italic;
+  }
+}
+
+// Custom scrollbar for textareas
+textarea::-webkit-scrollbar {
+  width: 4px;
+}
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(13, 148, 136, 0.1);
+  border-radius: 10px;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,70 +1,72 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { LucideAngularModule, Calendar, ClipboardList, Receipt, LayoutDashboard, LogOut } from 'lucide-angular';
+import { Router, RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { SignalRService } from '../../core/services/signalr.service';
+import { trigger, transition, style, animate, state } from '@angular/animations';
+import { ToastComponent } from '../../shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-patient-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
-  template: `
-    <div class="min-h-screen bg-mq-navy">
-      <header class="bg-mq-800 border-b border-mq-700 px-6 h-16 flex items-center justify-between sticky top-0 z-40">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-mq-teal to-mq-teal-600 flex items-center justify-center text-white font-bold text-sm">MQ</div>
-          <span class="text-white font-bold">MediQueue</span>
-        </div>
-        <div class="flex items-center gap-4">
-          <span class="text-mq-s400 text-sm">{{ currentUser()?.firstName }}</span>
-          <div class="w-8 h-8 rounded-full bg-mq-teal/15 flex items-center justify-center text-mq-teal-400 text-sm font-bold">
-            {{ initials() }}
-          </div>
-          <button (click)="logout()" class="text-mq-s400 hover:text-rose-400 transition-colors text-sm">Sign Out</button>
-        </div>
-      </header>
-
-      <nav class="bg-mq-800 border-b border-mq-700 px-6">
-        <div class="flex gap-1 max-w-4xl mx-auto">
-          <a routerLink="/my-portal" routerLinkActive="border-b-2 border-mq-teal text-white"
-             class="px-5 py-3.5 text-sm font-medium text-mq-s400 hover:text-white transition-colors">
-            Overview
-          </a>
-          <a routerLink="/my-appointments" routerLinkActive="border-b-2 border-mq-teal text-white"
-             class="px-5 py-3.5 text-sm font-medium text-mq-s400 hover:text-white transition-colors">
-            Appointments
-          </a>
-          <a routerLink="/my-records" routerLinkActive="border-b-2 border-mq-teal text-white"
-             class="px-5 py-3.5 text-sm font-medium text-mq-s400 hover:text-white transition-colors">
-            Medical Records
-          </a>
-          <a routerLink="/my-invoices" routerLinkActive="border-b-2 border-mq-teal text-white"
-             class="px-5 py-3.5 text-sm font-medium text-mq-s400 hover:text-white transition-colors">
-            Invoices
-          </a>
-        </div>
-      </nav>
-
-      <main class="max-w-4xl mx-auto px-6 py-8">
-        <router-outlet/>
-      </main>
-    </div>
-  `
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent],
+  templateUrl: './patient-shell.component.html',
+  styleUrls: ['./patient-shell.component.scss'],
+  animations: [
+    trigger('sidebarToggle', [
+      state('expanded', style({ width: '260px' })),
+      state('collapsed', style({ width: '80px' })),
+      transition('expanded <=> collapsed', animate('250ms cubic-bezier(0.4, 0, 0.2, 1)'))
+    ])
+  ]
 })
-export class PatientShellComponent {
-  private auth = inject(AuthService);
-  private router = inject(Router);
+export class PatientShellComponent implements OnInit, OnDestroy {
+  readonly auth = inject(AuthService);
+  readonly signalr = inject(SignalRService);
+  private readonly router = inject(Router);
 
-  currentUser = this.auth.currentUser;
+  collapsed = signal(false);
+  sidebarState = computed(() => this.collapsed() ? 'collapsed' : 'expanded');
+  
+  user = computed(() => this.auth.currentUser());
+  role = computed(() => this.auth.userRole());
+  initials = computed(() => this.user()?.name?.[0]?.toUpperCase() || 'P');
+  
+  connected = computed(() => this.signalr.connectionState() === 'connected');
+  notifCount = computed(() => this.signalr.notificationCount());
+  showNotifs = signal(false);
 
-  initials = computed(() => {
-    const u = this.currentUser();
-    if (!u) return '?';
-    return (u.firstName?.charAt(0) || '').toUpperCase();
+  pageTitle = computed(() => {
+    const url = this.router.url;
+    if (url.includes('/my-portal')) return 'Patient Dashboard';
+    if (url.includes('/my-appointments')) return 'My Appointments';
+    if (url.includes('/my-records')) return 'My Medical Records';
+    if (url.includes('/my-invoices')) return 'My Invoices & Payments';
+    return 'Patient Portal';
   });
 
-  logout(): void {
+  navItems = [
+    { label: 'Portal Dashboard', path: '/my-portal',      icon: 'layout-dashboard' },
+    { label: 'My Appointments',  path: '/my-appointments',  icon: 'calendar' },
+    { label: 'Medical History',  path: '/my-records',       icon: 'file-text' },
+    { label: 'Invoices & Bills', path: '/my-invoices',      icon: 'receipt' },
+  ];
+
+  async ngOnInit() {
+    await this.signalr.connect();
+  }
+
+  async ngOnDestroy() {
+    await this.signalr.disconnect();
+  }
+
+  toggleSidebar() {
+    this.collapsed.update(v => !v);
+  }
+
+  logout() {
     this.auth.logout();
-    void this.router.navigateByUrl('/');
+    this.router.navigate(['/patient-login']);
   }
 }

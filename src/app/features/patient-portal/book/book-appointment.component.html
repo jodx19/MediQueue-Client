@@ -1,152 +1,276 @@
-<div class="book-wrapper" @pageEnter>
-  <!-- Header -->
-  <header class="book-header">
-    <div class="header-content">
-      <a class="back-link" (click)="goHome()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
+<div class="min-h-screen bg-mq-navy relative overflow-hidden">
+
+  <!-- Grid bg + orb -->
+  <div class="absolute inset-0" style="
+    background-image:
+      linear-gradient(rgba(13,148,136,.04)1px,transparent 1px),
+      linear-gradient(90deg,rgba(13,148,136,.04)1px,transparent 1px);
+    background-size:60px 60px"></div>
+  <div class="absolute w-96 h-96 top-0 right-0 rounded-full pointer-events-none opacity-20"
+       style="background:radial-gradient(circle,#0D9488,transparent 70%);filter:blur(80px)"></div>
+
+  <div class="relative max-w-2xl mx-auto px-6 py-16">
+
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <a routerLink="/" class="inline-flex items-center gap-2 text-mq-s400
+                                hover:text-white text-sm transition-colors mb-8">
+        <lucide-icon name="arrow-left" [size]="15"/>
         Back to Home
       </a>
-      <div class="brand">
-        <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="6" fill="var(--color-accent)"/>
-          <path d="M20 8C14 8 10 13 10 20C10 27 14 32 20 32C26 32 30 27 30 20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="28" cy="12" r="3" fill="white"/>
-        </svg>
-        <span>Book Appointment</span>
-      </div>
+      <h1 class="text-4xl font-black text-white tracking-tight mb-3">
+        Book an Appointment
+      </h1>
+      <p class="text-mq-s400">Fast, easy, online</p>
     </div>
-  </header>
 
-  <main class="book-main">
-    <div class="card-container" @fadeSlideIn>
-      <!-- Error banner -->
-      <div *ngIf="errorMessage()" class="error-banner">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        {{ errorMessage() }}
-      </div>
-
-      <!-- Step 1: Patient MRN Lookup -->
-      <div *ngIf="currentStep() === 1" class="step-card">
-        <h2 class="step-title">Welcome</h2>
-        <p class="step-subtitle">Please enter your Medical Record Number (MRN) or National ID to continue.</p>
-        
-        <div class="field-group">
-          <label class="field-label">MRN or National ID</label>
-          <input type="text" class="field-input" [(ngModel)]="mrnInput" placeholder="e.g. MQ-2026-12345" (keyup.enter)="lookupPatient()">
+    <!-- Stepper -->
+    <div class="flex items-center justify-center gap-0 mb-10">
+      @for (s of [1,2,3,4]; track s) {
+        <div class="flex items-center">
+          <div [class]="state().step >= s
+            ? 'w-9 h-9 rounded-full bg-mq-teal flex items-center justify-center text-white text-sm font-bold shadow-teal-glow-sm'
+            : 'w-9 h-9 rounded-full bg-mq-800 border-2 border-mq-700 flex items-center justify-center text-mq-s400 text-sm'">
+            @if (state().step > s) {
+              <lucide-icon name="check" [size]="16"/>
+            } @else {
+              {{ s }}
+            }
+          </div>
+          @if (s < 4) {
+            <div [class]="state().step > s
+              ? 'w-16 h-0.5 bg-mq-teal'
+              : 'w-16 h-0.5 bg-mq-700'"></div>
+          }
         </div>
+      }
+    </div>
 
-        <div class="actions">
-          <button class="btn btn-primary btn-full" (click)="lookupPatient()" [disabled]="!mrnInput || isLoading()">
-            <span *ngIf="isLoading()" class="spinner"></span>
-            {{ isLoading() ? 'Searching...' : 'Continue' }}
+    <!-- Step Labels -->
+    <div class="flex justify-between text-xs text-mq-s400 mb-10 px-0">
+      <span [class]="state().step===1?'text-mq-t400 font-semibold':''">Identity</span>
+      <span [class]="state().step===2?'text-mq-t400 font-semibold':''">Specialty</span>
+      <span [class]="state().step===3?'text-mq-t400 font-semibold':''">Doctor & Slot</span>
+      <span [class]="state().step===4?'text-mq-t400 font-semibold':''">Confirm</span>
+    </div>
+
+    <!-- STEP 1: Identity -->
+    @if (state().step === 1) {
+      <div class="glass p-8 rounded-2xl">
+        <h2 class="text-white font-bold text-xl mb-2">Who are you?</h2>
+        <p class="text-mq-s400 text-sm mb-6">
+          Enter your MRN (Medical Record Number) to continue.
+          Don't have one?
+          <a routerLink="/register" class="text-mq-t400 hover:underline">Register here</a>
+        </p>
+        <div class="space-y-4">
+          <div>
+            <label class="mq-label">MRN or National ID</label>
+            <input type="text" [(ngModel)]="state().mrn"
+                   class="mq-input" placeholder="MQ-2026-XXXXX"/>
+          </div>
+          <button (click)="findPatient()"
+                  class="btn-primary w-full flex items-center justify-center gap-2"
+                  [disabled]="isLoading()||!state().mrn">
+            @if (isLoading()) {
+              <span class="w-4 h-4 rounded-full border-2 border-white/30
+                           border-t-white animate-spin"></span>
+            }
+            Find My Record →
           </button>
         </div>
 
-        <div class="no-account">
-          <p>Don't have an account? <a routerLink="/register-patient">Register here</a></p>
-        </div>
-      </div>
-
-      <!-- Step 2: Choose Specialty & Doctor -->
-      <div *ngIf="currentStep() === 2" class="step-card">
-        <div class="patient-welcome">
-          Welcome back, <strong>{{ patient()?.fullName || patient()?.firstName }}</strong>!
-        </div>
-        
-        <h2 class="step-title">Choose a Specialist</h2>
-        <p class="step-subtitle">Select the department you need to visit.</p>
-        
-        <div class="specialty-grid">
-          <div class="specialty-card" *ngFor="let spec of specialties" 
-               [class.active]="selectedSpecialty() === spec" 
-               (click)="selectSpecialty(spec)">
-            {{ spec }}
+        @if (state().patient) {
+          <div class="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+            <p class="text-emerald-400 font-semibold text-sm">
+              ✓ Welcome back, {{ state().patient.firstName }} {{ state().patient.lastName }}!
+            </p>
+            <p class="text-mq-s400 text-xs mt-1">MRN: {{ state().patient.mrn }}</p>
+            <button (click)="setStep(2)"
+                    class="btn-primary w-full mt-4">
+              Continue →
+            </button>
           </div>
-        </div>
+        }
+      </div>
+    }
 
-        <div *ngIf="selectedSpecialty() && !isLoading() && doctors().length > 0" class="doctor-section" @fadeSlideIn>
-          <h3 class="section-title">Available Doctors in {{ selectedSpecialty() }}</h3>
-          <div class="doctor-list">
-            <div class="doctor-card" *ngFor="let doc of doctors()" (click)="selectDoctor(doc)">
-              <div class="doc-avatar">{{ doc.firstName?.charAt(0) }}{{ doc.lastName?.charAt(0) }}</div>
-              <div class="doc-info">
-                <h4>Dr. {{ doc.firstName }} {{ doc.lastName }}</h4>
-                <p>Available for booking</p>
-              </div>
-              <div class="doc-action">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </div>
+    <!-- STEP 2: Specialty -->
+    @if (state().step === 2) {
+      <div class="glass p-8 rounded-2xl">
+        <h2 class="text-white font-bold text-xl mb-6">Select Specialty</h2>
+        <div class="grid grid-cols-2 gap-3">
+          @for (spec of specialties; track spec) {
+            <button (click)="selectSpecialty(spec)"
+                    [class]="state().specialty === spec
+                      ? 'p-4 rounded-xl border-2 border-mq-teal bg-mq-teal/10 text-white font-semibold text-sm text-left'
+                      : 'p-4 rounded-xl border border-mq-700 bg-mq-navy/60 text-mq-s400 text-sm text-left hover:border-mq-teal/50 hover:text-white transition-all'">
+              {{ spec }}
+            </button>
+          }
+        </div>
+        <button (click)="setStep(1)"
+                class="btn-ghost w-full mt-6">← Back</button>
+      </div>
+    }
+
+    <!-- STEP 3: Doctor + Slot -->
+    @if (state().step === 3) {
+      <div class="space-y-4">
+        @if (isLoading()) {
+          <div class="glass p-8 text-center rounded-2xl">
+            <span class="w-8 h-8 rounded-full border-2 border-mq-teal/30
+                         border-t-mq-teal animate-spin inline-block"></span>
+          </div>
+        } @else {
+          <!-- Doctor cards -->
+          <div class="glass p-6 rounded-2xl">
+            <h3 class="text-white font-bold mb-4">Choose a Doctor</h3>
+            <div class="space-y-3">
+              @for (doc of doctors(); track doc.id) {
+                <button (click)="selectDoctor(doc)"
+                        [class]="state().doctor?.id===doc.id
+                          ? 'w-full flex items-center gap-4 p-4 rounded-xl border-2 border-mq-teal bg-mq-teal/10'
+                          : 'w-full flex items-center gap-4 p-4 rounded-xl border border-mq-700 hover:border-mq-teal/40 transition-all'">
+                  <div class="w-11 h-11 rounded-full bg-gradient-to-br from-mq-teal to-mq-t600
+                              flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {{ doc.firstName?.[0] }}{{ doc.lastName?.[0] }}
+                  </div>
+                  <div class="text-left">
+                    <p class="text-white font-semibold text-sm">
+                      Dr. {{ doc.firstName }} {{ doc.lastName }}
+                    </p>
+                    <p class="text-mq-s400 text-xs">{{ doc.specialty }}</p>
+                  </div>
+                  @if (state().doctor?.id===doc.id) {
+                    <lucide-icon name="check-circle" class="text-mq-t400 ml-auto" [size]="18"/>
+                  }
+                </button>
+              }
             </div>
           </div>
-        </div>
 
-        <div *ngIf="selectedSpecialty() && !isLoading() && doctors().length === 0" class="empty-state">
-          No doctors found for this specialty.
-        </div>
+          <!-- Time slots -->
+          @if (state().doctor) {
+            <div class="glass p-6 rounded-2xl">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white font-bold">Select Date & Slot</h3>
+                <input type="date" [value]="selectedDate()" (change)="onDateSelect($any($event.target).value)" 
+                       class="mq-input py-1 px-2 text-xs w-auto min-w-[130px] h-8 bg-mq-800 border-mq-700 text-white rounded-lg focus:border-mq-teal"/>
+              </div>
+              
+              @if (slots().length) {
+                <div class="grid grid-cols-3 gap-2">
+                  @for (slot of slots(); track slot) {
+                    <button (click)="setSlot(slot)"
+                            [class]="state().slot?.startTime?.getTime()===slot.startTime?.getTime()
+                              ? 'py-2.5 rounded-xl text-sm font-semibold bg-mq-teal text-white'
+                              : 'py-2.5 rounded-xl text-sm font-medium border border-mq-700 text-mq-s400 hover:border-mq-teal/50 hover:text-white transition-all'">
+                      {{ slot.startTime | date:'h:mm a' }}
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="text-mq-s400 text-sm text-center py-4">No available slots for this date.</p>
+              }
+            </div>
+          }
+
+          <!-- Reason -->
+          @if (state().slot) {
+            <div class="glass p-6 rounded-2xl">
+              <label class="mq-label">Reason for visit</label>
+              <textarea [ngModel]="state().reason"
+                        (ngModelChange)="updateReason($event)"
+                        class="mq-input h-24 resize-none mt-1"
+                        placeholder="Describe your symptoms briefly..."></textarea>
+              <button (click)="setStep(4)"
+                      class="btn-primary w-full mt-4"
+                      [disabled]="!state().doctor||!state().slot">
+                Review & Confirm →
+              </button>
+            </div>
+          }
+        }
+        <button (click)="setStep(2)"
+                class="btn-ghost w-full">← Back</button>
       </div>
+    }
 
-      <!-- Step 3: Pick Slot -->
-      <div *ngIf="currentStep() === 3" class="step-card">
-        <h2 class="step-title">Select a Time</h2>
-        <p class="step-subtitle">Dr. {{ selectedDoctor()?.lastName }}'s availability</p>
-        
-        <div class="slots-grid">
-          <div class="slot-item" *ngFor="let slot of availableSlots()" 
-               [class.selected]="selectedSlot() === slot"
-               (click)="pickSlot(slot)">
-            <span class="slot-date">{{ slot | date:'E, MMM d' }}</span>
-            <span class="slot-time">{{ slot | date:'shortTime' }}</span>
+    <!-- STEP 4: Confirm -->
+    @if (state().step === 4 && !confirmed()) {
+      <div class="glass p-8 rounded-2xl">
+        <h2 class="text-white font-bold text-xl mb-6">Review & Confirm</h2>
+        <div class="space-y-3 mb-8">
+          <div class="flex justify-between py-3 border-b border-mq-700">
+            <span class="text-mq-s400 text-sm">Patient</span>
+            <span class="text-white font-medium text-sm">
+              {{ state().patient?.firstName }} {{ state().patient?.lastName }}
+            </span>
+          </div>
+          <div class="flex justify-between py-3 border-b border-mq-700">
+            <span class="text-mq-s400 text-sm">Doctor</span>
+            <span class="text-white font-medium text-sm">
+              Dr. {{ state().doctor?.firstName }} {{ state().doctor?.lastName }}
+            </span>
+          </div>
+          <div class="flex justify-between py-3 border-b border-mq-700">
+            <span class="text-mq-s400 text-sm">Date & Time</span>
+            <span class="text-mq-t400 font-semibold text-sm">
+              {{ state().slot?.startTime | date:'EEE, MMM d · h:mm a' }}
+            </span>
+          </div>
+          <div class="flex justify-between py-3">
+            <span class="text-mq-s400 text-sm">Reason</span>
+            <span class="text-white text-sm max-w-[60%] text-right">
+              {{ state().reason || '—' }}
+            </span>
           </div>
         </div>
-
-        <div class="field-group" style="margin-top: 24px;">
-          <label class="field-label">Reason for visit (Optional)</label>
-          <textarea class="field-input" rows="3" [(ngModel)]="reason" placeholder="Briefly describe your symptoms..."></textarea>
-        </div>
-
-        <div class="actions two-buttons">
-          <button class="btn btn-ghost" (click)="prevStep()">Back</button>
-          <button class="btn btn-primary" (click)="bookAppointment()" [disabled]="!selectedSlot() || isLoading()">
-            <span *ngIf="isLoading()" class="spinner"></span>
-            {{ isLoading() ? 'Booking...' : 'Confirm Appointment' }}
-          </button>
-        </div>
+        <button (click)="confirmBooking()"
+                class="btn-primary w-full flex items-center justify-center gap-2"
+                [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="w-4 h-4 rounded-full border-2 border-white/30
+                         border-t-white animate-spin"></span>
+          }
+          Confirm Booking →
+        </button>
+        <button (click)="setStep(3)"
+                class="btn-ghost w-full mt-3">← Edit</button>
       </div>
+    }
 
-      <!-- Step 4: Confirmation -->
-      <div *ngIf="currentStep() === 4" class="step-card success-state">
-        <div class="success-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+    <!-- SUCCESS -->
+    @if (confirmed()) {
+      <div class="glass p-10 text-center rounded-2xl"
+           style="animation:scaleIn .6s cubic-bezier(0.34,1.56,0.64,1) both">
+        <div class="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center
+                    justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(16,185,129,.3)]">
+          <lucide-icon name="check-circle" class="text-emerald-400" [size]="32"/>
         </div>
-        <h2 class="step-title">Appointment Confirmed!</h2>
-        
-        <div class="confirmation-box">
-          <div class="conf-item">
-            <span class="conf-label">Date & Time</span>
-            <span class="conf-val">{{ confirmationDetails()?.date | date:'fullDate' }} at {{ confirmationDetails()?.date | date:'shortTime' }}</span>
+        <h2 class="text-2xl font-black text-white mb-2">Appointment Confirmed!</h2>
+        <p class="text-mq-s400 text-sm mb-8">
+          A confirmation has been saved for you.
+        </p>
+        <div class="bg-mq-navy/60 rounded-xl p-5 border border-mq-700 text-left space-y-3 mb-8">
+          <div class="flex justify-between text-sm">
+            <span class="text-mq-s400">Reference</span>
+            <span class="text-mq-t400 font-mono font-bold">
+              {{ confirmed().referenceNumber }}
+            </span>
           </div>
-          <div class="conf-item">
-            <span class="conf-label">Doctor</span>
-            <span class="conf-val">Dr. {{ confirmationDetails()?.doctorName }} — {{ confirmationDetails()?.specialty }}</span>
+          <div class="flex justify-between text-sm">
+            <span class="text-mq-s400">Doctor</span>
+            <span class="text-white">{{ confirmed().doctorName }}</span>
           </div>
-          <div class="conf-item reference">
-            <span class="conf-label">Reference Number</span>
-            <span class="conf-val highlight">{{ confirmationDetails()?.reference }}</span>
+          <div class="flex justify-between text-sm">
+            <span class="text-mq-s400">Date & Time</span>
+            <span class="text-white">{{ confirmed().scheduledAt | date:'EEE, MMM d · h:mm a' }}</span>
           </div>
         </div>
-
-        <button class="btn btn-primary btn-full" (click)="goHome()">Return to Home</button>
+        <a routerLink="/" class="btn-ghost w-full block text-center">← Back to Home</a>
       </div>
-
-    </div>
-  </main>
+    }
+  </div>
 </div>

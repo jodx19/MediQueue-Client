@@ -1,0 +1,333 @@
+<div class="p-6 space-y-6 max-w-7xl mx-auto">
+
+  <!-- Header Section -->
+  <div class="border-b border-mq-700/60 pb-6">
+    <h2 class="text-white font-extrabold text-2xl tracking-tight">Electronic Medical Records (EMR)</h2>
+    <p class="text-mq-s400 text-sm mt-1">Review your official clinic timeline, diagnosis outcomes, and laboratory referrals.</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="space-y-6 animate-pulse">
+      <div class="h-10 w-48 bg-mq-800 rounded-lg"></div>
+      <div class="space-y-4">
+        <div class="h-28 bg-mq-800 rounded-xl"></div>
+        <div class="h-28 bg-mq-800 rounded-xl"></div>
+      </div>
+    </div>
+  } @else {
+
+    @if (visits().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 bg-mq-800/40 rounded-2xl border border-mq-700/40 text-center">
+        <div class="w-16 h-16 rounded-full bg-mq-navy border border-mq-700/40 flex items-center justify-center text-mq-s400 mb-4 shadow-inner">
+          <lucide-icon name="file-text" [size]="28"/>
+        </div>
+        <h4 class="text-white font-semibold text-base">No clinical visits logged</h4>
+        <p class="text-mq-s400 text-xs mt-1.5 max-w-sm leading-relaxed">
+          Your EMR profile timeline is currently clear. Once your clinic consultant files your visit notes, they will appear here instantly.
+        </p>
+      </div>
+    } @else {
+      
+      <!-- Timeline layout -->
+      <div class="relative pl-6 sm:pl-8 space-y-8 before:absolute before:top-2 before:bottom-2 before:left-3 before:w-0.5 before:bg-mq-700">
+        
+        @for (visit of visits(); track visit.id; let idx = $index) {
+          
+          <div class="relative animate-fade-in" [style.animation-delay.ms]="idx * 80">
+            
+            <!-- Timeline node indicator -->
+            <div class="absolute -left-[29px] top-1.5 w-4 h-4 rounded-full bg-mq-navy border-2 border-emerald-400 flex items-center justify-center shadow-md">
+              <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+            </div>
+
+            <!-- EMR Timeline Card -->
+            <div class="bg-mq-800 border border-mq-700/60 rounded-2xl p-5 hover:border-mq-600 transition-all shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-mq-700/40 pb-3 mb-4">
+                <div>
+                  <span class="text-xs text-emerald-400 font-semibold tracking-wider uppercase block">
+                    {{ visit.visitDate | date:'EEEE, MMMM d, y' }}
+                  </span>
+                  <h3 class="text-white font-extrabold text-base mt-1">Consultation Session</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-mq-s400 bg-mq-navy border border-mq-700 px-3 py-1 rounded-full font-medium">
+                    Dr. {{ visit.doctorId?.substring(0,8) || 'Specialist' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Main notes summary -->
+              <div class="space-y-3">
+                @if (visit.assessmentNote) {
+                  <p class="text-mq-s400 text-sm leading-relaxed">
+                    <strong class="text-white font-semibold">Doctor Notes:</strong> {{ visit.assessmentNote }}
+                  </p>
+                }
+                
+                @if (visit.planNote) {
+                  <p class="text-mq-s400 text-sm leading-relaxed">
+                    <strong class="text-white font-semibold">Treatment Plan:</strong> {{ visit.planNote }}
+                  </p>
+                }
+
+                @if (visit.diagnoses && visit.diagnoses.length > 0) {
+                  <div class="flex flex-wrap items-center gap-2 pt-2">
+                    <span class="text-xs text-mq-s400 font-semibold block mr-1">Diagnoses:</span>
+                    @for (diag of visit.diagnoses; track diag.icD10Code) {
+                      <span class="px-2.5 py-0.5 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 text-xs font-medium">
+                        {{ diag.icD10Code }} - {{ diag.codeDescription }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Action Link to open complete details modal -->
+              <div class="flex items-center justify-end mt-4 pt-3 border-t border-mq-700/40">
+                <button (click)="viewDetails(visit.id!)"
+                        class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors">
+                  <lucide-icon name="file-text" [size]="14"/>
+                  View Full Clinical Report
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+
+    }
+
+  }
+
+  <!-- Detail EMR Modal -->
+  @if (showDetailModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+      <div class="w-full max-w-3xl bg-mq-800 border border-mq-700/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-slide-in">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-5 bg-mq-navy border-b border-mq-700 flex items-center justify-between">
+          <div>
+            <span class="text-emerald-400 text-xs font-bold tracking-widest uppercase block">Clinical Records Summary</span>
+            <h3 class="text-white font-extrabold text-lg mt-0.5">Consultation Report</h3>
+          </div>
+          <button (click)="closeDetailModal()" class="text-mq-s400 hover:text-white transition-colors">
+            <lucide-icon name="x" [size]="20"/>
+          </button>
+        </div>
+
+        @if (isLoadingDetail() || !selectedVisit()) {
+          <div class="flex flex-col items-center justify-center py-24 space-y-4">
+            <div class="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin"></div>
+            <p class="text-mq-s400 text-xs font-semibold">Retrieving finalized EHR data...</p>
+          </div>
+        } @else {
+          
+          <!-- Tab Navigation inside Modal -->
+          <div class="flex items-center gap-1 px-6 bg-mq-navy border-b border-mq-700 overflow-x-auto">
+            <button (click)="activeTab.set('summary')"
+                    [class]="activeTab() === 'summary' ? 'border-b-2 border-emerald-400 text-white font-semibold' : 'text-mq-s400 hover:text-white'"
+                    class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
+              Summary
+            </button>
+            <button (click)="activeTab.set('vitals')"
+                    [class]="activeTab() === 'vitals' ? 'border-b-2 border-emerald-400 text-white font-semibold' : 'text-mq-s400 hover:text-white'"
+                    class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
+              Vital Signs
+            </button>
+            <button (click)="activeTab.set('prescriptions')"
+                    [class]="activeTab() === 'prescriptions' ? 'border-b-2 border-emerald-400 text-white font-semibold' : 'text-mq-s400 hover:text-white'"
+                    class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
+              Prescribed Rx
+            </button>
+            <button (click)="activeTab.set('orders')"
+                    [class]="activeTab() === 'orders' ? 'border-b-2 border-emerald-400 text-white font-semibold' : 'text-mq-s400 hover:text-white'"
+                    class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
+              Lab & Imaging
+            </button>
+          </div>
+
+          <!-- Tab Content Scrollable Area -->
+          <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-mq-navy/10">
+
+            <!-- TAB 1: Summary -->
+            @if (activeTab() === 'summary') {
+              <div class="space-y-4">
+                
+                <!-- Physician details and visit date -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-mq-navy/50 p-4 border border-mq-700/50 rounded-xl">
+                  <div>
+                    <span class="text-[10px] text-mq-s400 font-bold block uppercase tracking-wider">Date of Visit</span>
+                    <span class="text-white text-sm font-semibold mt-0.5 block">{{ selectedVisit()?.visitDate | date:'MMM d, y, h:mm a' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-mq-s400 font-bold block uppercase tracking-wider">Attending Doctor</span>
+                    <span class="text-white text-sm font-semibold mt-0.5 block">Dr. {{ selectedVisit()?.patientName ? 'Specialist' : 'Physician' }}</span>
+                  </div>
+                </div>
+
+                <!-- Diagnosis notes -->
+                @if (selectedVisit()?.subjective) {
+                  <div>
+                    <h4 class="text-white font-bold text-sm mb-1.5 border-l-2 border-emerald-400 pl-2">Subjective Complaints</h4>
+                    <p class="text-mq-s400 text-xs leading-relaxed bg-mq-800/40 p-3 rounded-lg border border-mq-750">{{ selectedVisit()?.subjective }}</p>
+                  </div>
+                }
+
+                @if (selectedVisit()?.assessment) {
+                  <div>
+                    <h4 class="text-white font-bold text-sm mb-1.5 border-l-2 border-emerald-400 pl-2">Doctor Assessment Note</h4>
+                    <p class="text-mq-s400 text-xs leading-relaxed bg-mq-800/40 p-3 rounded-lg border border-mq-750">{{ selectedVisit()?.assessment }}</p>
+                  </div>
+                }
+
+                @if (selectedVisit()?.plan) {
+                  <div>
+                    <h4 class="text-white font-bold text-sm mb-1.5 border-l-2 border-emerald-400 pl-2">Recommended Treatment Plan</h4>
+                    <p class="text-mq-s400 text-xs leading-relaxed bg-mq-800/40 p-3 rounded-lg border border-mq-750">{{ selectedVisit()?.plan }}</p>
+                  </div>
+                }
+
+              </div>
+            }
+
+            <!-- TAB 2: Vital Signs -->
+            @if (activeTab() === 'vitals') {
+              <div class="space-y-4">
+                @if (!selectedVisit()?.vitalSigns || selectedVisit()!.vitalSigns!.length === 0) {
+                  <p class="text-mq-s400 text-xs italic text-center py-6">No vital signs were recorded during this visit.</p>
+                } @else {
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    @for (vital of selectedVisit()?.vitalSigns; track vital.recordedAt) {
+                      <div class="bg-mq-navy/60 p-4 border border-mq-700/50 rounded-xl">
+                        <span class="text-[10px] text-mq-s400 font-bold block uppercase tracking-wider mb-1">{{ vital.type || 'Vital Sign' }}</span>
+                        <span class="text-white font-extrabold text-base">{{ vital.value }} {{ vital.unit }}</span>
+                        <span class="text-[10px] text-emerald-400 block mt-1">Recorded: {{ vital.recordedAt | date:'shortTime' }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- TAB 3: Prescriptions Rx -->
+            @if (activeTab() === 'prescriptions') {
+              <div class="space-y-4">
+                @if (!selectedVisit()?.prescriptions || selectedVisit()!.prescriptions!.length === 0) {
+                  <p class="text-mq-s400 text-xs italic text-center py-6">No prescription orders were generated in this session.</p>
+                } @else {
+                  <div class="space-y-4">
+                    @for (rx of selectedVisit()?.prescriptions; track rx.id) {
+                      <div class="p-4 rounded-xl bg-mq-navy/50 border border-mq-700/50">
+                        <div class="border-b border-mq-700/40 pb-2 mb-3">
+                          <span class="text-[10px] text-mq-s400 block font-bold uppercase tracking-wide">Prescription Number</span>
+                          <span class="text-white text-xs font-bold">{{ rx.prescriptionNumber || rx.id?.substring(0,8) }}</span>
+                        </div>
+                        
+                        @if (rx.items && rx.items.length > 0) {
+                          <div class="space-y-3">
+                            @for (item of rx.items; track item.medicationName) {
+                              <div class="bg-mq-800/40 p-3 rounded-lg border border-mq-750">
+                                <h5 class="text-white font-bold text-sm flex items-center gap-2">
+                                  <lucide-icon name="pill" class="text-emerald-400" [size]="14"/>
+                                  {{ item.medicationName }} ({{ item.dosage || 'N/A' }})
+                                </h5>
+                                @if (item.instructions) {
+                                  <p class="text-mq-s400 text-xs mt-1.5 leading-relaxed">
+                                    <strong class="text-white font-semibold">Directions:</strong> {{ item.instructions }}
+                                  </p>
+                                }
+                                <div class="flex items-center gap-4 mt-2 text-[10px] text-mq-s400">
+                                  <span>Frequency: <strong>{{ item.frequency || 'N/A' }}</strong></span>
+                                  <span>Duration: <strong>{{ item.duration || 'N/A' }}</strong></span>
+                                  <span>Refills: <strong>{{ item.refills ?? 0 }}</strong></span>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- TAB 4: Lab & Imaging Orders -->
+            @if (activeTab() === 'orders') {
+              <div class="space-y-5">
+                
+                <!-- Lab requests -->
+                <div>
+                  <h4 class="text-white font-bold text-sm mb-2.5 flex items-center gap-1.5">
+                    <lucide-icon name="beaker" class="text-teal-400" [size]="15"/>
+                    Laboratory Requests
+                  </h4>
+                  @if (!selectedVisit()?.labRequests || selectedVisit()!.labRequests!.length === 0) {
+                    <p class="text-mq-s400 text-xs italic bg-mq-800/25 p-3 rounded-lg border border-mq-750">No lab panel diagnostics requested.</p>
+                  } @else {
+                    <div class="space-y-2">
+                      @for (lab of selectedVisit()?.labRequests; track lab.testName) {
+                        <div class="p-3 bg-mq-navy/50 border border-mq-700/40 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span class="text-white font-semibold text-xs block">{{ lab.testName }}</span>
+                            @if (lab.instructions) {
+                              <span class="text-[10px] text-mq-s400 block mt-0.5">{{ lab.instructions }}</span>
+                            }
+                          </div>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-amber-500/10 text-amber-400">
+                            {{ lab.status || 'Pending' }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Imaging requests -->
+                <div>
+                  <h4 class="text-white font-bold text-sm mb-2.5 flex items-center gap-1.5">
+                    <lucide-icon name="image" class="text-teal-400" [size]="15"/>
+                    Imaging & X-Ray Requests
+                  </h4>
+                  @if (!selectedVisit()?.imagingRequests || selectedVisit()!.imagingRequests!.length === 0) {
+                    <p class="text-mq-s400 text-xs italic bg-mq-800/25 p-3 rounded-lg border border-mq-750">No imaging (MRI, CT, X-ray) panels requested.</p>
+                  } @else {
+                    <div class="space-y-2">
+                      @for (img of selectedVisit()?.imagingRequests; track img.imagingType) {
+                        <div class="p-3 bg-mq-navy/50 border border-mq-700/40 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span class="text-white font-semibold text-xs block">{{ img.imagingType }}</span>
+                            <span class="text-[10px] text-mq-s400 block mt-0.5">Region: {{ img.bodyPart || 'General' }}</span>
+                          </div>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-amber-500/10 text-amber-400">
+                            {{ img.status || 'Pending' }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+              </div>
+            }
+
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-6 py-4 bg-mq-navy border-t border-mq-700 flex items-center justify-end">
+            <button (click)="closeDetailModal()"
+                    class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs rounded-lg shadow-md transition-all">
+              Acknowledge & Close
+            </button>
+          </div>
+
+        }
+
+      </div>
+    </div>
+  }
+
+</div>

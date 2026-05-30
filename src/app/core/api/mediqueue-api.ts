@@ -14,7 +14,7 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
-export interface IClient {
+export interface IAppointmentsClient {
     /**
      * @param body (optional) 
      * @return Created
@@ -83,275 +83,10 @@ export interface IClient {
      * @return OK
      */
     noShow(id: string): Observable<AppointmentDto>;
-    /**
-     * @param patientId (optional) 
-     * @param type (optional) 
-     * @param clinicalVisitId (optional) 
-     * @param description (optional) 
-     * @param file (optional) 
-     * @return OK
-     */
-    upload(patientId?: string | undefined, type?: AttachmentType | undefined, clinicalVisitId?: string | undefined, description?: string | undefined, file?: FileParameter | undefined): Observable<string>;
-    /**
-     * @param body (optional) 
-     * @return OK
-     */
-    login(body?: LoginCommand | undefined): Observable<AuthResponseDto>;
-    /**
-     * @param body (optional) 
-     * @return OK
-     */
-    register(body?: RegisterCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return OK
-     */
-    refreshToken(body?: RefreshTokenCommand | undefined): Observable<AuthResponseDto>;
-    /**
-     * @param body (optional) 
-     * @return OK
-     */
-    patientLogin(body?: PatientLoginCommand | undefined): Observable<AuthResponseDto>;
-    /**
-     * @return OK
-     */
-    clinicalVisitsGET(id: string): Observable<ClinicalVisitDetailDto>;
-    /**
-     * @return OK
-     */
-    appointment(appointmentId: string): Observable<ClinicalVisitDetailDto>;
-    /**
-     * @param page (optional) 
-     * @param size (optional) 
-     * @return OK
-     */
-    patient2(patientId: string, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfClinicalVisitSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @return OK
-     */
-    prescriptionsAll(patientId: string): Observable<PrescriptionDto[]>;
-    /**
-     * @param body (optional) 
-     * @return Created
-     */
-    clinicalVisitsPOST(body?: CreateClinicalVisitCommand | undefined): Observable<ClinicalVisitDto>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    soap(id: string, body?: UpdateSOAPNoteCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    vitalSigns(id: string, body?: AddVitalSignCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    diagnoses(id: string, body?: AddDiagnosisCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    procedures(id: string, body?: AddProcedureCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    labRequests(id: string, body?: AddLabRequestCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    imagingRequests(id: string, body?: AddImagingRequestCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    referrals(id: string, body?: AddReferralCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    prescriptions(id: string, body?: CreatePrescriptionCommand | undefined): Observable<void>;
-    /**
-     * @return No Content
-     */
-    finalize(id: string): Observable<void>;
-    /**
-     * @return OK
-     */
-    stats(): Observable<ClinicStatsDto>;
-    /**
-     * @param startDate (optional) 
-     * @param endDate (optional) 
-     * @return OK
-     */
-    revenueReport(startDate?: Date | undefined, endDate?: Date | undefined): Observable<RevenueReportDto>;
-    /**
-     * @param body (optional) 
-     * @return Created
-     */
-    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param page (optional) 
-     * @param size (optional) 
-     * @return OK
-     */
-    doctorsGET(page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfDoctorSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @return OK
-     */
-    doctorsGET2(id: string): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    doctorsPUT(id: string, body?: UpdateDoctorCommand | undefined): Observable<void>;
-    /**
-     * @return OK
-     */
-    specialty(specialty: MedicalSpecialty): Observable<DoctorDto[]>;
-    /**
-     * @param date (optional) 
-     * @return OK
-     */
-    availability(id: string, date?: Date | undefined): Observable<DoctorAvailabilityDto>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    shiftsPOST(id: string, body?: AddWorkingShiftCommand | undefined): Observable<void>;
-    /**
-     * @return No Content
-     */
-    shiftsDELETE(id: string, dayOfWeek: DayOfWeek): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    unavailable(id: string, body?: SetDoctorUnavailableCommand | undefined): Observable<void>;
-    /**
-     * @param page (optional) 
-     * @param pageSize (optional) 
-     * @param status (optional) 
-     * @param from (optional) 
-     * @param to (optional) 
-     * @return OK
-     */
-    invoicesGET(page?: number | undefined, pageSize?: number | undefined, status?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<PagedResult_1OfOfInvoiceListItemDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param body (optional) 
-     * @return Created
-     */
-    invoicesPOST(body?: CreateInvoiceCommand | undefined): Observable<InvoiceDto>;
-    /**
-     * @return OK
-     */
-    invoicesGET2(id: string): Observable<InvoiceDto>;
-    /**
-     * @return No Content
-     */
-    invoicesDELETE(id: string): Observable<void>;
-    /**
-     * @param page (optional) 
-     * @param size (optional) 
-     * @return OK
-     */
-    patient3(patientId: string, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfInvoiceDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param from (optional) 
-     * @param to (optional) 
-     * @return OK
-     */
-    revenueReport2(from?: Date | undefined, to?: Date | undefined): Observable<RevenueReportDto2>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    items(id: string, body?: AddInvoiceItemCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    discount(id: string, body?: ApplyDiscountCommand | undefined): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    payments(id: string, body?: RecordPaymentCommand | undefined): Observable<void>;
-    /**
-     * @param limit (optional) 
-     * @return OK
-     */
-    notifications(limit?: number | undefined): Observable<NotificationDto[]>;
-    /**
-     * @return OK
-     */
-    read(id: string): Observable<void>;
-    /**
-     * @param page (optional) 
-     * @param size (optional) 
-     * @return OK
-     */
-    patientsGET(page?: number | undefined, size?: number | undefined): Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param body (optional) 
-     * @return Created
-     */
-    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @param body (optional) 
-     * @return Created
-     */
-    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<PatientDto>;
-    /**
-     * @return OK
-     */
-    patientsGET2(id: string): Observable<PatientDetailDto>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    patientsPUT(id: string, body?: UpdatePatientCommand | undefined): Observable<void>;
-    /**
-     * @return No Content
-     */
-    patientsDELETE(id: string): Observable<void>;
-    /**
-     * @return OK
-     */
-    mrn(mrn: string): Observable<PatientDetailDto>;
-    /**
-     * @param term (optional) 
-     * @param page (optional) 
-     * @param size (optional) 
-     * @return OK
-     */
-    search(term?: string | undefined, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
-    /**
-     * @return OK
-     */
-    medicalHistory(id: string): Observable<PatientMedicalHistoryDto>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    allergiesPOST(id: string, body?: AddAllergyCommand | undefined): Observable<void>;
-    /**
-     * @return No Content
-     */
-    allergiesDELETE(id: string, allergyId: string): Observable<void>;
-    /**
-     * @param body (optional) 
-     * @return No Content
-     */
-    chronicConditions(id: string, body?: AddChronicConditionCommand | undefined): Observable<void>;
 }
 
 @Injectable()
-export class Client implements IClient {
+export class AppointmentsClient implements IAppointmentsClient {
     private http: HttpClient;
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -1198,6 +933,30 @@ export class Client implements IClient {
         }
         return _observableOf(null as any);
     }
+}
+
+export interface IAttachmentsClient {
+    /**
+     * @param patientId (optional) 
+     * @param type (optional) 
+     * @param clinicalVisitId (optional) 
+     * @param description (optional) 
+     * @param file (optional) 
+     * @return OK
+     */
+    upload(patientId?: string | undefined, type?: AttachmentType | undefined, clinicalVisitId?: string | undefined, description?: string | undefined, file?: FileParameter | undefined): Observable<string>;
+}
+
+@Injectable()
+export class AttachmentsClient implements IAttachmentsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
 
     /**
      * @param patientId (optional) 
@@ -1278,6 +1037,41 @@ export class Client implements IClient {
         }
         return _observableOf(null as any);
     }
+}
+
+export interface IAuthClient {
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    login(body?: LoginCommand | undefined): Observable<AuthResponseDto>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    patientLogin(body?: PatientLoginCommand | undefined): Observable<AuthResponseDto>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    register(body?: RegisterCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    refreshToken(body?: RefreshTokenCommand | undefined): Observable<AuthResponseDto>;
+}
+
+@Injectable()
+export class AuthClient implements IAuthClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
 
     /**
      * @param body (optional) 
@@ -1314,6 +1108,62 @@ export class Client implements IClient {
     }
 
     protected processLogin(response: HttpResponseBase): Observable<AuthResponseDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = AuthResponseDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    patientLogin(body?: PatientLoginCommand | undefined): Observable<AuthResponseDto> {
+        let url_ = this.baseUrl + "/api/Auth/patient-login";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processPatientLogin(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processPatientLogin(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<AuthResponseDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<AuthResponseDto>;
+        }));
+    }
+
+    protected processPatientLogin(response: HttpResponseBase): Observable<AuthResponseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -1442,61 +1292,87 @@ export class Client implements IClient {
         }
         return _observableOf(null as any);
     }
+}
 
+export interface IClinicalVisitsClient {
     /**
-     * @param body (optional) 
      * @return OK
      */
-    patientLogin(body?: PatientLoginCommand | undefined): Observable<AuthResponseDto> {
-        let url_ = this.baseUrl + "/api/Auth/patient-login";
-        url_ = url_.replace(/[?&]$/, "");
+    clinicalVisitsGET(id: string): Observable<ClinicalVisitDetailDto>;
+    /**
+     * @return OK
+     */
+    appointment(appointmentId: string): Observable<ClinicalVisitDetailDto>;
+    /**
+     * @param page (optional) 
+     * @param size (optional) 
+     * @return OK
+     */
+    patient2(patientId: string, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfClinicalVisitSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @return OK
+     */
+    prescriptionsAll(patientId: string): Observable<PrescriptionDto[]>;
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    clinicalVisitsPOST(body?: CreateClinicalVisitCommand | undefined): Observable<ClinicalVisitDto>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    soap(id: string, body?: UpdateSOAPNoteCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    vitalSigns(id: string, body?: AddVitalSignCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    diagnoses(id: string, body?: AddDiagnosisCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    procedures(id: string, body?: AddProcedureCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    labRequests(id: string, body?: AddLabRequestCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    imagingRequests(id: string, body?: AddImagingRequestCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    referrals(id: string, body?: AddReferralCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    prescriptions(id: string, body?: CreatePrescriptionCommand | undefined): Observable<void>;
+    /**
+     * @return No Content
+     */
+    finalize(id: string): Observable<void>;
+}
 
-        const content_ = JSON.stringify(body);
+@Injectable()
+export class ClinicalVisitsClient implements IClinicalVisitsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processPatientLogin(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processPatientLogin(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<AuthResponseDto>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<AuthResponseDto>;
-        }));
-    }
-
-    protected processPatientLogin(response: HttpResponseBase): Observable<AuthResponseDto> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = AuthResponseDto.fromJS(resultData200);
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
     }
 
     /**
@@ -2368,6 +2244,31 @@ export class Client implements IClient {
         }
         return _observableOf(null as any);
     }
+}
+
+export interface IDashboardClient {
+    /**
+     * @return OK
+     */
+    stats(): Observable<ClinicStatsDto>;
+    /**
+     * @param startDate (optional) 
+     * @param endDate (optional) 
+     * @return OK
+     */
+    revenueReport(startDate?: Date | undefined, endDate?: Date | undefined): Observable<RevenueReportDto>;
+}
+
+@Injectable()
+export class DashboardClient implements IDashboardClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
 
     /**
      * @return OK
@@ -2479,6 +2380,64 @@ export class Client implements IClient {
             }));
         }
         return _observableOf(null as any);
+    }
+}
+
+export interface IDoctorsClient {
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param page (optional) 
+     * @param size (optional) 
+     * @return OK
+     */
+    doctorsGET(page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfDoctorSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @return OK
+     */
+    doctorsGET2(id: string): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    doctorsPUT(id: string, body?: UpdateDoctorCommand | undefined): Observable<void>;
+    /**
+     * @return OK
+     */
+    specialty(specialty: MedicalSpecialty): Observable<DoctorDto[]>;
+    /**
+     * @param date (optional) 
+     * @return OK
+     */
+    availability(id: string, date?: Date | undefined): Observable<DoctorAvailabilityDto>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    shiftsPOST(id: string, body?: AddWorkingShiftCommand | undefined): Observable<void>;
+    /**
+     * @return No Content
+     */
+    shiftsDELETE(id: string, dayOfWeek: DayOfWeek): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    unavailable(id: string, body?: SetDoctorUnavailableCommand | undefined): Observable<void>;
+}
+
+@Injectable()
+export class DoctorsClient implements IDoctorsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
     }
 
     /**
@@ -3023,6 +2982,70 @@ export class Client implements IClient {
             }));
         }
         return _observableOf(null as any);
+    }
+}
+
+export interface IInvoicesClient {
+    /**
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @param status (optional) 
+     * @param from (optional) 
+     * @param to (optional) 
+     * @return OK
+     */
+    invoicesGET(page?: number | undefined, pageSize?: number | undefined, status?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<PagedResult_1OfOfInvoiceListItemDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    invoicesPOST(body?: CreateInvoiceCommand | undefined): Observable<InvoiceDto>;
+    /**
+     * @return OK
+     */
+    invoicesGET2(id: string): Observable<InvoiceDto>;
+    /**
+     * @return No Content
+     */
+    invoicesDELETE(id: string): Observable<void>;
+    /**
+     * @param page (optional) 
+     * @param size (optional) 
+     * @return OK
+     */
+    patient3(patientId: string, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfInvoiceDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param from (optional) 
+     * @param to (optional) 
+     * @return OK
+     */
+    revenueReport2(from?: Date | undefined, to?: Date | undefined): Observable<RevenueReportDto2>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    items(id: string, body?: AddInvoiceItemCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    discount(id: string, body?: ApplyDiscountCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    payments(id: string, body?: RecordPaymentCommand | undefined): Observable<void>;
+}
+
+@Injectable()
+export class InvoicesClient implements IInvoicesClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
     }
 
     /**
@@ -3592,6 +3615,30 @@ export class Client implements IClient {
         }
         return _observableOf(null as any);
     }
+}
+
+export interface INotificationsClient {
+    /**
+     * @param limit (optional) 
+     * @return OK
+     */
+    notifications(limit?: number | undefined): Observable<NotificationDto[]>;
+    /**
+     * @return OK
+     */
+    read(id: string): Observable<void>;
+}
+
+@Injectable()
+export class NotificationsClient implements INotificationsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
 
     /**
      * @param limit (optional) 
@@ -3704,6 +3751,79 @@ export class Client implements IClient {
             }));
         }
         return _observableOf(null as any);
+    }
+}
+
+export interface IPatientsClient {
+    /**
+     * @param page (optional) 
+     * @param size (optional) 
+     * @return OK
+     */
+    patientsGET(page?: number | undefined, size?: number | undefined): Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @return OK
+     */
+    patientsGET2(id: string): Observable<PatientDetailDto>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    patientsPUT(id: string, body?: UpdatePatientCommand | undefined): Observable<void>;
+    /**
+     * @return No Content
+     */
+    patientsDELETE(id: string): Observable<void>;
+    /**
+     * @return OK
+     */
+    mrn(mrn: string): Observable<PatientDetailDto>;
+    /**
+     * @param term (optional) 
+     * @param page (optional) 
+     * @param size (optional) 
+     * @return OK
+     */
+    search(term?: string | undefined, page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    /**
+     * @return OK
+     */
+    medicalHistory(id: string): Observable<PatientMedicalHistoryDto>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    allergiesPOST(id: string, body?: AddAllergyCommand | undefined): Observable<void>;
+    /**
+     * @return No Content
+     */
+    allergiesDELETE(id: string, allergyId: string): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    chronicConditions(id: string, body?: AddChronicConditionCommand | undefined): Observable<void>;
+}
+
+@Injectable()
+export class PatientsClient implements IPatientsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
     }
 
     /**
@@ -3827,7 +3947,7 @@ export class Client implements IClient {
      * @param body (optional) 
      * @return Created
      */
-    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<PatientDto> {
+    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
         let url_ = this.baseUrl + "/api/Patients/self-register";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3850,14 +3970,14 @@ export class Client implements IClient {
                 try {
                     return this.processSelfRegister(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<PatientDto>;
+                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<PatientDto>;
+                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
         }));
     }
 
-    protected processSelfRegister(response: HttpResponseBase): Observable<PatientDto> {
+    protected processSelfRegister(response: HttpResponseBase): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -3868,15 +3988,8 @@ export class Client implements IClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result201: any = null;
             let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result201 = PatientDto.fromJS(resultData201);
+            result201 = ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData201);
             return _observableOf(result201);
-            }));
-        } else if (status === 400) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result400: any = null;
-            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result400 = ProblemDetails.fromJS(resultData400);
-            return throwException("Bad Request", status, _responseText, _headers, result400);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -4429,6 +4542,83 @@ export class Client implements IClient {
             let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result404 = ProblemDetails.fromJS(resultData404);
             return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+export interface IUsersClient {
+    /**
+     * @return OK
+     */
+    users(): Observable<UserListItemDto[]>;
+}
+
+@Injectable()
+export class UsersClient implements IUsersClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @return OK
+     */
+    users(): Observable<UserListItemDto[]> {
+        let url_ = this.baseUrl + "/api/Users";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processUsers(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processUsers(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<UserListItemDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<UserListItemDto[]>;
+        }));
+    }
+
+    protected processUsers(response: HttpResponseBase): Observable<UserListItemDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserListItemDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -5037,7 +5227,7 @@ export class PatientLoginCommand implements IPatientLoginCommand {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["mrn"] = this.mrn;
-        data["dateOfBirth"] = this.dateOfBirth ? this.dateOfBirth.toISOString() : undefined as any;
+        data["dateOfBirth"] = this.dateOfBirth ? formatDate(this.dateOfBirth) : undefined as any;
         return data;
     }
 }
@@ -5094,6 +5284,7 @@ export class RegisterCommand implements IRegisterCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
     phoneNumber?: string | undefined;
+    role?: string | undefined;
 
     constructor(data?: IRegisterCommand) {
         if (data) {
@@ -5112,6 +5303,7 @@ export class RegisterCommand implements IRegisterCommand {
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
             this.phoneNumber = _data["phoneNumber"];
+            this.role = _data["role"];
         }
     }
 
@@ -5130,6 +5322,7 @@ export class RegisterCommand implements IRegisterCommand {
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
         data["phoneNumber"] = this.phoneNumber;
+        data["role"] = this.role;
         return data;
     }
 }
@@ -5141,6 +5334,7 @@ export interface IRegisterCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
     phoneNumber?: string | undefined;
+    role?: string | undefined;
 }
 
 export class AuthResponseDto implements IAuthResponseDto {
@@ -5193,6 +5387,66 @@ export interface IAuthResponseDto {
     expiryTime?: Date;
     username?: string | undefined;
     role?: string | undefined;
+}
+
+export class UserListItemDto implements IUserListItemDto {
+    id?: string | undefined;
+    email?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    role?: string | undefined;
+    isActive?: boolean;
+    createdAt?: Date;
+
+    constructor(data?: IUserListItemDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.email = _data["email"];
+            this.firstName = _data["firstName"];
+            this.lastName = _data["lastName"];
+            this.role = _data["role"];
+            this.isActive = _data["isActive"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): UserListItemDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserListItemDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["email"] = this.email;
+        data["firstName"] = this.firstName;
+        data["lastName"] = this.lastName;
+        data["role"] = this.role;
+        data["isActive"] = this.isActive;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IUserListItemDto {
+    id?: string | undefined;
+    email?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    role?: string | undefined;
+    isActive?: boolean;
+    createdAt?: Date;
 }
 
 export class AddDiagnosisCommand implements IAddDiagnosisCommand {
@@ -8322,16 +8576,13 @@ export interface IRegisterPatientCommand {
 export class SelfRegisterPatientCommand implements ISelfRegisterPatientCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
-    middleName?: string | undefined;
     dateOfBirth?: Date;
-    gender?: string | undefined;
+    gender?: Gender;
+    bloodType?: BloodType;
     nationalId?: string | undefined;
     phone?: string | undefined;
     email?: string | undefined;
-    bloodType?: string | undefined;
     address?: string | undefined;
-    city?: string | undefined;
-    governorate?: string | undefined;
 
     constructor(data?: ISelfRegisterPatientCommand) {
         if (data) {
@@ -8346,16 +8597,13 @@ export class SelfRegisterPatientCommand implements ISelfRegisterPatientCommand {
         if (_data) {
             this.firstName = _data["firstName"];
             this.lastName = _data["lastName"];
-            this.middleName = _data["middleName"];
             this.dateOfBirth = _data["dateOfBirth"] ? new Date(_data["dateOfBirth"].toString()) : undefined as any;
             this.gender = _data["gender"];
+            this.bloodType = _data["bloodType"];
             this.nationalId = _data["nationalId"];
             this.phone = _data["phone"];
             this.email = _data["email"];
-            this.bloodType = _data["bloodType"];
             this.address = _data["address"];
-            this.city = _data["city"];
-            this.governorate = _data["governorate"];
         }
     }
 
@@ -8370,16 +8618,13 @@ export class SelfRegisterPatientCommand implements ISelfRegisterPatientCommand {
         data = typeof data === 'object' ? data : {};
         data["firstName"] = this.firstName;
         data["lastName"] = this.lastName;
-        data["middleName"] = this.middleName;
-        data["dateOfBirth"] = this.dateOfBirth ? this.dateOfBirth.toISOString() : undefined as any;
+        data["dateOfBirth"] = this.dateOfBirth ? formatDate(this.dateOfBirth) : undefined as any;
         data["gender"] = this.gender;
+        data["bloodType"] = this.bloodType;
         data["nationalId"] = this.nationalId;
         data["phone"] = this.phone;
         data["email"] = this.email;
-        data["bloodType"] = this.bloodType;
         data["address"] = this.address;
-        data["city"] = this.city;
-        data["governorate"] = this.governorate;
         return data;
     }
 }
@@ -8387,16 +8632,13 @@ export class SelfRegisterPatientCommand implements ISelfRegisterPatientCommand {
 export interface ISelfRegisterPatientCommand {
     firstName?: string | undefined;
     lastName?: string | undefined;
-    middleName?: string | undefined;
     dateOfBirth?: Date;
-    gender?: string | undefined;
+    gender?: Gender;
+    bloodType?: BloodType;
     nationalId?: string | undefined;
     phone?: string | undefined;
     email?: string | undefined;
-    bloodType?: string | undefined;
     address?: string | undefined;
-    city?: string | undefined;
-    governorate?: string | undefined;
 }
 
 export class UpdatePatientCommand implements IUpdatePatientCommand {

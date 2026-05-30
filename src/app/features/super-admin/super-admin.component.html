@@ -1,104 +1,237 @@
-<div class="super-admin-container" @pageEnter>
-  <header class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Super Admin Panel</h1>
-      <button class="btn btn-primary" (click)="openModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        Add Staff Member
-      </button>
-    </div>
-  </header>
+<div class="p-6 min-h-screen bg-mq-navy" @pageEnter>
 
-  <main class="staff-section" @fadeSlideIn>
-    <div class="table-card">
-      <table class="staff-table">
+  <!-- ══ HEADER ══ -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-black text-white tracking-tight">Staff Management</h1>
+      <p class="text-mq-s400 text-sm mt-1">Manage clinic staff accounts, roles, and access control.</p>
+    </div>
+    <button (click)="openModal()" class="btn-primary flex items-center gap-2 self-start sm:self-auto">
+      <lucide-icon name="user-plus" [size]="16"/>
+      Add Staff Member
+    </button>
+  </div>
+
+  <!-- ══ STATS ROW ══ -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    @for (s of [
+      {label:'Total Staff', value: staffList().length, icon:'users', color:'#2DD4BF', bg:'rgba(13,148,136,.15)'},
+      {label:'Active', value: staffList().length, icon:'check-circle', color:'#34D399', bg:'rgba(16,185,129,.15)'},
+      {label:'Doctors', value: staffList().length, icon:'stethoscope', color:'#818CF8', bg:'rgba(124,58,237,.15)'},
+      {label:'Admins', value: 1, icon:'shield', color:'#FCD34D', bg:'rgba(245,158,11,.15)'}
+    ]; track s.label) {
+      <div class="mq-card-dark p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+             [style.background]="s.bg">
+          <lucide-icon [name]="s.icon" [size]="20" [style.color]="s.color"/>
+        </div>
+        <div>
+          <p class="text-2xl font-black text-white">{{ s.value }}</p>
+          <p class="text-mq-s400 text-xs font-semibold uppercase tracking-wide">{{ s.label }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ══ STAFF TABLE ══ -->
+  <div @fadeSlideIn class="mq-card-dark overflow-hidden">
+
+    <!-- Table header with search -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-mq-700">
+      <h2 class="text-white font-bold text-sm flex items-center gap-2">
+        <lucide-icon name="users" [size]="16" class="text-mq-t400"/>
+        All Staff Members
+      </h2>
+      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-mq-navy/60 border border-mq-700/60
+                  hover:border-mq-teal/30 transition-colors w-48">
+        <lucide-icon name="search" class="text-mq-s400" [size]="14"/>
+        <span class="text-mq-s400 text-xs">Search staff...</span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full">
         <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
+          <tr class="border-b border-mq-700">
+            <th class="text-left px-5 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Name</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Email</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Role</th>
+            <th class="text-left px-5 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Status</th>
+            <th class="w-24 px-5 py-3"></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let staff of staffList()">
-            <td>
-              <div class="staff-name">
-                <span class="avatar">{{ staff.firstName[0] }}{{ staff.lastName[0] }}</span>
-                {{ staff.firstName }} {{ staff.lastName }}
-              </div>
-            </td>
-            <td>{{ staff.email }}</td>
-            <td><span class="badge role-badge">{{ staff.role }}</span></td>
-            <td>
-              <span class="status-indicator" [class.active]="staff.status === 'Active'"></span>
-              {{ staff.status }}
-            </td>
-            <td>
-              <div class="actions">
-                <button class="btn-icon" title="Reset Password">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3y-3.5 3.5z"/>
-                  </svg>
-                </button>
-                <button class="btn-icon danger" (click)="deactivateStaff(staff.email)" title="Deactivate">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="staffList().length === 0">
-            <td colspan="5" class="empty-state">No staff members found.</td>
-          </tr>
+          @for (staff of staffList(); track staff.email) {
+            <tr class="border-b border-mq-700/50 hover:bg-mq-teal/5 transition-colors group">
+
+              <!-- Name + Avatar -->
+              <td class="px-5 py-3.5">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                       style="background: linear-gradient(135deg, #0D9488, #7C3AED)">
+                    {{ staff.firstName[0] }}{{ staff.lastName[0] }}
+                  </div>
+                  <div>
+                    <p class="text-white font-semibold text-sm">{{ staff.firstName }} {{ staff.lastName }}</p>
+                    <p class="text-mq-s400 text-xs">Staff Member</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Email -->
+              <td class="px-5 py-3.5 text-mq-s400 text-sm">{{ staff.email }}</td>
+
+              <!-- Role badge -->
+              <td class="px-5 py-3.5">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                      [class]="staff.role === 'Doctor'
+                        ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                        : staff.role === 'Admin'
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        : 'bg-mq-teal/15 text-mq-t400 border border-mq-teal/30'">
+                  {{ staff.role }}
+                </span>
+              </td>
+
+              <!-- Status -->
+              <td class="px-5 py-3.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full"
+                       [class]="staff.status === 'Active'
+                         ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,.8)]'
+                         : 'bg-mq-700'"></div>
+                  <span class="text-xs font-semibold"
+                        [class]="staff.status === 'Active' ? 'text-emerald-400' : 'text-mq-s400'">
+                    {{ staff.status }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-5 py-3.5">
+                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button class="w-8 h-8 rounded-lg flex items-center justify-center
+                                 text-mq-s400 hover:text-mq-t400 hover:bg-mq-teal/10 transition-colors"
+                          title="Reset Password">
+                    <lucide-icon name="key" [size]="14"/>
+                  </button>
+                  <button class="w-8 h-8 rounded-lg flex items-center justify-center
+                                 text-mq-s400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          (click)="deactivateStaff(staff.email)" title="Deactivate">
+                    <lucide-icon name="power" [size]="14"/>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+
+          @if (staffList().length === 0) {
+            <tr>
+              <td colspan="5">
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                  <div class="w-16 h-16 rounded-2xl bg-mq-teal/10 flex items-center justify-center mb-4">
+                    <lucide-icon name="users" class="text-mq-s400" [size]="28"/>
+                  </div>
+                  <h3 class="text-white font-semibold mb-2">No staff members found</h3>
+                  <p class="text-mq-s400 text-sm mb-6">Add your first staff member to get started</p>
+                  <button (click)="openModal()" class="btn-primary">
+                    Add Staff Member →
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
-  </main>
+  </div>
+</div>
 
-  <!-- Add Staff Modal -->
-  <div class="modal-overlay" *ngIf="isModalOpen()" @fadeSlideIn>
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>Add Staff Member</h2>
-        <button class="btn-close" (click)="closeModal()">&times;</button>
+
+<!-- ══ ADD STAFF MODAL ══ -->
+@if (isModalOpen()) {
+  <div class="fixed inset-0 bg-mq-navy/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+       @fadeSlideIn>
+    <div class="bg-mq-800 border border-mq-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-mq-700 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-mq-teal/15 flex items-center justify-center">
+            <lucide-icon name="user-plus" class="text-mq-t400" [size]="18"/>
+          </div>
+          <h2 class="text-white font-bold text-lg">Add Staff Member</h2>
+        </div>
+        <button (click)="closeModal()"
+                class="w-8 h-8 rounded-lg text-mq-s400 hover:text-rose-400 hover:bg-rose-500/10
+                       flex items-center justify-center transition-colors">
+          <lucide-icon name="x" [size]="16"/>
+        </button>
       </div>
-      <form (ngSubmit)="createAccount()" #staffForm="ngForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>First Name</label>
-            <input type="text" name="firstName" [(ngModel)]="newStaff.firstName" required>
+
+      <!-- Modal Form -->
+      <form (ngSubmit)="createAccount()" #staffForm="ngForm" class="p-6 space-y-5">
+
+        <!-- Name Row -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">First Name *</label>
+            <input type="text" name="firstName" [(ngModel)]="newStaff.firstName" required
+                   class="mq-input" placeholder="Mohamed"/>
           </div>
-          <div class="form-group">
-            <label>Last Name</label>
-            <input type="text" name="lastName" [(ngModel)]="newStaff.lastName" required>
-          </div>
-          <div class="form-group full-width">
-            <label>Email Address</label>
-            <input type="email" name="email" [(ngModel)]="newStaff.email" required>
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <select name="role" [(ngModel)]="newStaff.role" required>
-              <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Temp Password</label>
-            <input type="password" name="password" [(ngModel)]="newStaff.password" required>
+          <div>
+            <label class="mq-label">Last Name *</label>
+            <input type="text" name="lastName" [(ngModel)]="newStaff.lastName" required
+                   class="mq-input" placeholder="Ahmed"/>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" (click)="closeModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!staffForm.valid || isLoading()">
-            {{ isLoading() ? 'Creating...' : 'Create Account' }}
+
+        <!-- Email -->
+        <div>
+          <label class="mq-label">Email Address *</label>
+          <input type="email" name="email" [(ngModel)]="newStaff.email" required
+                 class="mq-input" placeholder="doctor@clinic.com"/>
+        </div>
+
+        <!-- Role + Password Row -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">Role *</label>
+            <select name="role" [(ngModel)]="newStaff.role" required class="mq-input mq-select bg-mq-navy">
+              @for (role of roles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mq-label">Temp Password *</label>
+            <input type="password" name="password" [(ngModel)]="newStaff.password" required
+                   class="mq-input" placeholder="••••••••"/>
+          </div>
+        </div>
+
+        <!-- Info note -->
+        <div class="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-mq-teal/5 border border-mq-teal/15 text-xs text-mq-s400">
+          <lucide-icon name="info" [size]="14" class="text-mq-t400 flex-shrink-0 mt-0.5"/>
+          Staff member will receive login credentials by email and must change their password on first login.
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" (click)="closeModal()" class="btn-ghost">Cancel</button>
+          <button type="submit"
+                  [disabled]="!staffForm.valid || isLoading()"
+                  class="btn-primary flex items-center gap-2">
+            @if (isLoading()) {
+              <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Creating...
+            } @else {
+              <lucide-icon name="user-plus" [size]="14"/>
+              Create Account
+            }
           </button>
         </div>
       </form>
     </div>
   </div>
-</div>
+}

@@ -1,0 +1,138 @@
+<div class="p-6 min-h-full bg-mq-navy" [@dashboardEnter]>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        Live data monitoring
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn-ghost !py-2 !text-xs flex items-center gap-1.5" (click)="refreshStats()">
+        <lucide-icon name="refresh-cw" [size]="14" [class.animate-spin]="isLoading()"/>
+        Refresh
+      </button>
+      <button class="btn-primary !py-2 !text-xs flex items-center gap-1.5" (click)="navigate('/appointments/register')">
+        <lucide-icon name="calendar-plus" [size]="14"/>
+        New Appointment
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <!-- Skeleton bento -->
+    <div class="bento">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="bento-quarter h-32 skeleton rounded-2xl"></div>
+      }
+      <div class="bento-wide h-72 skeleton rounded-2xl"></div>
+      <div class="bento-narrow h-72 skeleton rounded-2xl"></div>
+    </div>
+  } @else {
+    <div class="bento stagger-item">
+
+      <!-- Metrics -->
+      @for (stat of metricStats(); track stat.label) {
+        <div class="bento-quarter metric-card">
+          <div class="flex items-start justify-between">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center"
+                 [style.background]="stat.color + '26'">
+              <lucide-icon [name]="stat.icon" [style.color]="stat.color" [size]="20"/>
+            </div>
+            <span class="badge" [ngClass]="stat.positive ? 'badge-success' : 'badge-danger'">
+              <lucide-icon [name]="stat.positive ? 'trending-up' : 'trending-down'" [size]="12"/>
+              {{ stat.change }}
+            </span>
+          </div>
+          <div>
+            <p class="text-3xl font-black text-white tracking-tight animate-count-up">
+              {{ stat.value }}
+            </p>
+            <p class="mq-label mt-1">{{ stat.label }}</p>
+          </div>
+        </div>
+      }
+
+      <!-- Today's Appointments (Wide) -->
+      <div class="bento-wide mq-card p-6 min-h-[400px]">
+        <div class="flex items-center justify-between mb-6 border-b border-mq-700/50 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-mq-teal/10 text-mq-t400 flex items-center justify-center">
+              <lucide-icon name="calendar" [size]="20"/>
+            </div>
+            <h2 class="text-lg font-bold text-white tracking-tight">Today's Appointments</h2>
+          </div>
+          <button (click)="navigate('/appointments')" class="text-xs font-bold text-mq-t400 hover:text-white transition-colors">
+            View All →
+          </button>
+        </div>
+        
+        <div class="relative">
+          @if (isLoadingAppointments()) {
+            <div class="absolute inset-0 flex flex-col items-center justify-center bg-mq-navy/50 backdrop-blur-sm z-10 rounded-2xl">
+              <lucide-icon name="loader-2" class="animate-spin text-mq-teal mb-4" [size]="32"/>
+              <p class="text-mq-s400 text-sm font-medium">Syncing live queue...</p>
+            </div>
+          }
+          <app-interactive-table 
+            [data]="todayAppointments()" 
+            [columns]="appointmentColumns" 
+            [loading]="isLoadingAppointments()" 
+            (rowClick)="onAppointmentClick($event)"/>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Revenue (Narrow) -->
+      <div class="bento-narrow flex flex-col gap-4">
+        
+        <!-- Management Tools -->
+        <div class="mq-card p-6">
+          <h3 class="text-xs font-black text-mq-s400 uppercase tracking-widest mb-4 border-l-2 border-mq-teal pl-3">
+            Quick Actions
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button (click)="navigate('/patients/register')" class="btn-ghost !p-3 flex-col gap-2 h-auto text-xs">
+              <lucide-icon name="user-plus" [size]="18"/>
+              Add Patient
+            </button>
+            <button (click)="navigate('/invoices')" class="btn-ghost !p-3 flex-col gap-2 h-auto text-xs">
+              <lucide-icon name="receipt" [size]="18"/>
+              Billing
+            </button>
+            <button (click)="navigate('/doctors')" class="btn-ghost !p-3 flex-col gap-2 h-auto text-xs">
+              <lucide-icon name="stethoscope" [size]="18"/>
+              Staff
+            </button>
+            <button (click)="navigate('/super-admin')" class="btn-ghost !p-3 flex-col gap-2 h-auto text-xs">
+              <lucide-icon name="settings" [size]="18"/>
+              Config
+            </button>
+          </div>
+        </div>
+
+        <!-- Revenue Pulse -->
+        <div class="mq-card p-6 flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-white font-bold tracking-tight">Revenue Pulse</h3>
+            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-dot"></div>
+          </div>
+          
+          <div class="flex-1 flex items-end gap-1.5 min-h-[120px] mb-6">
+            @for (bar of revenueBars(); track $index) {
+              <div class="flex-1 bg-mq-teal/30 hover:bg-mq-teal/50 rounded-t-sm transition-all duration-500 cursor-pointer" 
+                   [style.height.%]="bar"></div>
+            }
+          </div>
+          
+          <div class="pt-4 border-t border-mq-700/50">
+            <p class="text-[10px] text-mq-s400 uppercase font-bold tracking-widest mb-1">MTD Performance</p>
+            <p class="text-2xl font-black text-white">EGP {{ (stats()?.revenueMonthToDate ?? 0) | currencyEgp }}</p>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  }
+</div>

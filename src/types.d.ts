@@ -20,6 +20,9 @@ declare module 'rxjs' {
   export function throwError(error: any): Observable<never>;
   export function catchError<T, R>(fn: (err: any, caught: Observable<T>) => Observable<R>): (source: Observable<T>) => Observable<R>;
   export type ObservableInput<T> = Observable<T> | Promise<T> | Array<T>;
+  export function forkJoin(sources: any): Observable<any>;
+  export function debounceTime<T>(dueTime: number): (source: Observable<T>) => Observable<T>;
+  export function distinctUntilChanged<T>(): (source: Observable<T>) => Observable<T>;
 }
 
 declare module 'rxjs/operators' {
@@ -28,4 +31,6 @@ declare module 'rxjs/operators' {
   export function catchError<T, R>(fn: (err: any, caught: Observable<T>) => Observable<R>): (source: Observable<T>) => Observable<R>;
   export function map<T, R>(fn: (value: T) => R): (source: Observable<T>) => Observable<R>;
   export function tap<T>(fn: (value: T) => void): (source: Observable<T>) => Observable<T>;
+  export function debounceTime<T>(dueTime: number): (source: Observable<T>) => Observable<T>;
+  export function distinctUntilChanged<T>(): (source: Observable<T>) => Observable<T>;
 }

@@ -1,126 +1,92 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { PatientsClient } from '../../../core/api/api-facade.service';
-import { RegisterPatientCommand, Gender, BloodType } from '../../../core/api/mediqueue-api';
-import { pageEnter, fadeSlideIn } from '../../../shared/animations/page-animations';
+import { Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { PatientsClient, SelfRegisterPatientCommand, Gender, BloodType } from '../../../core/api/mediqueue-api';
+import { NotificationService } from '../../../core/services/notification.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-patient-self-register',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   templateUrl: './patient-self-register.component.html',
-  styleUrl: './patient-self-register.component.scss',
-  animations: [pageEnter, fadeSlideIn]
 })
 export class PatientSelfRegisterComponent {
   private patientsClient = inject(PatientsClient);
-  private router = inject(Router);
+  private notify         = inject(NotificationService);
 
-  currentStep = signal<number>(1);
-  isLoading = signal<boolean>(false);
-  errorMessage = signal<string | null>(null);
-  successMrn = signal<string | null>(null);
+  step = signal<1|2|3>(1);
+  isLoading = signal(false);
+  result = signal<any>(null);
 
-  // Form model
-  command = new RegisterPatientCommand({
-    gender: Gender._1, // Default to Male
-    bloodType: BloodType._0 // Default to Unknown
-  });
+  form = {
+    // Step 1
+    firstName: '', lastName: '',
+    dateOfBirth: '', gender: 'Male',
+    nationalId: '', bloodType: 'Unknown',
+    // Step 2
+    phone: '', email: '', address: '',
+  };
 
-  // Derived state
-  progressPercentage = computed(() => ((this.currentStep() - 1) / 2) * 100);
+  genders    = ['Male','Female'];
+  bloodTypes = ['A+','A-','B+','B-','AB+','AB-','O+','O-','Unknown'];
 
-  // UI helpers
-  readonly genders = [
-    { value: Gender._1, label: 'Male' },
-    { value: Gender._2, label: 'Female' },
-    { value: Gender._3, label: 'Other' }
-  ];
+  today = new Date().toISOString().split('T')[0];
 
-  readonly bloodTypes = [
-    { value: BloodType._0, label: 'Unknown' },
-    { value: BloodType._1, label: 'A+' },
-    { value: BloodType._2, label: 'A-' },
-    { value: BloodType._3, label: 'B+' },
-    { value: BloodType._4, label: 'B-' },
-    { value: BloodType._5, label: 'AB+' },
-    { value: BloodType._6, label: 'AB-' },
-    { value: BloodType._7, label: 'O+' },
-    { value: BloodType._8, label: 'O-' }
-  ];
+  // Map string labels to NSwag enums
+  private genderMap: Record<string, Gender> = {
+    'Male': Gender._1,
+    'Female': Gender._2
+  };
 
-  get canGoNext(): boolean {
-    if (this.currentStep() === 1) {
-      return !!(this.command.firstName && this.command.lastName && this.command.dateOfBirth && this.command.nationalId && this.command.gender);
-    }
-    if (this.currentStep() === 2) {
-      return !!this.command.phone;
-    }
-    return true;
-  }
+  private bloodTypeMap: Record<string, BloodType> = {
+    'A+': BloodType._1, 'A-': BloodType._2,
+    'B+': BloodType._3, 'B-': BloodType._4,
+    'AB+': BloodType._5, 'AB-': BloodType._6,
+    'O+': BloodType._7, 'O-': BloodType._8,
+    'Unknown': BloodType._0
+  };
 
-  nextStep() {
-    if (this.canGoNext && this.currentStep() < 3) {
-      this.currentStep.update(s => s + 1);
-    }
-  }
-
-  prevStep() {
-    if (this.currentStep() > 1) {
-      this.currentStep.update(s => s - 1);
-    }
-  }
-
-  formatDate(date: any): string {
-    if (!date) return '';
-    try {
-       const d = new Date(date);
-       return d.toISOString().split('T')[0];
-    } catch {
-       return '';
-    }
-  }
-
-  updateDate(dateString: string) {
-    if (dateString) {
-      this.command.dateOfBirth = new Date(dateString);
-    }
-  }
-
-  getGenderLabel(val: Gender | undefined): string {
-    return this.genders.find(g => g.value === val)?.label ?? 'Unknown';
-  }
-  
-  getBloodTypeLabel(val: BloodType | undefined): string {
-    return this.bloodTypes.find(b => b.value === val)?.label ?? 'Unknown';
-  }
+  reviewItems = computed(() => [
+    { label: 'Full Name', value: `${this.form.firstName} ${this.form.lastName}` },
+    { label: 'Date of Birth', value: this.form.dateOfBirth },
+    { label: 'Gender', value: this.form.gender },
+    { label: 'National ID', value: this.form.nationalId },
+    { label: 'Phone', value: this.form.phone },
+    { label: 'Blood Type', value: this.form.bloodType },
+  ]);
 
   async submit() {
-    if (!this.canGoNext) return;
-    
     this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     try {
-      const response = await this.patientsClient.selfRegister(this.command);
-      const mrn = response?.medicalRecordNumber || response?.mrn || `MQ-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-      this.successMrn.set(mrn);
-    } catch (err: any) {
-      const detail = err?.error?.detail || err?.message || 'Failed to register patient.';
-      this.errorMessage.set(detail);
-      this.currentStep.set(1); // Go back to show error
+      const res = await firstValueFrom(this.patientsClient.selfRegister(
+        new SelfRegisterPatientCommand({
+          firstName:   this.form.firstName,
+          lastName:    this.form.lastName,
+          dateOfBirth: new Date(this.form.dateOfBirth),
+          gender:      this.genderMap[this.form.gender] ?? Gender._1,
+          nationalId:  this.form.nationalId,
+          bloodType:   this.bloodTypeMap[this.form.bloodType] ?? BloodType._0,
+          phone:       this.form.phone,
+          email:       this.form.email || undefined,
+          address:     this.form.address || undefined,
+        })
+      ));
+      // NSwag might return the object directly or wrapped
+      this.result.set((res as any)?.data ?? res);
+    } catch(e:any) {
+      this.notify.error(e?.error?.detail ?? 'Registration failed');
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  goHome() {
-    this.router.navigate(['/']);
-  }
-
-  goToBook() {
-    this.router.navigate(['/book']);
+  copyMrn() {
+    if (this.result()?.mrn) {
+      navigator.clipboard.writeText(this.result().mrn);
+      this.notify.success('MRN copied to clipboard');
+    }
   }
 }

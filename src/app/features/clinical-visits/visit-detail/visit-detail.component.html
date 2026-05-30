@@ -1,0 +1,255 @@
+<div class="min-h-screen bg-mq-navy" @pageEnter>
+  
+  <!-- WORKSPACE HEADER -->
+  <header class="h-20 bg-mq-navy/80 backdrop-blur-xl border-b border-mq-700 px-6 flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center gap-4">
+      <button class="w-10 h-10 rounded-xl bg-mq-800 border border-mq-700 flex items-center justify-center text-mq-s400 hover:text-white transition-colors"
+              (click)="router.navigate(['/my-queue'])">
+        <lucide-icon name="arrow-left" size="20"></lucide-icon>
+      </button>
+      <div>
+        <h1 class="text-xl font-bold text-white flex items-center gap-3">
+          {{ visit()?.patientName }}
+          <span class="badge-info text-[10px] tracking-widest uppercase">{{ visit()?.patientMrn }}</span>
+        </h1>
+        <div class="flex items-center gap-3 text-xs text-mq-s400">
+          <span class="flex items-center gap-1">
+            <lucide-icon name="calendar" size="12"></lucide-icon>
+            {{ visit()?.startedAt | date:'mediumDate' }}
+          </span>
+          <span class="w-1 h-1 rounded-full bg-mq-700"></span>
+          <span>Visit #{{ visitId.substring(0, 8) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="hidden md:flex items-center gap-3 px-4 py-2 rounded-xl bg-mq-800/50 border border-mq-700">
+        @if (isSaving()) {
+          <div class="flex items-center gap-2 text-[10px] font-bold text-mq-t400 uppercase tracking-widest">
+            <lucide-icon name="loader-2" class="animate-spin" size="14"></lucide-icon>
+            Saving...
+          </div>
+        } @else if (lastSaved()) {
+          <div class="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+            <lucide-icon name="check" size="14"></lucide-icon>
+            Saved {{ lastSaved() | date:'HH:mm' }}
+          </div>
+        } @else {
+          <div class="text-[10px] font-bold text-mq-s600 uppercase tracking-widest">Draft</div>
+        }
+      </div>
+
+      @if (visit()?.status !== 'Finalized') {
+        <button class="bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-500/20 active:scale-95" 
+                (click)="finalizeVisit()">
+          Finalize & Bill
+        </button>
+      } @else {
+        <div class="badge-success px-6 py-2.5 text-sm font-bold flex items-center gap-2">
+          <lucide-icon name="lock" size="16"></lucide-icon>
+          Finalized Record
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="max-w-[1600px] mx-auto p-6 lg:p-8">
+    <div class="grid grid-cols-12 gap-8">
+      
+      <!-- LEFT SIDEBAR -->
+      <aside class="col-span-12 lg:col-span-3 space-y-6">
+        <div class="mq-card-dark p-6 overflow-hidden relative">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-mq-teal/5 rounded-full blur-2xl"></div>
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-mq-teal to-mq-t600 flex items-center justify-center text-white text-xl font-black">
+              {{ visit()?.patientName?.[0] }}
+            </div>
+            <div>
+              <p class="text-xs font-bold text-mq-t400 uppercase tracking-wider mb-1">In Visit</p>
+              <h3 class="text-white font-bold">{{ visit()?.patientName }}</h3>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-mq-navy/50 p-3 rounded-xl border border-mq-700/50">
+                <p class="text-[9px] text-mq-s400 uppercase font-bold mb-1">Age</p>
+                <p class="text-white font-medium">32 Years</p>
+              </div>
+              <div class="bg-mq-navy/50 p-3 rounded-xl border border-mq-700/50">
+                <p class="text-[9px] text-mq-s400 uppercase font-bold mb-1">Gender</p>
+                <p class="text-white font-medium">Male</p>
+              </div>
+            </div>
+            <div class="bg-rose-500/5 p-4 rounded-xl border border-rose-500/20">
+              <p class="text-[9px] text-rose-400 uppercase font-bold mb-2 flex items-center gap-2">
+                <lucide-icon name="alert-triangle" size="12"></lucide-icon>
+                Allergies
+              </p>
+              @if (visit()?.allergies?.length) {
+                <div class="flex flex-wrap gap-2">
+                  @for (a of visit()?.allergies; track a) {
+                    <span class="px-2 py-1 rounded-md bg-rose-500/10 text-rose-400 text-[10px] font-bold">{{ a }}</span>
+                  }
+                </div>
+              } @else {
+                <p class="text-mq-s600 text-[11px] italic">No known allergies</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="mq-card-dark p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="mq-label !mb-0">Vitals Summary</h3>
+            <button (click)="activeTab.set('vitals')" class="text-mq-t400 text-[10px] font-bold hover:underline">View All</button>
+          </div>
+          <div class="space-y-3">
+            @for (v of visit()?.vitalSigns?.slice(0, 3); track v.id) {
+              <div class="flex items-center justify-between p-3 rounded-xl bg-mq-navy/40 border border-mq-700/30">
+                <div class="flex items-center gap-3">
+                  <lucide-icon [name]="getVitalIcon(v.type || '')" class="text-mq-t400" size="14"></lucide-icon>
+                  <span class="text-xs text-mq-s400">{{ v.type }}</span>
+                </div>
+                <span class="text-xs text-white font-bold">{{ v.value }} <small class="text-mq-s600">{{ v.unit }}</small></span>
+              </div>
+            }
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN WORKSPACE -->
+      <div class="col-span-12 lg:col-span-9 space-y-6">
+        <div class="bg-mq-800 p-1.5 rounded-2xl flex items-center gap-1 border border-mq-700">
+          @for (tab of tabs; track tab.key) {
+            <button (click)="activeTab.set(tab.key)"
+                    [class]="activeTab() === tab.key ? 'flex-1 bg-mq-teal text-white shadow-lg' : 'flex-1 text-mq-s400 hover:text-white'"
+                    class="flex items-center justify-center gap-3 py-3 px-4 rounded-xl text-sm font-bold transition-all">
+              <lucide-icon [name]="tab.icon" [size]="18"></lucide-icon>
+              <span class="hidden sm:inline">{{ tab.label }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="min-h-[600px] relative">
+          @if (activeTab() === 'soap') {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" @tabContent>
+              <div class="mq-card-dark p-6 transition-colors">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">S</div>
+                  <h3 class="text-white font-bold">Subjective</h3>
+                </div>
+                <textarea [ngModel]="soap.subjective()" (ngModelChange)="soap.subjective.set($event); onSoapChange()"
+                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                          placeholder="Patient's complaints..."></textarea>
+              </div>
+              <div class="mq-card-dark p-6 transition-colors">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">O</div>
+                  <h3 class="text-white font-bold">Objective</h3>
+                </div>
+                <textarea [ngModel]="soap.objective()" (ngModelChange)="soap.objective.set($event); onSoapChange()"
+                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                          placeholder="Physical exam findings..."></textarea>
+              </div>
+              <div class="mq-card-dark p-6 transition-colors">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-black text-xs">A</div>
+                  <h3 class="text-white font-bold">Assessment</h3>
+                </div>
+                <textarea [ngModel]="soap.assessment()" (ngModelChange)="soap.assessment.set($event); onSoapChange()"
+                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                          placeholder="Diagnosis..."></textarea>
+              </div>
+              <div class="mq-card-dark p-6 transition-colors">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-xs">P</div>
+                  <h3 class="text-white font-bold">Plan</h3>
+                </div>
+                <textarea [ngModel]="soap.plan()" (ngModelChange)="soap.plan.set($event); onSoapChange()"
+                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                          placeholder="Treatment plan..."></textarea>
+              </div>
+            </div>
+          }
+
+          @if (activeTab() === 'vitals') {
+            <div class="space-y-8" @tabContent>
+              <div class="mq-card-dark p-8 border-l-4 border-mq-teal">
+                <h3 class="text-white font-bold mb-6">Record New Vital Signs</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div class="space-y-2">
+                    <label class="mq-label">Measurement Type</label>
+                    <select class="mq-input" [ngModel]="vital().type" (ngModelChange)="updateVital('type', $event)">
+                      @for (vt of vitalTypes; track vt.value) { <option [value]="vt.value">{{ vt.label }}</option> }
+                    </select>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="mq-label">Value</label>
+                    <input type="text" class="mq-input" [ngModel]="vital().value" (ngModelChange)="updateVital('value', $event)">
+                  </div>
+                  <div class="space-y-2">
+                    <label class="mq-label">Unit</label>
+                    <input type="text" class="mq-input" [ngModel]="vital().unit" (ngModelChange)="updateVital('unit', $event)">
+                  </div>
+                  <div class="flex items-end">
+                    <button class="btn-primary w-full !py-3.5" (click)="addVital()">Record Vital</button>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" @staggerList>
+                @for (v of visit()?.vitalSigns; track v.id) {
+                  <div class="mq-card-dark p-6 list-item">
+                    <p class="text-xs text-mq-s400 font-bold uppercase mb-1">{{ v.type }}</p>
+                    <p class="text-2xl text-white font-black">{{ v.value }} <span class="text-xs text-mq-t400">{{ v.unit }}</span></p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (activeTab() === 'diagnoses') {
+            <div class="space-y-8" @tabContent>
+              <div class="mq-card-dark p-8 border-l-4 border-purple-500">
+                <div class="flex flex-col md:flex-row gap-6">
+                  <input type="text" class="mq-input w-48" placeholder="ICD-10" [ngModel]="diagnosis().icdCode" (ngModelChange)="updateDiagnosis('icdCode', $event)">
+                  <input type="text" class="mq-input flex-1" placeholder="Description" [ngModel]="diagnosis().description" (ngModelChange)="updateDiagnosis('description', $event)">
+                  <button class="btn-primary !bg-purple-600 px-10" (click)="addDiagnosis()">Add</button>
+                </div>
+              </div>
+              @for (d of visit()?.diagnoses; track d.id) {
+                <div class="flex items-center justify-between p-5 mq-card-dark list-item border-l-2 border-purple-500/50">
+                  <p class="text-white font-bold">{{ d.icD10Code }} - {{ d.codeDescription }}</p>
+                </div>
+              }
+            </div>
+          }
+
+          @if (activeTab() === 'prescriptions') {
+            <div class="space-y-8" @tabContent>
+              <button (click)="showRxForm.set(!showRxForm())" class="btn-neon">New Medication</button>
+              @if (showRxForm()) {
+                <div class="mq-card-dark p-8 border-l-4 border-emerald-500">
+                  <div class="grid grid-cols-2 gap-4">
+                    <input type="text" class="mq-input" placeholder="Medication" [ngModel]="newRx().medicationName" (ngModelChange)="updateNewRx('medicationName', $event)">
+                    <input type="text" class="mq-input" placeholder="Dosage" [ngModel]="newRx().dosage" (ngModelChange)="updateNewRx('dosage', $event)">
+                    <input type="text" class="mq-input" placeholder="Frequency" [ngModel]="newRx().frequency" (ngModelChange)="updateNewRx('frequency', $event)">
+                    <input type="text" class="mq-input" placeholder="Duration" [ngModel]="newRx().duration" (ngModelChange)="updateNewRx('duration', $event)">
+                  </div>
+                  <button class="btn-primary w-full mt-4" (click)="addPrescription()">Add</button>
+                </div>
+              }
+              @for (rx of visit()?.prescriptions; track rx.id) {
+                @for (item of rx.items; track $index) {
+                  <div class="mq-card-dark p-6 list-item">
+                    <p class="text-white font-bold">{{ item.medicationName }} - {{ item.dosage }}</p>
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

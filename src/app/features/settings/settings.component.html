@@ -1,0 +1,272 @@
+<div class="p-6 space-y-6 max-w-7xl mx-auto">
+
+  <!-- Header Section -->
+  <div class="border-b border-mq-700/60 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-white font-extrabold text-2xl tracking-tight">Clinic Settings</h2>
+      <p class="text-mq-s400 text-sm mt-1">Configure clinic profile, operation schedules, consultation preferences, and integration systems.</p>
+    </div>
+    <button (click)="saveSettings()" [disabled]="isSaving()"
+            class="px-5 py-3 rounded-xl bg-gradient-to-r from-mq-teal to-mq-t600 hover:from-mq-t400 hover:to-mq-teal disabled:opacity-50 text-white font-semibold text-sm shadow-lg shadow-mq-teal/15 hover:shadow-mq-teal/20 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 flex items-center gap-2 self-start sm:self-auto">
+      @if (isSaving()) {
+        <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+        Saving Configs...
+      } @else {
+        <lucide-icon name="save" [size]="16"/>
+        Save Changes
+      }
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+    <!-- Left Tab Navigation Sidebar -->
+    <div class="lg:col-span-1 flex flex-col gap-1.5">
+      <button (click)="activeTab.set('profile')"
+              [class]="activeTab() === 'profile' ? 'bg-mq-teal/10 text-mq-t400 border border-mq-teal/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3">
+        <lucide-icon name="building" [size]="16"/>
+        <span class="text-sm">Clinic Profile</span>
+      </button>
+      <button (click)="activeTab.set('hours')"
+              [class]="activeTab() === 'hours' ? 'bg-mq-teal/10 text-mq-t400 border border-mq-teal/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3">
+        <lucide-icon name="calendar-clock" [size]="16"/>
+        <span class="text-sm">Clinical Hours</span>
+      </button>
+      <button (click)="activeTab.set('medical')"
+              [class]="activeTab() === 'medical' ? 'bg-mq-teal/10 text-mq-t400 border border-mq-teal/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3">
+        <lucide-icon name="heart-pulse" [size]="16"/>
+        <span class="text-sm">EHR & Billing</span>
+      </button>
+      <button (click)="activeTab.set('integrations')"
+              [class]="activeTab() === 'integrations' ? 'bg-mq-teal/10 text-mq-t400 border border-mq-teal/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3">
+        <lucide-icon name="key" [size]="16"/>
+        <span class="text-sm">SaaS Gateways</span>
+      </button>
+    </div>
+
+    <!-- Right Content Card -->
+    <div class="lg:col-span-3 bg-mq-800 border border-mq-700/60 rounded-2xl p-6 shadow-sm">
+      
+      <!-- TAB 1: Clinic Profile -->
+      @if (activeTab() === 'profile') {
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-white font-bold text-base flex items-center gap-2">
+              <lucide-icon name="building" class="text-mq-t400" [size]="18"/>
+              Clinic Profile Details
+            </h3>
+            <p class="text-mq-s400 text-xs mt-1">Provide public identity credentials of your medical practice.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Clinic / Hospital Name</label>
+              <input type="text" name="clinicName" [(ngModel)]="profileSettings().clinicName"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Official Slogan</label>
+              <input type="text" name="slogan" [(ngModel)]="profileSettings().slogan"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Primary Location Address</label>
+            <input type="text" name="address" [(ngModel)]="profileSettings().address"
+                   class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Support Telephone</label>
+              <input type="text" name="phone" [(ngModel)]="profileSettings().phone"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Billing / Support Email</label>
+              <input type="email" name="email" [(ngModel)]="profileSettings().email"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-mq-700/60 pt-6">
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Tax Registration Number</label>
+              <input type="text" name="taxNumber" [(ngModel)]="profileSettings().taxNumber"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Billing Currency</label>
+              <select name="currency" [(ngModel)]="profileSettings().currency"
+                      class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors">
+                <option value="USD">USD ($) - Dollar</option>
+                <option value="EGP">EGP (LE) - Egyptian Pound</option>
+                <option value="EUR">EUR (€) - Euro</option>
+                <option value="SAR">SAR (SR) - Saudi Riyal</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Theme Branding Accent</label>
+              <select name="logoGlowColor" [(ngModel)]="profileSettings().logoGlowColor"
+                      class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors">
+                <option value="teal">Teal (Vibrant Glow)</option>
+                <option value="blue">Blue (Classic Hospital)</option>
+                <option value="emerald">Emerald (Sleek Modern)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 2: Clinical Hours -->
+      @if (activeTab() === 'hours') {
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-white font-bold text-base flex items-center gap-2">
+              <lucide-icon name="calendar-clock" class="text-mq-t400" [size]="18"/>
+              Clinical Operation Hours
+            </h3>
+            <p class="text-mq-s400 text-xs mt-1">Define active working schedules and appointment slot availability.</p>
+          </div>
+
+          <div class="space-y-4">
+            @for (day of workingDays(); track day.day) {
+              <div class="p-4 rounded-xl border border-mq-700/60 bg-mq-navy/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" [(ngModel)]="day.active" [id]="day.day"
+                         class="w-4.5 h-4.5 rounded bg-mq-navy border-mq-700 text-mq-teal focus:ring-0 cursor-pointer"/>
+                  <label [for]="day.day" class="text-white text-sm font-semibold cursor-pointer select-none">{{ day.day }}</label>
+                </div>
+                
+                <div class="flex items-center gap-3" [class.opacity-40]="!day.active">
+                  <span class="text-xs text-mq-s400">Shift Start:</span>
+                  <input type="time" [(ngModel)]="day.start" [disabled]="!day.active"
+                         class="bg-mq-navy border border-mq-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-mq-teal [color-scheme:dark]"/>
+                  <span class="text-xs text-mq-s400">Shift End:</span>
+                  <input type="time" [(ngModel)]="day.end" [disabled]="!day.active"
+                         class="bg-mq-navy border border-mq-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-mq-teal [color-scheme:dark]"/>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- TAB 3: EHR & Billing -->
+      @if (activeTab() === 'medical') {
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-white font-bold text-base flex items-center gap-2">
+              <lucide-icon name="heart-pulse" class="text-mq-t400" [size]="18"/>
+              Electronic Health Records & Billing Configuration
+            </h3>
+            <p class="text-mq-s400 text-xs mt-1">Manage consultation variables and default charge configurations.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Default Consultation (Mins)</label>
+              <input type="number" name="defaultDuration" [(ngModel)]="medicalSettings().defaultDuration"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Emergency Consultation Fee ($)</label>
+              <input type="number" name="emergencyFee" [(ngModel)]="medicalSettings().emergencyFee"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Doctor Commission Rate (%)</label>
+              <input type="number" name="commissionRate" [(ngModel)]="medicalSettings().commissionRate"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+          </div>
+
+          <div class="space-y-3 p-4 bg-mq-navy/60 border border-mq-700 rounded-xl">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-white text-sm font-semibold block">Auto-Lock Diagnosis SOAP Notes</label>
+                <span class="text-mq-s400 text-[11px] block mt-0.5">SOAP assessment forms cannot be modified once visit is closed.</span>
+              </div>
+              <input type="checkbox" [(ngModel)]="medicalSettings().autoLockSoapNotes"
+                     class="w-9 h-5 rounded-full bg-mq-800 border-mq-700 text-mq-teal focus:ring-0 cursor-pointer"/>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Invoice Statement Disclaimer Notes</label>
+            <textarea name="customInvoiceNotes" [(ngModel)]="medicalSettings().customInvoiceNotes" rows="3"
+                      class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors custom-scrollbar resize-none"></textarea>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 4: SaaS Gateways -->
+      @if (activeTab() === 'integrations') {
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-white font-bold text-base flex items-center gap-2">
+              <lucide-icon name="key" class="text-mq-t400" [size]="18"/>
+              SaaS Integrations & Gateway Credentials
+            </h3>
+            <p class="text-mq-s400 text-xs mt-1">Configure credit card payment gateways and digital client alert engines.</p>
+          </div>
+
+          <div class="space-y-4">
+            <h4 class="text-white text-xs font-bold uppercase tracking-wider border-b border-mq-700/60 pb-2">Stripe Payment Gateway</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Live Public Key</label>
+                <input type="password" name="stripePublicKey" [(ngModel)]="integrationKeys().stripePublicKey"
+                       class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Live Secret Key</label>
+                <input type="password" name="stripeSecretKey" [(ngModel)]="integrationKeys().stripeSecretKey"
+                       class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-4 border-t border-mq-700/60">
+            <h4 class="text-white text-xs font-bold uppercase tracking-wider border-b border-mq-700/60 pb-2">PayPal Checkout Integration</h4>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Client ID Credentials</label>
+              <input type="password" name="paypalClientId" [(ngModel)]="integrationKeys().paypalClientId"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-mq-teal focus:outline-none transition-colors"/>
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-4 border-t border-mq-700/60">
+            <h4 class="text-white text-xs font-bold uppercase tracking-wider border-b border-mq-700/60 pb-2">Digital Client Notifications</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="p-4 rounded-xl bg-mq-navy/40 border border-mq-700/60 flex items-center justify-between">
+                <div>
+                  <span class="text-white text-xs font-semibold block">Enable SMS Patient Alerts</span>
+                  <span class="text-mq-s500 text-[10px] block mt-0.5">Send reservation confirmations.</span>
+                </div>
+                <input type="checkbox" [(ngModel)]="integrationKeys().enableSMSAlerts"
+                       class="w-4.5 h-4.5 rounded bg-mq-navy border-mq-700 text-mq-teal focus:ring-0 cursor-pointer"/>
+              </div>
+              <div class="p-4 rounded-xl bg-mq-navy/40 border border-mq-700/60 flex items-center justify-between">
+                <div>
+                  <span class="text-white text-xs font-semibold block">Enable Email Clinic Reminders</span>
+                  <span class="text-mq-s500 text-[10px] block mt-0.5">Auto-email prescription lists.</span>
+                </div>
+                <input type="checkbox" [(ngModel)]="integrationKeys().enableEmailReminders"
+                       class="w-4.5 h-4.5 rounded bg-mq-navy border-mq-700 text-mq-teal focus:ring-0 cursor-pointer"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+
+  </div>
+
+</div>

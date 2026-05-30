@@ -12,19 +12,28 @@ function roleHome(role: string | null | undefined): string {
   return map[role ?? ''] ?? '/auth/login';
 }
 
-export const roleGuard: CanActivateFn = (route) => {
-  const auth = inject(AuthService);
-  const router = inject(Router);
+/**
+ * Modern Functional Guard for Role-based Access Control
+ * Usage in routes: canActivate: [roleGuard(['Admin', 'Doctor'])]
+ */
+export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
+  return (route) => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
 
-  const allowed = (route.data['roles'] as string[] | undefined) ?? [];
+    // If no roles specified, allow access (or could be strict and deny)
+    if (allowedRoles.length === 0) return true;
 
-  if (!auth.isLoggedIn()) {
-    return router.createUrlTree(['/auth/login']);
-  }
+    if (!auth.isLoggedIn()) {
+      return router.createUrlTree(['/auth/login']);
+    }
 
-  if (allowed.length === 0 || auth.hasRole(...allowed)) {
-    return true;
-  }
+    if (auth.hasRole(...allowedRoles)) {
+      return true;
+    }
 
-  return router.createUrlTree([roleHome(auth.userRole())]);
+    // Redirect to their specific home based on role
+    const userRole = auth.userRole();
+    return router.createUrlTree([roleHome(userRole)]);
+  };
 };

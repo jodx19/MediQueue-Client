@@ -1,0 +1,198 @@
+<div class="min-h-screen bg-mq-navy flex items-center justify-center py-16 px-6 relative">
+
+  <!-- Grid bg -->
+  <div class="absolute inset-0" style="
+    background-image:
+      linear-gradient(rgba(13,148,136,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(13,148,136,.04) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events:none"></div>
+
+  <div class="relative w-full max-w-xl">
+
+    <!-- Back -->
+    <button (click)="router.navigate(['/patients'])"
+            class="flex items-center gap-2 text-mq-s400 hover:text-white text-sm
+                   transition-colors mb-8">
+      <lucide-icon name="arrow-left" [size]="14"/>
+      Back to Patients
+    </button>
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-black text-white tracking-tight">Register Patient</h1>
+      <p class="text-mq-s400 text-sm mt-1">Staff-administered patient registration</p>
+    </div>
+
+    <!-- Progress -->
+    @if (!mrn()) {
+      <div class="mb-8">
+        <div class="flex justify-between text-xs text-mq-s400 mb-2">
+          <span [class]="step() >= 1 ? 'text-mq-t400 font-semibold' : ''">Personal</span>
+          <span [class]="step() >= 2 ? 'text-mq-t400 font-semibold' : ''">Contact</span>
+          <span [class]="step() >= 3 ? 'text-mq-t400 font-semibold' : ''">Review</span>
+        </div>
+        <div class="h-1.5 bg-mq-700 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-mq-teal to-mq-t400 rounded-full transition-all duration-500"
+               [style.width]="(step() / 3 * 100) + '%'"></div>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 1 -->
+    @if (step() === 1 && !mrn()) {
+      <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
+        <h2 class="text-white font-bold text-lg mb-2">Personal Information</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">First Name *</label>
+            <input type="text" [(ngModel)]="form.firstName"
+                   class="mq-input" placeholder="Mohamed"/>
+          </div>
+          <div>
+            <label class="mq-label">Last Name *</label>
+            <input type="text" [(ngModel)]="form.lastName"
+                   class="mq-input" placeholder="Ahmed"/>
+          </div>
+        </div>
+        <div>
+          <label class="mq-label">Date of Birth *</label>
+          <input type="date" [(ngModel)]="form.dateOfBirth"
+                 class="mq-input" [max]="today"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">Gender *</label>
+            <select [(ngModel)]="form.gender" class="mq-input">
+              @for (g of genderOptions; track g.value) {
+                <option [value]="g.value">{{ g.label }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mq-label">Blood Type</label>
+            <select [(ngModel)]="form.bloodType" class="mq-input">
+              @for (b of bloodTypeOptions; track b.value) {
+                <option [value]="b.value">{{ b.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="mq-label">National ID *</label>
+          <input type="text" [(ngModel)]="form.nationalId"
+                 class="mq-input" placeholder="14 digits" maxlength="14"/>
+          @if (form.nationalId && form.nationalId.length !== 14) {
+            <p class="text-rose-400 text-xs mt-1">Must be exactly 14 digits</p>
+          }
+        </div>
+        <button (click)="step.set(2)"
+                class="btn-primary w-full"
+                [disabled]="!step1Valid()">
+          Next: Contact Info →
+        </button>
+      </div>
+    }
+
+    <!-- STEP 2 -->
+    @if (step() === 2 && !mrn()) {
+      <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
+        <h2 class="text-white font-bold text-lg mb-2">Contact Information</h2>
+        <div>
+          <label class="mq-label">Phone Number *</label>
+          <input type="tel" [(ngModel)]="form.phone"
+                 class="mq-input" placeholder="01x-xxxx-xxxx"/>
+        </div>
+        <div>
+          <label class="mq-label">Email (optional)</label>
+          <input type="email" [(ngModel)]="form.email"
+                 class="mq-input" placeholder="patient@email.com"/>
+        </div>
+        <div>
+          <label class="mq-label">Address</label>
+          <textarea [(ngModel)]="form.address"
+                    class="mq-input h-20 resize-none"
+                    placeholder="Cairo, Egypt"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button (click)="step.set(1)" class="btn-ghost flex-1">← Back</button>
+          <button (click)="step.set(3)"
+                  class="btn-primary flex-1"
+                  [disabled]="!step2Valid()">
+            Review →
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 3: Review -->
+    @if (step() === 3 && !mrn()) {
+      <div class="mq-card-dark p-8 rounded-2xl">
+        <h2 class="text-white font-bold text-lg mb-6">Review & Register</h2>
+        <div class="space-y-2 mb-8">
+          @for (row of [
+            {label:'First Name', value:form.firstName},
+            {label:'Last Name', value:form.lastName},
+            {label:'Date of Birth', value:form.dateOfBirth},
+            {label:'National ID', value:form.nationalId},
+            {label:'Phone', value:form.phone},
+            {label:'Email', value:form.email||'—'},
+            {label:'Address', value:form.address||'—'}
+          ]; track row.label) {
+            <div class="flex justify-between py-2.5 border-b border-mq-700/60 text-sm">
+              <span class="text-mq-s400">{{ row.label }}</span>
+              <span class="text-white font-medium">{{ row.value }}</span>
+            </div>
+          }
+        </div>
+        <div class="flex gap-3">
+          <button (click)="step.set(2)" class="btn-ghost flex-1">← Edit</button>
+          <button (click)="onSubmit()"
+                  class="btn-primary flex-1 flex items-center justify-center gap-2"
+                  [disabled]="isLoading()">
+            @if (isLoading()) {
+              <span class="w-4 h-4 rounded-full border-2 border-white/30
+                           border-t-white animate-spin"></span>
+            }
+            Register Patient
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- SUCCESS -->
+    @if (mrn()) {
+      <div class="mq-card-dark p-10 text-center rounded-2xl"
+           style="animation: scaleIn .6s cubic-bezier(0.34,1.56,0.64,1) both">
+        <div class="w-16 h-16 rounded-2xl bg-mq-teal/15 flex items-center
+                    justify-center mx-auto mb-6"
+             style="box-shadow:0 0 40px rgba(13,148,136,.4)">
+          <lucide-icon name="check-circle" class="text-mq-t400" [size]="32"/>
+        </div>
+        <h2 class="text-2xl font-black text-white mb-2">Patient Registered!</h2>
+        <p class="text-mq-s400 text-sm mb-8">
+          Save this MRN — the patient will need it to book appointments.
+        </p>
+
+        <div class="bg-mq-teal/10 border border-mq-teal/30 rounded-2xl p-5 mb-6"
+             style="animation:glowPulse 3s ease-in-out infinite">
+          <p class="text-mq-s400 text-xs uppercase tracking-wider mb-2">Medical Record Number</p>
+          <p class="text-3xl font-black text-mq-t400 tracking-wider font-mono">
+            {{ mrn() }}
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <button (click)="copyMrn()"
+                  class="btn-ghost flex-1 flex items-center justify-center gap-2">
+            <lucide-icon name="copy" [size]="14"/>
+            Copy MRN
+          </button>
+          <button (click)="router.navigate(['/patients'])"
+                  class="btn-primary flex-1">
+            → Patients List
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

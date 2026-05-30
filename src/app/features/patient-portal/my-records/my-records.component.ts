@@ -1,55 +1,80 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, ClipboardList, FileText, Download } from 'lucide-angular';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../../core/auth/auth.service';
+import { 
+  ClinicalVisitsClient, 
+  ClinicalVisitSummaryDto, 
+  ClinicalVisitDetailDto 
+} from '../../../core/api/mediqueue-api';
 
 @Component({
   selector: 'app-my-records',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
-  animations: [
-    trigger('pageEnter', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(24px)' }),
-        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' })),
-      ]),
-    ]),
-  ],
-  template: `
-    <div class="space-y-6" [@pageEnter]>
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-black text-white">Medical Records</h1>
-      </div>
-
-      <div class="glass p-12 text-center">
-        <lucide-icon name="clipboard-list" class="text-mq-s400 mx-auto mb-4" [size]="48"/>
-        <h3 class="text-white font-semibold text-lg mb-2">No medical records yet</h3>
-        <p class="text-mq-s400 text-sm max-w-md mx-auto">
-          Your medical history, visit summaries, and prescriptions will appear here after your first appointment.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div class="mq-card-dark p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-mq-teal/10 flex items-center justify-center">
-            <lucide-icon name="file-text" class="text-mq-teal-400" [size]="24"/>
-          </div>
-          <div>
-            <h4 class="text-white font-semibold text-sm">Download Summary</h4>
-            <p class="text-mq-s400 text-xs">Complete medical history PDF</p>
-          </div>
-        </div>
-        <div class="mq-card-dark p-5 flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-            <lucide-icon name="download" class="text-purple-400" [size]="24"/>
-          </div>
-          <div>
-            <h4 class="text-white font-semibold text-sm">Lab Reports</h4>
-            <p class="text-mq-s400 text-xs">Download lab results</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './my-records.component.html',
 })
-export class MyRecordsComponent {}
+export class MyRecordsComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly visitsClient = inject(ClinicalVisitsClient);
+
+  isLoading = signal(true);
+  visits = signal<ClinicalVisitSummaryDto[]>([]);
+
+  // Detailed modal view
+  selectedVisit = signal<ClinicalVisitDetailDto | null>(null);
+  isLoadingDetail = signal(false);
+  showDetailModal = signal(false);
+  activeTab = signal<'summary' | 'vitals' | 'diagnoses' | 'prescriptions' | 'orders'>('summary');
+
+  ngOnInit() {
+    this.loadRecords();
+  }
+
+  loadRecords() {
+    const patientId = this.auth.currentUser()?.patientId;
+    if (!patientId) {
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.visitsClient.patient2(patientId, 1, 100).subscribe({
+      next: (res: any) => {
+        if (res && res.items) {
+          this.visits.set(res.items);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err: any) => {
+        console.error('Failed to load clinical records:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  viewDetails(visitId: string) {
+    this.isLoadingDetail.set(true);
+    this.showDetailModal.set(true);
+    this.activeTab.set('summary');
+
+    this.visitsClient.clinicalVisitsGET(visitId).subscribe({
+      next: (res: any) => {
+        if (res) {
+          this.selectedVisit.set(res);
+        }
+        this.isLoadingDetail.set(false);
+      },
+      error: (err: any) => {
+        console.error('Failed to load visit details:', err);
+        this.isLoadingDetail.set(false);
+        this.showDetailModal.set(false);
+      }
+    });
+  }
+
+  closeDetailModal() {
+    this.showDetailModal.set(false);
+    this.selectedVisit.set(null);
+  }
+}

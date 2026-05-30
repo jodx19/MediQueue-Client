@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
-import { Client, AppointmentDto } from '../../../core/api/mediqueue-api';
+import { AppointmentsClient, ClinicalVisitsClient, AppointmentListItemDto } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { pageEnter, listStagger } from '../../../shared/animations/page-animations';
 
 @Component({
@@ -14,14 +15,17 @@ import { pageEnter, listStagger } from '../../../shared/animations/page-animatio
   animations: [pageEnter, listStagger],
   templateUrl: './my-queue.component.html',
 })
-export class MyQueueComponent {
-  private readonly api = inject(Client);
+export class MyQueueComponent implements OnInit {
+  private readonly appointmentsClient = inject(AppointmentsClient);
+  private readonly visitsClient = inject(ClinicalVisitsClient);
   private readonly notify = inject(NotificationService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly appointments = signal<AppointmentDto[]>([]);
+  readonly queueWarning = signal<string | null>(null);
+  readonly appointments = signal<AppointmentListItemDto[]>([]);
 
   readonly waitingCount = computed(() => this.appointments().length);
 
@@ -29,15 +33,25 @@ export class MyQueueComponent {
     return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
   }
 
-  constructor() {
-    void this.load();
+  async ngOnInit() {
+    await this.load();
   }
 
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
+    this.queueWarning.set(null);
     try {
-      const list = (await firstValueFrom(this.api.today(undefined) as any)) as AppointmentDto[];
+      const doctorId = this.auth.currentUser()?.doctorId;
+      if (!doctorId) {
+        this.queueWarning.set(
+          'Doctor profile not linked to your account. Contact your administrator.'
+        );
+        this.appointments.set([]);
+        return;
+      }
+
+      const list = await firstValueFrom(this.appointmentsClient.today(doctorId));
       this.appointments.set(list ?? []);
     } catch (e: any) {
       const detail = e?.error?.detail ?? e?.message ?? 'Failed to load queue';
@@ -48,11 +62,12 @@ export class MyQueueComponent {
     }
   }
 
-  async startVisit(appt: AppointmentDto): Promise<void> {
+  async startVisit(appt: AppointmentListItemDto): Promise<void> {
     if (!appt.id) return;
     try {
-      const visit = await firstValueFrom(this.api.appointment(appt.id));
-      if (visit.id) {
+      // Get or Start the clinical visit for this appointment
+      const visit = await firstValueFrom(this.visitsClient.appointment(appt.id));
+      if (visit && visit.id) {
         void this.router.navigate(['/clinical-visits', visit.id]);
       }
     } catch (e: any) {

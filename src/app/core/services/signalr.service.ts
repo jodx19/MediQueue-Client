@@ -4,12 +4,12 @@ import { AuthService } from '../auth/auth.service';
 import { NotificationService } from './notification.service';
 import { environment } from '../../../environments/environment';
 
-export interface AppNotification {
+export interface NotificationItem {
   id: string;
-  type: 'appointment' | 'visit' | 'invoice' | 'system';
   message: string;
-  createdAt: Date;
-  isRead: boolean;
+  timestamp: string;
+  read: boolean;
+  type: 'info' | 'success' | 'warning';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,7 +20,59 @@ export class SignalRService {
   private hub?: HubConnection;
   readonly connectionState = signal<'connected'|'connecting'|'disconnected'>('disconnected');
   readonly notificationCount = signal(0);
-  readonly recentEvents = signal<AppNotification[]>([]);
+  readonly notificationsList = signal<NotificationItem[]>([]);
+
+  constructor() {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage() {
+    try {
+      const stored = localStorage.getItem('mediqueue_notifications');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        this.notificationsList.set(parsed);
+        const unreadCount = parsed.filter((n: any) => !n.read).length;
+        this.notificationCount.set(unreadCount);
+      }
+    } catch (e) {
+      console.error('Failed to load notifications from localStorage', e);
+    }
+  }
+
+  private saveToStorage(list: NotificationItem[]) {
+    try {
+      localStorage.setItem('mediqueue_notifications', JSON.stringify(list));
+      const unreadCount = list.filter(n => !n.read).length;
+      this.notificationCount.set(unreadCount);
+    } catch (e) {
+      console.error('Failed to save notifications to localStorage', e);
+    }
+  }
+
+  addNotification(message: string, type: 'info' | 'success' | 'warning' = 'info') {
+    const newItem: NotificationItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      message,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type
+    };
+    const updated = [newItem, ...this.notificationsList()].slice(0, 20); // keep last 20
+    this.notificationsList.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  markAllAsRead() {
+    const updated = this.notificationsList().map(n => ({ ...n, read: true }));
+    this.notificationsList.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  clearNotifications(): void {
+    this.notificationsList.set([]);
+    this.saveToStorage([]);
+  }
 
   async connect(): Promise<void> {
     if (this.hub?.state === HubConnectionState.Connected) return;
@@ -36,42 +88,26 @@ export class SignalRService {
       .configureLogging(LogLevel.Warning)
       .build();
 
+    // ═══ Events from Backend (ClinicHub)
     this.hub.on('AppointmentBooked', (data: any) => {
-      this.addEvent({
-        id: Date.now().toString(),
-        type: 'appointment',
-        message: `New appointment: ${data.patientName} with ${data.doctorName}`,
-        createdAt: new Date(),
-        isRead: false,
-      });
-      this.notifications.info(`New appointment: ${data.patientName}`);
-      this.incrementCount();
+      const msg = `New Appointment: ${data.patientName} with Dr. ${data.doctorName}`;
+      this.notifications.info(msg);
+      this.addNotification(msg, 'info');
     });
 
     this.hub.on('VisitStarted', (data: any) => {
-      this.addEvent({
-        id: Date.now().toString(),
-        type: 'visit',
-        message: `Visit started: ${data.patientName} — Dr. ${data.doctorName}`,
-        createdAt: new Date(),
-        isRead: false,
-      });
-      this.notifications.success(`Visit started: ${data.patientName}`);
-      this.incrementCount();
+      const msg = `Visit Started: ${data.patientName} — Dr. ${data.doctorName}`;
+      this.notifications.success(msg);
+      this.addNotification(msg, 'success');
     });
 
     this.hub.on('InvoicePaid', (data: any) => {
-      this.addEvent({
-        id: Date.now().toString(),
-        type: 'invoice',
-        message: `Invoice #${data.invoiceNumber} paid — EGP ${data.amount}`,
-        createdAt: new Date(),
-        isRead: false,
-      });
-      this.notifications.success(`Invoice paid: EGP ${data.amount}`);
-      this.incrementCount();
+      const msg = `Payment Received: Invoice #${data.invoiceNumber} — EGP ${data.amount.toLocaleString()}`;
+      this.notifications.success(msg);
+      this.addNotification(msg, 'success');
     });
 
+    // ═══ Reconnection handlers
     this.hub.onreconnecting(() => this.connectionState.set('connecting'));
     this.hub.onreconnected(() => this.connectionState.set('connected'));
     this.hub.onclose(() => this.connectionState.set('disconnected'));
@@ -79,22 +115,11 @@ export class SignalRService {
     try {
       await this.hub.start();
       this.connectionState.set('connected');
+      console.log('SignalR Connected');
     } catch (err) {
       this.connectionState.set('disconnected');
       console.error('SignalR failed to connect:', err);
     }
-  }
-
-  private addEvent(event: AppNotification) {
-    this.recentEvents.update(events => [event, ...events].slice(0, 50));
-  }
-
-  clearNotifications(): void {
-    this.notificationCount.set(0);
-  }
-
-  private incrementCount(): void {
-    this.notificationCount.update(n => n + 1);
   }
 
   async disconnect(): Promise<void> {

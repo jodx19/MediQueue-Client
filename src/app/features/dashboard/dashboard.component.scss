@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.mq-card-dark {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 32px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #2dd4bf, #0d9488, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric-card {
+  @apply relative;
+  &::before {
+    content: '';
+    @apply absolute inset-0 rounded-[32px] pointer-events-none;
+    box-shadow: inset 0 0 40px rgba(13, 148, 136, 0.02);
+  }
+}
+
+.action-btn {
+  @apply flex flex-col items-center gap-3 p-6 rounded-2xl bg-mq-navy/40 border border-mq-700/50 
+         hover:bg-mq-teal/5 hover:border-mq-teal/30 transition-all;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+// Adjusting interactive table for dashboard
+::ng-deep .app-interactive-table {
+  @apply bg-transparent;
+  .mq-table {
+    @apply border-none;
+  }
+  .mq-th {
+    @apply bg-transparent border-mq-700/50 text-mq-s600;
+  }
+  .mq-td {
+    @apply border-mq-700/30 text-white font-medium;
+  }
+  .mq-tr:hover {
+    @apply bg-white/5;
+  }
+}

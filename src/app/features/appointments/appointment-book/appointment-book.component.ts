@@ -2,11 +2,8 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { BookAppointmentCommand } from '../../../core/api/mediqueue-api';
-import {
-  AppointmentsClient, DoctorsClient, PatientsClient,
-  AppointmentType, AppointmentPriority,
-} from '../../../core/api/api-facade.service';
+import { BookAppointmentCommand, AppointmentsClient, DoctorsClient, PatientsClient, VisitType, AppointmentPriority } from '../../../core/api/mediqueue-api';
+import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { pageEnter } from '../../../shared/animations/page-animations';
@@ -126,23 +123,23 @@ export class AppointmentBookComponent implements OnInit {
 
   doctors = signal<any[]>([]);
   isLoading = signal(false);
-  typeOptions = Object.values(AppointmentType);
-  priorityOptions = Object.values(AppointmentPriority);
+  typeOptions = ['Regular', 'FollowUp', 'Emergency', 'Consultation', 'CheckUp'];
+  priorityOptions = ['Normal', 'Urgent', 'Low'];
 
   form = {
     patientId: '',
     doctorId: '',
     scheduledAt: '',
-    type: AppointmentType.Regular as AppointmentType,
-    priority: AppointmentPriority.Normal as AppointmentPriority,
+    type: 'Regular',
+    priority: 'Normal',
     reason: '',
   };
 
   async ngOnInit() {
     const patientId = this.route.snapshot.queryParamMap.get('patientId');
     if (patientId) this.form.patientId = patientId;
-    const result = await this.doctorsClient.getAll();
-    this.doctors.set(result ?? []);
+    const result = await firstValueFrom(this.doctorsClient.doctorsGET());
+    this.doctors.set((result as any).items ?? result ?? []);
   }
 
   async onSubmit() {
@@ -152,8 +149,10 @@ export class AppointmentBookComponent implements OnInit {
         patientId: this.form.patientId,
         doctorId: this.form.doctorId,
         scheduledAt: new Date(this.form.scheduledAt),
+        visitType: VisitType._1,
+        priority: AppointmentPriority._1,
       });
-      const result = await this.appointmentsClient.book(command);
+      const result = await firstValueFrom(this.appointmentsClient.appointmentsPOST(command));
       this.notifications.success('Appointment booked successfully!');
       this.router.navigate(['/appointments', result.id]);
     } catch (err: any) {

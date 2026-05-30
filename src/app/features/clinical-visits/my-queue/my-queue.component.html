@@ -2,13 +2,22 @@
   <header class="page-header !mb-6">
     <div>
       <h1 class="page-title flex items-center gap-2">
-        <lucide-icon name="ListOrdered" class="h-7 w-7 text-mq-teal-400" />
+        <lucide-icon name="ListOrdered" class="h-7 w-7 text-mq-t400" />
         Today's Queue
       </h1>
       <p class="page-sub">{{ todayLabel() }} · {{ waitingCount() }} appointment(s) loaded</p>
     </div>
-    <button type="button" class="btn-ghost text-mq-teal-400 border-mq-700" (click)="load()">Retry</button>
+    <button type="button" class="btn-ghost text-mq-t400 border-mq-700" (click)="load()">Retry</button>
   </header>
+
+  @if (queueWarning()) {
+    <div class="flex items-center gap-3 px-5 py-4 rounded-xl
+                bg-amber-500/10 border border-amber-500/30 text-amber-400
+                text-sm mb-6 animate-pulse">
+      <lucide-icon name="alert-triangle" [size]="18" class="flex-shrink-0"/>
+      {{ queueWarning() }}
+    </div>
+  }
 
   @if (loading()) {
     <div class="space-y-3">
@@ -32,13 +41,13 @@
           [class.shadow-teal-glow-sm]="idx === 0">
           <div class="flex items-center gap-4">
             <div
-              class="w-10 h-10 rounded-xl bg-mq-teal/20 text-mq-teal-400 font-bold flex items-center justify-center">
+              class="w-10 h-10 rounded-xl bg-mq-teal/20 text-mq-t400 font-bold flex items-center justify-center">
               {{ idx + 1 }}
             </div>
             <div>
               <div class="text-white font-semibold">{{ appt.patientName || 'Patient' }}</div>
               <div class="text-mq-s400 text-sm">
-                {{ appt.scheduledAt | date: 'shortTime' }} · {{ appt.visitType ?? 'Visit' }}
+                {{ appt.scheduledAt | date: 'shortTime' }} · {{ appt.type ?? 'Visit' }}
               </div>
             </div>
           </div>

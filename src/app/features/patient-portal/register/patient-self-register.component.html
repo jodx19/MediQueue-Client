@@ -1,187 +1,194 @@
-<div class="register-wrapper" @pageEnter>
-  <!-- Header -->
-  <header class="register-header">
-    <div class="header-content">
-      <a class="back-link" (click)="goHome()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Back to Home
+<div class="min-h-screen bg-mq-navy relative overflow-hidden flex items-center justify-center py-16 px-6">
+
+  <!-- bg -->
+  <div class="absolute inset-0" style="
+    background-image:
+      linear-gradient(rgba(13,148,136,.04)1px,transparent 1px),
+      linear-gradient(90deg,rgba(13,148,136,.04)1px,transparent 1px);
+    background-size:60px 60px"></div>
+
+  <div class="relative w-full max-w-lg">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <a routerLink="/" class="inline-flex items-center gap-2 text-mq-s400
+                                hover:text-white text-sm transition-colors mb-8">
+        <lucide-icon name="arrow-left" [size]="14"/> Back to Home
       </a>
-      <div class="brand">
-        <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="6" fill="var(--color-accent)"/>
-          <path d="M20 8C14 8 10 13 10 20C10 27 14 32 20 32C26 32 30 27 30 20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="28" cy="12" r="3" fill="white"/>
-        </svg>
-        <span>MediQueue Portal</span>
-      </div>
-    </div>
-  </header>
-
-  <main class="register-main">
-    <!-- Success State -->
-    <div *ngIf="successMrn()" class="success-card" @fadeSlideIn>
-      <div class="success-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-      </div>
-      <h2 class="success-title">Registration Complete!</h2>
-      <p class="success-desc">Welcome to MediQueue. Your account has been created successfully.</p>
-      
-      <div class="mrn-box">
-        <span class="mrn-label">Your Medical Record Number (MRN)</span>
-        <strong class="mrn-value">{{ successMrn() }}</strong>
-        <p class="mrn-hint">Please save this number. You will need it to book appointments.</p>
-      </div>
-
-      <div class="success-actions">
-        <button class="btn btn-primary btn-full" (click)="goToBook()">Book Your First Appointment</button>
-      </div>
+      <h1 class="text-3xl font-black text-white tracking-tight">Register as Patient</h1>
+      <p class="text-mq-s400 text-sm mt-2">Your health journey starts here</p>
     </div>
 
-    <!-- Registration Form -->
-    <div *ngIf="!successMrn()" class="form-card" @fadeSlideIn>
-      <div class="form-header">
-        <h1 class="form-title">Patient Registration</h1>
-        <p class="form-subtitle">Create your file to book appointments and view records.</p>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="progress-container">
-        <div class="progress-labels">
-          <span>Step {{ currentStep() }} of 3</span>
-          <span class="progress-desc">
-            {{ currentStep() === 1 ? 'Personal Information' : currentStep() === 2 ? 'Contact Details' : 'Review & Confirm' }}
-          </span>
+    <!-- Progress bar -->
+    @if (!result()) {
+      <div class="mb-8">
+        <div class="flex justify-between text-xs text-mq-s400 mb-2">
+          <span [class]="step()>=1?'text-mq-t400 font-semibold':''">Personal Info</span>
+          <span [class]="step()>=2?'text-mq-t400 font-semibold':''">Contact Info</span>
+          <span [class]="step()>=3?'text-mq-t400 font-semibold':''">Review</span>
         </div>
-        <div class="progress-track">
-          <div class="progress-fill" [style.width.%]="progressPercentage()"></div>
+        <div class="h-1.5 bg-mq-700 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-mq-teal to-mq-t400 rounded-full
+                      transition-all duration-500"
+               [style.width]="(step()/3*100)+'%'"></div>
         </div>
       </div>
+    }
 
-      <div *ngIf="errorMessage()" class="error-banner">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        {{ errorMessage() }}
+    <!-- STEP 1: Personal -->
+    @if (step()===1 && !result()) {
+      <div class="glass p-8 space-y-5 rounded-2xl">
+        <h2 class="text-white font-bold text-lg">Personal Information</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">First Name *</label>
+            <input type="text" [(ngModel)]="form.firstName"
+                   class="mq-input" placeholder="Ahmed"/>
+          </div>
+          <div>
+            <label class="mq-label">Last Name *</label>
+            <input type="text" [(ngModel)]="form.lastName"
+                   class="mq-input" placeholder="Mohamed"/>
+          </div>
+        </div>
+        <div>
+          <label class="mq-label">Date of Birth *</label>
+          <input type="date" [(ngModel)]="form.dateOfBirth"
+                 class="mq-input" [max]="today"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mq-label">Gender *</label>
+            <select [(ngModel)]="form.gender" class="mq-input">
+              @for (g of genders; track g) {
+                <option [value]="g">{{ g }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mq-label">Blood Type</label>
+            <select [(ngModel)]="form.bloodType" class="mq-input">
+              @for (b of bloodTypes; track b) {
+                <option [value]="b">{{ b }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="mq-label">National ID *</label>
+          <input type="text" [(ngModel)]="form.nationalId"
+                 class="mq-input" placeholder="14 digits" maxlength="14"/>
+        </div>
+        <button (click)="step.set(2)"
+                class="btn-primary w-full"
+                [disabled]="!form.firstName||!form.lastName||!form.dateOfBirth||!form.nationalId">
+          Next: Contact Info →
+        </button>
       </div>
+    }
 
-      <form #regForm="ngForm" class="register-form">
-        <!-- STEP 1: Personal Info -->
-        <div class="step-content" *ngIf="currentStep() === 1" @fadeSlideIn>
-          <div class="form-row">
-            <div class="field-group">
-              <label class="field-label">First Name *</label>
-              <input type="text" class="field-input" name="firstName" [(ngModel)]="command.firstName" required [class.invalid]="regForm.submitted && !command.firstName">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Last Name *</label>
-              <input type="text" class="field-input" name="lastName" [(ngModel)]="command.lastName" required [class.invalid]="regForm.submitted && !command.lastName">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="field-group">
-              <label class="field-label">Date of Birth *</label>
-              <input type="date" class="field-input" name="dob" [ngModel]="formatDate(command.dateOfBirth)" (ngModelChange)="updateDate($event)" required>
-            </div>
-            <div class="field-group">
-              <label class="field-label">National ID *</label>
-              <input type="text" class="field-input" name="nationalId" [(ngModel)]="command.nationalId" placeholder="14-digit number" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="field-group">
-              <label class="field-label">Gender *</label>
-              <div class="radio-group">
-                <label class="radio-label" *ngFor="let g of genders">
-                  <input type="radio" name="gender" [value]="g.value" [(ngModel)]="command.gender">
-                  <span class="radio-text">{{ g.label }}</span>
-                </label>
-              </div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Blood Type</label>
-              <select class="field-input" name="bloodType" [(ngModel)]="command.bloodType">
-                <option *ngFor="let b of bloodTypes" [ngValue]="b.value">{{ b.label }}</option>
-              </select>
-            </div>
-          </div>
+    <!-- STEP 2: Contact -->
+    @if (step()===2 && !result()) {
+      <div class="glass p-8 space-y-5 rounded-2xl">
+        <h2 class="text-white font-bold text-lg">Contact Information</h2>
+        <div>
+          <label class="mq-label">Phone Number *</label>
+          <input type="tel" [(ngModel)]="form.phone"
+                 class="mq-input" placeholder="01x-xxxx-xxxx"/>
         </div>
-
-        <!-- STEP 2: Contact Info -->
-        <div class="step-content" *ngIf="currentStep() === 2" @fadeSlideIn>
-          <div class="form-row">
-            <div class="field-group">
-              <label class="field-label">Phone Number *</label>
-              <input type="tel" class="field-input" name="phone" [(ngModel)]="command.phone" placeholder="e.g. 01012345678" required>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Email (Optional)</label>
-              <input type="email" class="field-input" name="email" [(ngModel)]="command.email" placeholder="your@email.com">
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Street Address</label>
-            <textarea class="field-input textarea" name="street" [(ngModel)]="command.street" rows="3" placeholder="Apartment, building, street..."></textarea>
-          </div>
+        <div>
+          <label class="mq-label">Email (optional)</label>
+          <input type="email" [(ngModel)]="form.email"
+                 class="mq-input" placeholder="your@email.com"/>
         </div>
-
-        <!-- STEP 3: Review -->
-        <div class="step-content" *ngIf="currentStep() === 3" @fadeSlideIn>
-          <div class="review-card">
-            <h3 class="review-title">Review Your Details</h3>
-            <div class="review-grid">
-              <div class="review-item">
-                <span class="review-label">Full Name</span>
-                <span class="review-value">{{ command.firstName }} {{ command.lastName }}</span>
-              </div>
-              <div class="review-item">
-                <span class="review-label">National ID</span>
-                <span class="review-value">{{ command.nationalId }}</span>
-              </div>
-              <div class="review-item">
-                <span class="review-label">Date of Birth</span>
-                <span class="review-value">{{ formatDate(command.dateOfBirth) }}</span>
-              </div>
-              <div class="review-item">
-                <span class="review-label">Gender</span>
-                <span class="review-value">{{ getGenderLabel(command.gender) }}</span>
-              </div>
-              <div class="review-item">
-                <span class="review-label">Blood Type</span>
-                <span class="review-value">{{ getBloodTypeLabel(command.bloodType) }}</span>
-              </div>
-              <div class="review-item">
-                <span class="review-label">Phone</span>
-                <span class="review-value">{{ command.phone }}</span>
-              </div>
-            </div>
-            <p class="review-hint">By completing registration, you agree to our privacy policy and terms of service.</p>
-          </div>
+        <div>
+          <label class="mq-label">Address</label>
+          <textarea [(ngModel)]="form.address"
+                    class="mq-input h-20 resize-none"
+                    placeholder="Cairo, Egypt"></textarea>
         </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn btn-ghost" (click)="prevStep()" [style.visibility]="currentStep() === 1 ? 'hidden' : 'visible'">
-            Back
-          </button>
-          
-          <button *ngIf="currentStep() < 3" type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!canGoNext">
-            Continue &rarr;
-          </button>
-
-          <button *ngIf="currentStep() === 3" type="button" class="btn btn-primary" (click)="submit()" [disabled]="isLoading()">
-            <span *ngIf="isLoading()" class="spinner"></span>
-            {{ isLoading() ? 'Registering...' : 'Complete Registration' }}
+        <div class="flex gap-3">
+          <button (click)="step.set(1)" class="btn-ghost flex-1">← Back</button>
+          <button (click)="step.set(3)"
+                  class="btn-primary flex-1"
+                  [disabled]="!form.phone">
+            Review →
           </button>
         </div>
-      </form>
-    </div>
-  </main>
+      </div>
+    }
+
+    <!-- STEP 3: Review -->
+    @if (step()===3 && !result()) {
+      <div class="glass p-8 rounded-2xl">
+        <h2 class="text-white font-bold text-lg mb-6">Review & Submit</h2>
+        <div class="space-y-2 mb-8">
+          @for (item of reviewItems(); track item.label) {
+            <div class="flex justify-between py-2.5 border-b border-mq-700/60 text-sm">
+              <span class="text-mq-s400">{{ item.label }}</span>
+              <span class="text-white font-medium">{{ item.value }}</span>
+            </div>
+          }
+        </div>
+        <div class="flex gap-3">
+          <button (click)="step.set(2)" class="btn-ghost flex-1">← Edit</button>
+          <button (click)="submit()"
+                  class="btn-primary flex-1 flex items-center justify-center gap-2"
+                  [disabled]="isLoading()">
+            @if (isLoading()) {
+              <span class="w-4 h-4 rounded-full border-2 border-white/30
+                           border-t-white animate-spin"></span>
+            }
+            Complete Registration
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- SUCCESS: MRN Card -->
+    @if (result()) {
+      <div class="glass p-10 text-center rounded-2xl"
+           style="animation:scaleIn .6s cubic-bezier(0.34,1.56,0.64,1) both">
+        <div class="w-16 h-16 rounded-full bg-mq-teal/15 flex items-center
+                    justify-center mx-auto mb-6"
+             style="box-shadow:0 0 50px rgba(13,148,136,.4)">
+          <lucide-icon name="user-check" class="text-mq-t400" [size]="30"/>
+        </div>
+        <h2 class="text-2xl font-black text-white mb-2">
+          Welcome to MediQueue!
+        </h2>
+        <p class="text-mq-s400 text-sm mb-8">
+          Your account has been created. Save your MRN to book appointments.
+        </p>
+
+        <!-- MRN Card -->
+        <div class="bg-mq-navy border-2 border-mq-teal/50 rounded-2xl p-6 mb-6"
+             style="box-shadow:0 0 30px rgba(13,148,136,.2)">
+          <p class="text-mq-s400 text-xs uppercase tracking-widest mb-2">
+            Your Medical Record Number
+          </p>
+          <p class="text-3xl font-black text-mq-t400 font-mono tracking-wider">
+            {{ result().mrn }}
+          </p>
+          <button (click)="copyMrn()"
+                  class="mt-4 flex items-center gap-2 mx-auto text-xs
+                         text-mq-s400 hover:text-mq-t400 transition-colors">
+            <lucide-icon name="copy" [size]="13"/>
+            Copy MRN
+          </button>
+        </div>
+
+        <div class="flex gap-3">
+          <a routerLink="/book"
+             class="btn-primary flex-1 text-center block">
+            Book Appointment →
+          </a>
+          <a routerLink="/"
+             class="btn-ghost flex-1 text-center block">
+            Home
+          </a>
+        </div>
+      </div>
+    }
+  </div>
 </div>

@@ -1,153 +1,138 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { PatientsClient, DoctorsClient, AppointmentsClient, AppointmentType, AppointmentPriority } from '../../../core/api/api-facade.service';
-import { BookAppointmentCommand } from '../../../core/api/mediqueue-api';
-import { pageEnter, fadeSlideIn } from '../../../shared/animations/page-animations';
+import { Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { PatientsClient, DoctorsClient, AppointmentsClient, BookAppointmentCommand, VisitType, AppointmentPriority } from '../../../core/api/mediqueue-api';
+import { NotificationService } from '../../../core/services/notification.service';
+import { firstValueFrom } from 'rxjs';
+
+interface BookingState {
+  step: 1|2|3|4;
+  patient: any|null;
+  mrn: string;
+  specialty: string;
+  doctor: any|null;
+  slot: any|null;
+  reason: string;
+}
 
 @Component({
   selector: 'app-book-appointment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   templateUrl: './book-appointment.component.html',
-  styleUrl: './book-appointment.component.scss',
-  animations: [pageEnter, fadeSlideIn]
 })
 export class BookAppointmentComponent {
   private patientsClient = inject(PatientsClient);
-  private doctorsClient = inject(DoctorsClient);
-  private appointmentsClient = inject(AppointmentsClient);
-  private router = inject(Router);
+  private doctorsClient  = inject(DoctorsClient);
+  private apptClient     = inject(AppointmentsClient);
+  private notify         = inject(NotificationService);
+  private router         = inject(Router);
 
-  currentStep = signal<number>(1);
-  isLoading = signal<boolean>(false);
-  errorMessage = signal<string | null>(null);
+  state = signal<BookingState>({
+    step:1, patient:null, mrn:'', specialty:'',
+    doctor:null, slot:null, reason:''
+  });
 
-  // Step 1: Patient lookup
-  mrnInput = '';
-  patient = signal<any>(null);
+  isLoading  = signal(false);
+  doctors    = signal<any[]>([]);
+  slots      = signal<any[]>([]);
+  confirmed  = signal<any>(null);
+  selectedDate = signal<string>(new Date().toISOString().split('T')[0]);
 
-  // Step 2: Specialty & Doctor
-  specialties = ['Cardiology', 'Neurology', 'Pediatrics', 'Orthopedics', 'General Practice', 'Dermatology'];
-  selectedSpecialty = signal<string>('');
-  doctors = signal<any[]>([]);
-  selectedDoctor = signal<any>(null);
+  specialties = [
+    'General Medicine','Cardiology','Dermatology',
+    'Orthopedics','Pediatrics','Gynecology',
+    'Neurology','ENT','Ophthalmology','Dentistry'
+  ];
 
-  // Step 3: Slot & Reason
-  availableSlots = signal<Date[]>([]);
-  selectedSlot = signal<Date | null>(null);
-  reason = signal<string>('');
+  setStep(step: 1|2|3|4) {
+    this.state.update(s => ({ ...s, step }));
+  }
 
-  // Step 4: Confirmation
-  confirmationDetails = signal<any>(null);
+  setSlot(slot: any) {
+    this.state.update(s => ({ ...s, slot }));
+  }
 
-  async lookupPatient() {
-    if (!this.mrnInput.trim()) return;
+  updateReason(val: string) {
+    this.state.update(s => ({ ...s, reason: val }));
+  }
+
+  async findPatient() {
+    const mrn = this.state().mrn.trim();
+    if (!mrn) return;
     this.isLoading.set(true);
-    this.errorMessage.set(null);
     try {
-      const p = await this.patientsClient.getByMrn(this.mrnInput.trim());
-      if (p) {
-        this.patient.set(p);
-        this.currentStep.set(2);
-      } else {
-        this.errorMessage.set('Patient not found. Please check your MRN.');
-      }
-    } catch (err: any) {
-      this.errorMessage.set('Failed to lookup patient.');
+      const p = await firstValueFrom(this.patientsClient.mrn(mrn));
+      this.state.update(s => ({ ...s, patient: p }));
+      this.notify.success(`Welcome back, ${p.fullName || 'Patient'}!`);
+    } catch {
+      this.notify.error('Patient not found. Register first.');
     } finally {
       this.isLoading.set(false);
     }
   }
 
   async selectSpecialty(spec: string) {
-    this.selectedSpecialty.set(spec);
+    this.state.update(s => ({ ...s, specialty: spec, step: 2 }));
     this.isLoading.set(true);
     try {
-      const docs = await this.doctorsClient.getBySpecialty(spec);
-      this.doctors.set(docs);
-    } catch (err: any) {
-      this.errorMessage.set('Failed to load doctors.');
+      const docs = await firstValueFrom(this.doctorsClient.specialty(spec as any));
+      this.doctors.set(docs ?? []);
     } finally {
       this.isLoading.set(false);
     }
   }
 
   async selectDoctor(doc: any) {
-    this.selectedDoctor.set(doc);
+    this.state.update(s => ({ ...s, doctor: doc, slot: null }));
+    await this.loadSlots();
+    this.state.update(s => ({ ...s, step: 3 }));
+  }
+
+  onDateSelect(date: string) {
+    this.selectedDate.set(date);
+    this.state.update(s => ({ ...s, slot: null }));
+    this.loadSlots();
+  }
+
+  async loadSlots() {
+    const doc = this.state().doctor;
+    if (!doc) return;
     this.isLoading.set(true);
     try {
-      // Assuming getAvailability exists or we mock some slots if empty
-      let slots = await this.doctorsClient.getAvailability(doc.id);
-      if (!slots || slots.length === 0) {
-        // Mocking availability for demonstration purposes
-        const now = new Date();
-        now.setHours(9, 0, 0, 0);
-        slots = [
-          new Date(now.getTime() + 24 * 60 * 60 * 1000), // tomorrow 9 AM
-          new Date(now.getTime() + 24 * 60 * 60 * 1000 + 30 * 60 * 1000), // tomorrow 9:30 AM
-          new Date(now.getTime() + 48 * 60 * 60 * 1000), // day after 9 AM
-        ];
-      }
-      this.availableSlots.set(slots);
-      this.currentStep.set(3);
+      const avail = await firstValueFrom(this.doctorsClient.availability(doc.id, new Date(this.selectedDate())));
+      this.slots.set(avail?.slots ?? []);
     } catch (err: any) {
-      // Mock if error
-      const now = new Date();
-      now.setDate(now.getDate() + 1);
-      this.availableSlots.set([now]);
-      this.currentStep.set(3);
+      this.notify.error(err?.error?.detail ?? 'Failed to load slots');
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  pickSlot(slot: Date) {
-    this.selectedSlot.set(slot);
-  }
-
-  async bookAppointment() {
-    if (!this.patient() || !this.selectedDoctor() || !this.selectedSlot()) return;
+  async confirmBooking() {
     this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    const command = new BookAppointmentCommand({
-      patientId: this.patient().id,
-      doctorId: this.selectedDoctor().id,
-      clinicId: '00000000-0000-0000-0000-000000000100', // Default clinic ID
-      scheduledAt: this.selectedSlot()!,
-      durationMinutes: 30,
-      visitType: 'Consultation' as any, // Mapped to Consultation
-      priority: 'Normal' as any,
-      chiefComplaint: this.reason() || 'Regular checkup'
-    });
-
     try {
-      const result = await this.appointmentsClient.book(command);
-      this.confirmationDetails.set({
-        date: this.selectedSlot(),
-        doctorName: `${this.selectedDoctor().firstName} ${this.selectedDoctor().lastName}`,
-        specialty: this.selectedDoctor().specialization || this.selectedSpecialty(),
-        reference: result?.id ? `APT-${result.id.substring(0,8).toUpperCase()}` : `APT-2026-${Math.floor(10000 + Math.random()*90000)}`
+      const s = this.state();
+      const result = await firstValueFrom(this.apptClient.appointmentsPOST(new BookAppointmentCommand({
+        patientId:   s.patient.id,
+        doctorId:    s.doctor.id,
+        scheduledAt: s.slot!.startTime, // using startTime of AvailableSlotDto
+        visitType:   VisitType._1,
+        priority:    AppointmentPriority._1,
+        chiefComplaint: s.reason,
+      })));
+      this.confirmed.set({
+        referenceNumber: result.id?.substring(0,8).toUpperCase(),
+        doctorName: `Dr. ${s.doctor.firstName} ${s.doctor.lastName}`,
+        scheduledAt: result.scheduledAt
       });
-      this.currentStep.set(4);
-    } catch (err: any) {
-      const detail = err?.error?.detail || 'Failed to book appointment.';
-      this.errorMessage.set(detail);
+      this.state.update(s => ({ ...s, step: 4 }));
+    } catch(e:any) {
+      this.notify.error(e?.error?.detail ?? 'Booking failed');
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  goHome() {
-    this.router.navigate(['/']);
-  }
-
-  prevStep() {
-    if (this.currentStep() > 1 && this.currentStep() < 4) {
-      this.currentStep.update(s => s - 1);
-      this.errorMessage.set(null);
     }
   }
 }
