@@ -40,13 +40,13 @@ export class MyRecordsComponent implements OnInit {
 
     this.isLoading.set(true);
     this.visitsClient.patient2(patientId, 1, 100).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res && res.items) {
           this.visits.set(res.items);
         }
         this.isLoading.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load clinical records:', err);
         this.isLoading.set(false);
       }
@@ -59,13 +59,13 @@ export class MyRecordsComponent implements OnInit {
     this.activeTab.set('summary');
 
     this.visitsClient.clinicalVisitsGET(visitId).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res) {
           this.selectedVisit.set(res);
         }
         this.isLoadingDetail.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load visit details:', err);
         this.isLoadingDetail.set(false);
         this.showDetailModal.set(false);

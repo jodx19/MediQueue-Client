@@ -77,7 +77,7 @@ export class PatientDashboardComponent implements OnInit {
       visits: this.visitsClient.patient2(patientId, 1, 5).pipe(catchError(() => of(null))),
       invoices: this.invoicesClient.patient3(patientId, 1, 10).pipe(catchError(() => of(null)))
     }).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res.details) {
           this.patientDetails.set(res.details);
         }
@@ -92,7 +92,7 @@ export class PatientDashboardComponent implements OnInit {
         }
         this.isLoading.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading patient dashboard data:', err);
         this.isLoading.set(false);
       }

@@ -85,7 +85,7 @@ export class MyInvoicesComponent implements OnInit {
     if (!patientId) { this.isLoading.set(false); return; }
     this.isLoading.set(true);
     this.invoicesClient.patient3(patientId, 1, 100).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res?.items) this.invoices.set(res.items);
         this.isLoading.set(false);
       },

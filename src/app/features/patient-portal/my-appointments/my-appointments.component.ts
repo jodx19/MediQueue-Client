@@ -89,13 +89,13 @@ export class MyAppointmentsComponent implements OnInit {
 
     // Load appointments and doctors in parallel
     this.appointmentsClient.patient(patientId, 1, 100).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res && res.items) {
           this.appointments.set(res.items);
         }
         this.loadDoctors();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load appointments:', err);
         this.loadDoctors();
       }
@@ -104,13 +104,13 @@ export class MyAppointmentsComponent implements OnInit {
 
   loadDoctors() {
     this.doctorsClient.doctorsGET(1, 100).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res && res.items) {
           this.doctors.set(res.items);
         }
         this.isLoading.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load doctors list:', err);
         this.isLoading.set(false);
       }
@@ -184,7 +184,7 @@ export class MyAppointmentsComponent implements OnInit {
       next: () => {
         this.loadData();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to cancel appointment:', err);
         alert('Could not cancel appointment. It may already be in progress.');
       }
