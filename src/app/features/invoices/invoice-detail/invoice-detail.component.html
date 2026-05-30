@@ -1,0 +1,174 @@
+<div class="p-6 bg-mq-navy min-h-screen">
+
+  <!-- Back -->
+  <button (click)="router.navigate(['/invoices'])"
+          class="flex items-center gap-2 text-mq-s400 hover:text-white text-sm
+                 transition-colors mb-6">
+    <lucide-icon name="arrow-left" [size]="14"/>
+    Back to Invoices
+  </button>
+
+  @if (isLoading()) {
+    <div class="space-y-4">
+      @for (i of [1,2,3]; track i) {
+        <div class="h-32 rounded-xl bg-mq-800/80 animate-pulse"></div>
+      }
+    </div>
+  }
+
+  @else if (invoice()) {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl">
+
+      <!-- CENTER: Invoice details (col-span-2) -->
+      <div class="lg:col-span-2 space-y-5">
+
+        <!-- Invoice header -->
+        <div class="mq-card-dark p-6">
+          <div class="flex items-start justify-between mb-6">
+            <div>
+              <h1 class="text-2xl font-black text-white">
+                Invoice #{{ invoice().invoiceNumber }}
+              </h1>
+              <p class="text-mq-s400 text-sm mt-1">{{ invoice().issuedAt | date:'longDate' }}</p>
+              <p class="text-white font-semibold mt-1">{{ invoice().patientName }}</p>
+            </div>
+            <span [class]="statusBadgeClass(invoice().status)">
+              {{ invoice().status }}
+            </span>
+          </div>
+
+          <!-- Line items -->
+          @if (invoice().items?.length > 0) {
+            <div class="border border-mq-700 rounded-xl overflow-hidden mb-6">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-mq-800/50 border-b border-mq-700">
+                    <th class="text-left px-4 py-3 text-xs text-mq-s400 font-semibold uppercase">Description</th>
+                    <th class="text-center px-4 py-3 text-xs text-mq-s400 font-semibold uppercase">Qty</th>
+                    <th class="text-right px-4 py-3 text-xs text-mq-s400 font-semibold uppercase">Unit Price</th>
+                    <th class="text-right px-4 py-3 text-xs text-mq-s400 font-semibold uppercase">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of invoice().items; track item.id) {
+                    <tr class="border-b border-mq-700/50">
+                      <td class="px-4 py-3 text-white">{{ item.description }}</td>
+                      <td class="px-4 py-3 text-center text-mq-s400">× {{ item.quantity }}</td>
+                      <td class="px-4 py-3 text-right font-mono text-mq-s400 text-xs">
+                        EGP {{ (item.unitPrice ?? 0).toLocaleString() }}
+                      </td>
+                      <td class="px-4 py-3 text-right font-mono text-white font-semibold text-xs">
+                        EGP {{ ((item.unitPrice ?? 0) * (item.quantity ?? 1)).toLocaleString() }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- Totals -->
+          <div class="space-y-2 max-w-xs ml-auto">
+            <div class="flex justify-between text-sm">
+              <span class="text-mq-s400">Subtotal</span>
+              <span class="text-white font-mono">EGP {{ (invoice().subtotal ?? 0).toLocaleString() }}</span>
+            </div>
+            @if (invoice().discountAmount) {
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Discount</span>
+                <span class="text-emerald-400 font-mono">-EGP {{ (invoice().discountAmount ?? 0).toLocaleString() }}</span>
+              </div>
+            }
+            <div class="flex justify-between text-base font-bold pt-2 border-t border-mq-700">
+              <span class="text-white">Total Due</span>
+              <span class="text-white font-mono">EGP {{ (invoice().totalAmount ?? 0).toLocaleString() }}</span>
+            </div>
+            @if (invoice().paidAmount) {
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Paid</span>
+                <span class="text-emerald-400 font-mono">EGP {{ (invoice().paidAmount ?? 0).toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-sm font-semibold">
+                <span class="text-rose-400">Balance</span>
+                <span class="text-rose-400 font-mono">
+                  EGP {{ ((invoice().totalAmount ?? 0) - (invoice().paidAmount ?? 0)).toLocaleString() }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Actions panel -->
+      <div class="space-y-4">
+
+        @if (invoice().status !== 'Paid') {
+          <!-- Discount -->
+          <div class="mq-card-dark p-5">
+            <h3 class="text-white font-semibold mb-4 text-sm">Apply Discount</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="mq-label">Amount (EGP)</label>
+                <input type="number" [(ngModel)]="discountValue"
+                       class="mq-input" placeholder="0.00"/>
+              </div>
+              <button (click)="applyDiscount()" class="btn-ghost w-full text-sm">
+                Apply Discount
+              </button>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="mq-card-dark p-5">
+            <h3 class="text-white font-semibold mb-4 text-sm">Record Payment</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="mq-label">Amount (EGP)</label>
+                <input type="number" [(ngModel)]="payment.amount"
+                       class="mq-input" [max]="invoice().totalAmount"/>
+              </div>
+              <div>
+                <label class="mq-label">Payment Method</label>
+                <div class="grid grid-cols-3 gap-2">
+                  @for (m of paymentMethodKeys; track m.value) {
+                    <button (click)="payment.method = m.value"
+                            [class]="payment.method === m.value
+                              ? 'py-2 rounded-xl text-xs font-semibold bg-mq-teal text-white border-2 border-mq-teal'
+                              : 'py-2 rounded-xl text-xs font-medium border border-mq-700 text-mq-s400 hover:border-mq-teal/50 hover:text-white transition-all'">
+                      {{ m.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+              <div>
+                <label class="mq-label">Notes</label>
+                <input type="text" [(ngModel)]="payment.notes"
+                       class="mq-input" placeholder="Optional notes..."/>
+              </div>
+              <button (click)="recordPayment()"
+                      class="btn-primary w-full flex items-center justify-center gap-2"
+                      [disabled]="!payment.amount">
+                <lucide-icon name="credit-card" [size]="14"/>
+                Record Payment
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (invoice().status === 'Paid') {
+          <!-- Paid state -->
+          <div class="mq-card-dark p-5 text-center border border-emerald-500/30">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center
+                        justify-center mx-auto mb-3">
+              <lucide-icon name="check-circle" class="text-emerald-400" [size]="24"/>
+            </div>
+            <p class="text-emerald-400 font-bold">Fully Paid</p>
+            <p class="text-mq-s400 text-xs mt-1">
+              EGP {{ (invoice().paidAmount ?? 0).toLocaleString() }} collected
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

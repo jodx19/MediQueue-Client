@@ -11,6 +11,7 @@
   "codeGenerators": {
     "openApiToTypeScriptClient": {
       "className": "{controller}Client",
+      "operationGenerationMode": "MultipleClientsFromFirstTagAndOperationId",
       "moduleName": "",
       "namespace": "",
       "typeScriptVersion": 5.0,

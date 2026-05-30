@@ -1,0 +1,73 @@
+<div class="p-6 bg-mq-navy min-h-screen">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-black text-white tracking-tight">Clinical Staff</h1>
+      <p class="text-mq-s400 text-sm mt-1">{{ doctors().length }} doctors registered</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="grid grid-cols-3 gap-5">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="h-48 rounded-2xl bg-mq-800/80 animate-pulse"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty -->
+  @else if (doctors().length === 0) {
+    <div class="flex flex-col items-center justify-center py-24 mq-card-dark text-center">
+      <lucide-icon name="stethoscope" class="text-mq-s400 mb-4" [size]="40"/>
+      <p class="text-white font-semibold">No doctors registered</p>
+      <p class="text-mq-s400 text-sm mt-1">Add doctors via Staff Management</p>
+    </div>
+  }
+
+  <!-- Grid -->
+  @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      @for (doc of doctors(); track doc.id) {
+        <div class="mq-card-dark p-6 group cursor-pointer hover:border-mq-teal/40
+                    border border-mq-700 transition-all rounded-2xl"
+             (click)="router.navigate(['/doctors', doc.id])">
+
+          <!-- Avatar -->
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600
+                        flex items-center justify-center text-white font-black text-lg
+                        shadow-[0_0_20px_rgba(139,92,246,.3)] flex-shrink-0">
+              {{ getInitials(doc) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-white font-bold text-sm truncate">
+                Dr. {{ doc.fullName }}
+              </p>
+              <span class="inline-flex px-2 py-0.5 mt-1 rounded-full text-xs
+                           bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                {{ doc.specialty }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Status + Stats -->
+          <div class="flex items-center justify-between pt-4 border-t border-mq-700">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full"
+                   [class]="doc.isAvailable ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,.8)]' : 'bg-mq-700'"></div>
+              <span class="text-xs"
+                    [class]="doc.isAvailable ? 'text-emerald-400' : 'text-mq-s400'">
+                {{ doc.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </div>
+            <button class="text-xs text-mq-t400 hover:underline">
+              View Profile →
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

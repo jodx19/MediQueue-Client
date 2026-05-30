@@ -1,129 +1,96 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
-import { Client, InvoiceDto, InvoiceStatus } from '../../../core/api/mediqueue-api';
+import { InvoicesClient, InvoiceListItemDto } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
-import { pageEnter } from '../../../shared/animations/page-animations';
-import { CurrencyEgpPipe } from '../../../shared/pipes/currency-egp.pipe';
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyEgpPipe],
-  animations: [pageEnter],
-  template: `
-    <div class="min-h-full bg-mq-navy p-6" @pageEnter>
-      <header class="page-header !mb-6">
-        <div>
-          <h1 class="page-title">Invoices</h1>
-          <p class="page-sub">Clinic billing and payment status</p>
-        </div>
-        <button type="button" class="btn-ghost border-mq-700 text-mq-s400" (click)="load()">Retry</button>
-      </header>
-
-      @if (loading()) {
-        <div class="space-y-3">
-          @for (i of [1, 2, 3, 4, 5]; track i) {
-            <div class="h-14 rounded-xl skeleton"></div>
-          }
-        </div>
-      } @else if (error()) {
-        <div class="glass p-6 text-rose-300 text-sm">{{ error() }}</div>
-      } @else {
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div class="metric-card">
-            <span class="metric-label">Outstanding</span>
-            <span class="metric-value text-mq-teal-400">{{ stats().outstanding | currencyEgp }}</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Collected (range)</span>
-            <span class="metric-value text-emerald-400">{{ stats().collected | currencyEgp }}</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Invoices (range)</span>
-            <span class="metric-value">{{ stats().count }}</span>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-2xl border border-mq-700 bg-mq-800/40">
-          <table class="mq-table">
-            <thead>
-              <tr>
-                <th class="mq-th">Invoice</th>
-                <th class="mq-th">Patient</th>
-                <th class="mq-th">Amount</th>
-                <th class="mq-th">Status</th>
-                <th class="mq-th">Issued</th>
-                <th class="mq-th text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (inv of rows(); track inv.id) {
-                <tr class="mq-tr" [routerLink]="['/invoices', inv.id]">
-                  <td class="mq-td text-white font-medium">{{ inv.invoiceNumber }}</td>
-                  <td class="mq-td">{{ inv.patientName || '—' }}</td>
-                  <td class="mq-td text-white">{{ inv.totalAmount | currencyEgp }}</td>
-                  <td class="mq-td">
-                    <span class="badge-info">{{ inv.status }}</span>
-                  </td>
-                  <td class="mq-td">{{ inv.issuedAt | date: 'mediumDate' }}</td>
-                  <td class="mq-td text-right row-actions opacity-100 md:opacity-0">
-                    <span class="text-mq-teal-400 text-xs font-semibold">View →</span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
-  `,
+  imports: [CommonModule, FormsModule, LucideAngularModule],
+  templateUrl: './invoice-list.component.html',
 })
-export class InvoiceListComponent {
-  private readonly api = inject(Client);
-  private readonly notify = inject(NotificationService);
+export class InvoiceListComponent implements OnInit {
+  private readonly invoicesClient = inject(InvoicesClient);
+  private readonly notify         = inject(NotificationService);
+  public  readonly router         = inject(Router);
 
-  readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
-  readonly rows = signal<InvoiceDto[]>([]);
-  readonly stats = signal<{ outstanding: number; collected: number; count: number }>({
-    outstanding: 0,
-    collected: 0,
-    count: 0,
-  });
+  isLoading = signal(true);
+  invoices  = signal<InvoiceListItemDto[]>([]);
+  filter    = signal<string>('');
 
-  readonly statusFilter = signal<InvoiceStatus | undefined>(undefined);
-
-  constructor() {
-    void this.load();
+  get filtered() {
+    const f = this.filter();
+    if (!f) return this.invoices();
+    return this.invoices().filter(i => (i.status as any) === f);
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
-    this.error.set(null);
+  get totalRevenue(): number {
+    return this.invoices()
+      .filter(i => (i.status as any) === 'Paid')
+      .reduce((sum, i) => sum + (i.totalAmount ?? 0), 0);
+  }
+
+  get pendingAmount(): number {
+    return this.invoices()
+      .filter(i => (i.status as any) === 'Pending')
+      .reduce((sum, i) => sum + (i.totalAmount ?? 0), 0);
+  }
+
+  async ngOnInit() {
+    await this.loadInvoices();
+  }
+
+  async loadInvoices() {
+    this.isLoading.set(true);
     try {
-      const from = new Date();
-      from.setDate(from.getDate() - 30);
-      const to = new Date();
-
-      const [page, report] = await Promise.all([
-        firstValueFrom(this.api.invoicesList(1, 50, this.statusFilter(), from, to)),
-        firstValueFrom(this.api.revenueReport2(from, to)).catch(() => null),
-      ]);
-
-      this.rows.set(page?.items ?? []);
-      this.stats.set({
-        outstanding: report?.outstandingRevenue ?? 0,
-        collected: report?.collectedRevenue ?? 0,
-        count: report?.invoiceCount ?? page?.totalCount ?? 0,
-      });
-    } catch (e: any) {
-      const detail = e?.error?.detail ?? e?.message ?? 'Failed to load invoices';
-      this.error.set(typeof detail === 'string' ? detail : 'Failed to load invoices');
-      this.notify.error(this.error()!);
+      const response = await firstValueFrom(this.invoicesClient.invoicesGET(1, 50, undefined, undefined, undefined));
+      const data = response?.items ?? [];
+      this.invoices.set(Array.isArray(data) ? data : []);
+    } catch (err) {
+      this.notify.error('Failed to load invoices');
     } finally {
-      this.loading.set(false);
+      this.isLoading.set(false);
     }
+  }
+
+  statusClass(status: any): string {
+    const map: Record<string, string> = {
+      'Paid':     'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      'Pending':  'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-400 border border-amber-500/30',
+      'Overdue':  'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-rose-500/15 text-rose-400 border border-rose-500/30',
+      'Cancelled':'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-mq-700/50 text-mq-s400 border border-mq-700',
+    };
+    return map[status] ?? 'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-mq-700 text-mq-s400';
+  }
+
+  exportCSV() {
+    const data = this.filtered;
+    if (data.length === 0) {
+      this.notify.warning('No invoice data available to export.');
+      return;
+    }
+    const headers = ['Invoice #', 'Patient Name', 'Amount (EGP)', 'Status', 'Date'];
+    const rows = data.map(i => [
+      `"${i.invoiceNumber || ''}"`,
+      `"${i.patientName || ''}"`,
+      i.totalAmount ?? 0,
+      `"${i.status || ''}"`,
+      i.createdAt ? `"${new Date(i.createdAt).toLocaleDateString()}"` : '""'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `MediQueue_Invoices_Report_${new Date().toISOString().substring(0, 10)}.csv`;
+    link.click();
+    this.notify.success('Invoice report CSV exported successfully!');
+  }
+
+  printPDF() {
+    window.print();
   }
 }

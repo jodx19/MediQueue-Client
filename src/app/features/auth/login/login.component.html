@@ -1,0 +1,130 @@
+<div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+
+  <!-- LEFT: Brand (dark + grid bg + orb) -->
+  <div class="hidden lg:flex flex-col justify-center items-center
+              relative overflow-hidden p-16"
+       style="background:#0F172A;
+              background-image:
+                linear-gradient(rgba(13,148,136,.04) 1px,transparent 1px),
+                linear-gradient(90deg,rgba(13,148,136,.04) 1px,transparent 1px);
+              background-size:60px 60px">
+
+    <div class="absolute w-[500px] h-[500px] -top-32 -right-32 pointer-events-none"
+         style="border-radius:50%;filter:blur(80px);
+                background:radial-gradient(circle,rgba(13,148,136,.2),transparent 70%)">
+    </div>
+
+    <div class="relative z-10 text-center max-w-sm animate-fade-up">
+      <div class="w-20 h-20 rounded-3xl mx-auto mb-8 flex items-center justify-center"
+           style="background:linear-gradient(135deg,#0D9488,#0F766E);
+                  box-shadow:0 0 60px rgba(13,148,136,.5);
+                  animation:glowPulse 3s ease-in-out infinite">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="2" stroke-linecap="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+
+      <h1 class="text-4xl font-black text-white mb-3 tracking-tight">
+        MediQueue
+      </h1>
+      <p class="text-mq-s400 text-base leading-relaxed mb-12">
+        Electronic Medical Records System
+      </p>
+
+      <div class="space-y-4 text-left">
+        @for (f of features; track f.text) {
+          <div class="flex items-center gap-3 p-3 glass-light rounded-xl">
+            <div class="w-9 h-9 rounded-xl bg-mq-teal/15 flex items-center
+                        justify-center flex-shrink-0">
+              <lucide-icon [name]="f.icon" class="text-mq-t400" [size]="16"/>
+            </div>
+            <span class="text-mq-s400 text-sm">{{ f.text }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Form (navy-800 bg) -->
+  <div class="flex flex-col justify-center items-center
+              bg-mq-800 p-8 lg:p-16">
+    <div class="w-full max-w-sm animate-scale-in">
+
+      <a routerLink="/"
+         class="inline-flex items-center gap-2 text-mq-s400
+                hover:text-mq-t400 text-sm mb-10 group transition-colors">
+        <lucide-icon name="arrow-left" [size]="16"
+                     class="group-hover:-translate-x-1 transition-transform"/>
+        Back to Home
+      </a>
+
+      <h2 class="text-3xl font-black text-white mb-2 tracking-tight">
+        Welcome back
+      </h2>
+      <p class="text-mq-s400 text-sm mb-8 leading-relaxed">
+        Staff accounts are managed by your administrator
+      </p>
+
+      @if (error()) {
+        <div class="flex items-start gap-3 px-4 py-3.5 rounded-xl mb-6
+                    bg-rose-500/10 border border-rose-500/25 text-rose-400
+                    text-sm animate-scale-in">
+          <lucide-icon name="alert-circle" [size]="16" class="flex-shrink-0 mt-0.5"/>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="submit()" class="space-y-5">
+        <div>
+          <label class="mq-label">Email Address</label>
+          <input type="email" name="email" [(ngModel)]="email"
+                 class="mq-input" placeholder="doctor@mediqueue.com"
+                 autocomplete="email" required/>
+        </div>
+        <div>
+          <label class="mq-label">Password</label>
+          <div class="relative">
+            <input [type]="showPass ? 'text' : 'password'"
+                   name="password" [(ngModel)]="password"
+                   class="mq-input pr-16" placeholder="••••••••"
+                   autocomplete="current-password" required/>
+            <button type="button" (click)="showPass = !showPass"
+                    class="absolute right-4 top-1/2 -translate-y-1/2
+                           text-mq-s400 hover:text-mq-t400 text-xs
+                           font-semibold transition-colors">
+              {{ showPass ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+                class="btn-primary w-full !py-4 !text-base gap-2"
+                [disabled]="isLoading() || !email || !password">
+          @if (isLoading()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white
+                         rounded-full animate-spin"></span>
+            Signing in...
+          } @else {
+            Sign In
+            <lucide-icon name="arrow-right" [size]="16"/>
+          }
+        </button>
+      </form>
+
+      <p class="text-center text-mq-s400 text-sm mt-8">
+        Are you a patient?
+        <a routerLink="/register"
+           class="text-mq-t400 font-semibold hover:underline ml-1">
+          Register here
+        </a>
+      </p>
+      <p class="text-center mt-3">
+        <a routerLink="/auth/patient-login"
+           class="text-mq-s400 text-xs hover:text-mq-t400 transition-colors">
+          Patient Sign In →
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

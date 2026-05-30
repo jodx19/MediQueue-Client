@@ -1,127 +1,73 @@
-import { Component, signal, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { trigger, transition, style, animate } from '@angular/animations';
-import {
-  LucideAngularModule,
-  LayoutDashboard,
-  Users,
-  Stethoscope,
-  Calendar,
-  Receipt,
-  Shield,
-  ListOrdered,
-  Clipboard,
-  Search,
-  Bell,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Menu,
-} from 'lucide-angular';
+import { Router, RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
+import { trigger, transition, style, animate, state } from '@angular/animations';
+import { ToastComponent } from '../../shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent],
   templateUrl: './shell.component.html',
+  styleUrls: ['./shell.component.scss'],
   animations: [
-    trigger('pageEnter', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(24px)' }),
-        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' })),
-      ]),
-      transition('* => *', [
-        style({ opacity: 0, transform: 'translateY(24px)' }),
-        animate('500ms cubic-bezier(0.34,1.56,0.64,1)', style({ opacity: 1, transform: 'translateY(0)' })),
-      ]),
-    ]),
-  ],
+    trigger('sidebarToggle', [
+      state('expanded', style({ width: '260px' })),
+      state('collapsed', style({ width: '80px' })),
+      transition('expanded <=> collapsed', animate('250ms cubic-bezier(0.4, 0, 0.2, 1)'))
+    ])
+  ]
 })
-export class ShellComponent implements OnInit {
-  private readonly auth = inject(AuthService);
-  private readonly signalR = inject(SignalRService);
+export class ShellComponent implements OnInit, OnDestroy {
+  readonly auth = inject(AuthService);
+  readonly signalr = inject(SignalRService);
   private readonly router = inject(Router);
 
   collapsed = signal(false);
-  mobileMenuOpen = signal(false);
+  sidebarState = computed(() => this.collapsed() ? 'collapsed' : 'expanded');
+  
+  user = computed(() => this.auth.currentUser());
+  role = computed(() => this.auth.userRole());
+  initials = computed(() => this.user()?.name?.[0]?.toUpperCase() || 'U');
+  
+  connected = computed(() => this.signalr.connectionState() === 'connected');
+  notifCount = computed(() => this.signalr.notificationCount());
+  showNotifs = signal(false);
 
-  readonly userRole = computed(() => this.auth.userRole());
-  readonly currentUser = this.auth.currentUser;
-  readonly signalRConnected = computed(() => this.signalR.connectionState() === 'connected');
-  readonly notificationCount = this.signalR.notificationCount;
+  pageTitle = signal('Dashboard');
 
-  readonly LucideIcons = {
-    LayoutDashboard,
-    Users,
-    Stethoscope,
-    Calendar,
-    Receipt,
-    Shield,
-    ListOrdered,
-    Clipboard,
-    Search,
-    Bell,
-    ChevronLeft,
-    ChevronRight,
-    LogOut,
-    Menu,
-  };
-
-  adminNav = [
-    { label: 'Dashboard', icon: 'LayoutDashboard', route: '/dashboard' },
-    { label: 'Patients', icon: 'Users', route: '/patients/list' },
-    { label: 'Doctors', icon: 'Stethoscope', route: '/doctors' },
-    { label: 'Appointments', icon: 'Calendar', route: '/appointments' },
-    { label: 'Invoices', icon: 'Receipt', route: '/invoices' },
-    { label: 'Super Admin', icon: 'Shield', route: '/super-admin' },
-  ];
-
-  doctorNav = [
-    { label: 'My Queue', icon: 'ListOrdered', route: '/my-queue' },
-    { label: 'Patients', icon: 'Users', route: '/patients/list' },
-  ];
-
-  receptionistNav = [
-    { label: 'Patients', icon: 'Users', route: '/patients/list' },
-    { label: 'Appointments', icon: 'Calendar', route: '/appointments' },
-    { label: 'Invoices', icon: 'Receipt', route: '/invoices' },
-  ];
-
-  readonly currentNav = computed(() => {
-    switch (this.userRole()) {
-      case 'Admin':
-        return this.adminNav;
-      case 'Doctor':
-        return this.doctorNav;
-      case 'Receptionist':
-        return this.receptionistNav;
-      default:
-        return [];
-    }
+  navItems = computed(() => {
+    const role = this.role();
+    const items = [
+      { label: 'Dashboard',   path: '/dashboard',     icon: 'layout-dashboard', roles: ['Admin'] },
+      { label: 'My Queue',    path: '/my-queue',      icon: 'activity',         roles: ['Doctor'] },
+      { label: 'Appointments', path: '/appointments', icon: 'calendar',         roles: ['Admin', 'Receptionist'] },
+      { label: 'Patients',    path: '/patients',      icon: 'users',            roles: ['Admin', 'Doctor', 'Receptionist'] },
+      { label: 'Doctors',     path: '/doctors',       icon: 'stethoscope',      roles: ['Admin', 'Receptionist'] },
+      { label: 'Invoices',    path: '/invoices',      icon: 'receipt',          roles: ['Admin', 'Receptionist'] },
+      { label: 'Staff Admin', path: '/super-admin',   icon: 'shield-check',     roles: ['Admin'] },
+      { label: 'Settings',    path: '/settings',      icon: 'settings',         roles: ['Admin'] },
+    ];
+    return items.filter(item => role && item.roles.includes(role));
   });
 
-  async ngOnInit(): Promise<void> {
-    await this.signalR.connect();
+  async ngOnInit() {
+    await this.signalr.connect();
+  }
+
+  async ngOnDestroy() {
+    await this.signalr.disconnect();
   }
 
   toggleSidebar() {
-    this.collapsed.set(!this.collapsed());
+    this.collapsed.update(v => !v);
   }
 
-  toggleMobileMenu() {
-    this.mobileMenuOpen.set(!this.mobileMenuOpen());
-  }
-
-  prepareRoute(outlet: any) {
-    return outlet?.activatedRouteData?.['animation'];
-  }
-
-  logout(): void {
+  logout() {
     this.auth.logout();
-    void this.signalR.disconnect();
-    void this.router.navigateByUrl('/login');
+    this.router.navigate(['/auth/login']);
   }
 }

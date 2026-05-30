@@ -1,0 +1,203 @@
+<div class="p-6 bg-mq-navy min-h-screen">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-black text-white tracking-tight">Appointments</h1>
+      <p class="text-mq-s400 text-sm mt-1">{{ appointments().length }} records</p>
+    </div>
+    <button (click)="showModal.set(true)"
+            class="btn-primary flex items-center gap-2">
+      <lucide-icon name="plus" [size]="16"/>
+      Book Appointment
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-4 gap-4 mb-6">
+    @for (stat of [
+      {label:'Total', count: appointments().length, color:'text-white'},
+      {label:'Waiting', count: getStatusCount('CheckedIn'), color:'text-amber-400'},
+      {label:'In Session', count: getStatusCount('InSession'), color:'text-purple-400'},
+      {label:'Completed', count: getStatusCount('Completed'), color:'text-emerald-400'}
+    ]; track stat.label) {
+      <div class="mq-card-dark p-4">
+        <p class="text-mq-s400 text-xs uppercase tracking-wider mb-1">{{ stat.label }}</p>
+        <p [class]="'text-2xl font-black ' + stat.color">{{ stat.count }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex gap-1 mb-6 bg-mq-800/50 rounded-xl p-1 w-fit border border-mq-700">
+    <button (click)="loadToday()"
+            [class]="activeFilter() === 'today'
+              ? 'px-4 py-2 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
+              : 'px-4 py-2 rounded-lg text-mq-s400 hover:text-white text-sm transition-all'">
+      Today
+    </button>
+    <button (click)="loadUpcoming()"
+            [class]="activeFilter() === 'upcoming'
+              ? 'px-4 py-2 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
+              : 'px-4 py-2 rounded-lg text-mq-s400 hover:text-white text-sm transition-all'">
+      Upcoming (7d)
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="space-y-3">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="h-20 rounded-xl bg-mq-800/80 animate-pulse"></div>
+      }
+    </div>
+  }
+
+  <!-- Empty -->
+  @else if (appointments().length === 0) {
+    <div class="flex flex-col items-center justify-center py-24 text-center mq-card-dark">
+      <lucide-icon name="calendar" class="text-mq-s400 mb-4" [size]="40"/>
+      <p class="text-white font-semibold">No appointments found</p>
+      <p class="text-mq-s400 text-sm mt-1 mb-6">Book a new appointment to get started</p>
+      <button (click)="showModal.set(true)" class="btn-primary">
+        Book Appointment →
+      </button>
+    </div>
+  }
+
+  <!-- List -->
+  @else {
+    <div class="space-y-3">
+      @for (appt of appointments(); track appt.id) {
+        <div class="mq-card-dark p-4 flex items-center gap-4 group cursor-pointer
+                    hover:border-mq-teal/30 border border-mq-700 transition-colors rounded-xl"
+             [routerLink]="['/appointments', appt.id]">
+
+          <!-- Time -->
+          <div class="w-20 bg-mq-teal/10 border border-mq-teal/20 rounded-xl
+                      p-3 text-center flex-shrink-0">
+            <p class="text-mq-t400 text-lg font-black leading-none">
+              {{ appt.scheduledAt | date:'h:mm' }}
+            </p>
+            <p class="text-mq-s400 text-[10px] mt-1">
+              {{ appt.scheduledAt | date:'a' }}
+            </p>
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="text-white font-semibold text-sm truncate">{{ appt.patientName }}</p>
+            <p class="text-mq-s400 text-xs mt-0.5">{{ appt.doctorName }}</p>
+            @if (appt.reason) {
+              <p class="text-mq-s400 text-xs mt-1 truncate italic opacity-70">{{ appt.reason }}</p>
+            }
+          </div>
+
+          <!-- Status badges -->
+          <div class="flex flex-col items-end gap-2">
+            <span [class]="statusClass(appt.status)">{{ appt.status }}</span>
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] bg-mq-700/50 text-mq-s400">
+              {{ appt.type }}
+            </span>
+          </div>
+
+          <!-- Actions on hover -->
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="text-xs bg-mq-teal/15 text-mq-t400 px-3 py-1.5
+                           rounded-lg hover:bg-mq-teal/25 transition-colors"
+                    (click)="$event.stopPropagation(); startOrViewVisit(appt)">
+              {{ appt.visitId ? 'View Visit' : 'Start Visit' }}
+            </button>
+            <button class="text-xs text-rose-400 px-3 py-1.5 rounded-lg
+                           hover:bg-rose-500/10 transition-colors"
+                    (click)="$event.stopPropagation(); cancelAppt(appt.id!)">
+              Cancel
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- BOOK APPOINTMENT MODAL -->
+@if (showModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(8px)">
+    <div class="mq-card-dark w-full max-w-lg p-8 rounded-2xl relative"
+         style="animation:scaleIn .3s cubic-bezier(0.34,1.56,0.64,1) both">
+      <button (click)="showModal.set(false)"
+              class="absolute top-4 right-4 text-mq-s400 hover:text-white transition-colors">
+        <lucide-icon name="x" [size]="20"/>
+      </button>
+
+      <h2 class="text-xl font-black text-white mb-6">Book Appointment</h2>
+
+      <!-- Patient search -->
+      <div class="mb-4 relative">
+        <label class="mq-label">Patient *</label>
+        <input type="text"
+               [value]="patientSearch()"
+               (input)="searchPatients($event)"
+               class="mq-input"
+               placeholder="Search by name or MRN..."/>
+        @if (patientResults().length > 0) {
+          <div class="absolute top-full mt-1 left-0 right-0 bg-mq-800 border border-mq-700
+                      rounded-xl overflow-hidden z-10 shadow-xl">
+            @for (p of patientResults(); track p.id) {
+              <button (click)="selectPatient(p)"
+                      class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-mq-teal/10
+                             text-left transition-colors">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-mq-teal to-mq-t600
+                            flex items-center justify-center text-white text-xs font-bold">
+                  {{ (p.fullName ?? 'P')[0] }}
+                </div>
+                <div>
+                  <p class="text-white text-sm font-medium">{{ p.fullName }}</p>
+                  <p class="text-mq-s400 text-xs">{{ p.medicalRecordNumber }}</p>
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Doctor -->
+      <div class="mb-4">
+        <label class="mq-label">Doctor *</label>
+        <select [(ngModel)]="bookForm.doctorId" class="mq-input">
+          <option value="">Select a doctor...</option>
+          @for (d of doctors(); track d.id) {
+            <option [value]="d.id">Dr. {{ d.fullName }} — {{ d.specialty }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Date + Time -->
+      <div class="mb-4">
+        <label class="mq-label">Date & Time *</label>
+        <input type="datetime-local" [(ngModel)]="bookForm.scheduledAt"
+               class="mq-input"/>
+      </div>
+
+      <!-- Reason -->
+      <div class="mb-6">
+        <label class="mq-label">Reason for Visit</label>
+        <input type="text" [(ngModel)]="bookForm.reason"
+               class="mq-input" placeholder="Routine checkup, follow-up..."/>
+      </div>
+
+      <div class="flex gap-3">
+        <button (click)="showModal.set(false)" class="btn-ghost flex-1">Cancel</button>
+        <button (click)="bookAppointment()"
+                class="btn-primary flex-1 flex items-center justify-center gap-2"
+                [disabled]="modalLoading() || !selectedPatient() || !bookForm.doctorId || !bookForm.scheduledAt">
+          @if (modalLoading()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          }
+          Confirm Booking
+        </button>
+      </div>
+    </div>
+  </div>
+}

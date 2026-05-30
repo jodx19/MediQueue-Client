@@ -1,7 +1,8 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ClinicalVisitsClient, ClinicalVisitSummaryDto } from '../../../core/api/api-facade.service';
+import { ClinicalVisitsClient, ClinicalVisitSummaryDto } from '../../../core/api/mediqueue-api';
+import { firstValueFrom } from 'rxjs';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { BadgeComponent } from '../../../shared/components/badge/badge.component';
@@ -68,8 +69,8 @@ export class VisitListComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const result = await this.visitsClient.getMyVisits();
-      this.visits.set(result ?? []);
+      const result = await firstValueFrom(this.visitsClient.clinicalVisitsPOST());
+      this.visits.set((result as any).items ?? result ?? []);
     } finally {
       this.isLoading.set(false);
     }

@@ -1,0 +1,163 @@
+<div class="min-h-screen bg-mq-navy grid grid-cols-1 lg:grid-cols-2">
+
+  <!-- LEFT: Medical illustration panel -->
+  <div class="hidden lg:flex flex-col justify-center items-center relative overflow-hidden p-16"
+       style="background: radial-gradient(ellipse at 60% 50%, rgba(13,148,136,.12) 0%, transparent 70%)">
+
+    <!-- Floating blobs -->
+    <div class="absolute top-20 right-20 w-72 h-72 bg-mq-teal/5 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute bottom-20 left-10 w-56 h-56 bg-purple-500/5 rounded-full blur-3xl animate-float-slow"></div>
+
+    <div class="relative z-10 text-center max-w-md">
+      <!-- Logo mark -->
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-mq-teal to-mq-t600
+                  flex items-center justify-center mx-auto mb-8 shadow-teal-glow">
+        <lucide-icon name="heart-pulse" [size]="38" class="text-white"></lucide-icon>
+      </div>
+
+      <h1 class="text-4xl font-black text-white mb-3 leading-tight">
+        Patient <span class="text-transparent bg-clip-text bg-gradient-to-r from-mq-teal to-mq-t400">Portal</span>
+      </h1>
+      <p class="text-mq-s400 text-base leading-relaxed mb-10">
+        Access your complete medical records, upcoming appointments, prescriptions, and billing history — all in one secure place.
+      </p>
+
+      <!-- Feature list -->
+      <div class="space-y-3 text-left">
+        @for (feat of features; track feat.label) {
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg bg-mq-teal/15 flex items-center justify-center flex-shrink-0">
+              <lucide-icon [name]="feat.icon" [size]="14" class="text-mq-t400"></lucide-icon>
+            </div>
+            <span class="text-mq-s400 text-sm">{{ feat.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Login form -->
+  <div class="flex flex-col justify-center items-center bg-mq-800 p-8 lg:p-16 relative">
+
+    <!-- Mobile logo -->
+    <div class="lg:hidden flex items-center gap-2 mb-10">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-mq-teal to-mq-t600 flex items-center justify-center">
+        <lucide-icon name="heart-pulse" [size]="16" class="text-white"></lucide-icon>
+      </div>
+      <span class="text-white font-bold text-lg">MediQueue</span>
+    </div>
+
+    <div class="w-full max-w-sm">
+
+      <a routerLink="/"
+         class="flex items-center gap-2 text-mq-s400 hover:text-mq-t400 text-sm mb-10 transition-colors group w-fit">
+        <lucide-icon name="arrow-left" [size]="15"
+                     class="group-hover:-translate-x-0.5 transition-transform"></lucide-icon>
+        Back to Home
+      </a>
+
+      <h2 class="text-3xl font-black text-white mb-1">Welcome back</h2>
+      <p class="text-mq-s400 text-sm mb-8">Sign in with your Medical Record Number</p>
+
+      <!-- Error message -->
+      @if (errorMsg()) {
+        <div class="flex items-start gap-3 px-4 py-3 rounded-xl
+                    bg-rose-500/10 border border-rose-500/30 text-rose-400
+                    text-sm mb-6 animate-scale-in">
+          <lucide-icon name="alert-circle" [size]="16" class="flex-shrink-0 mt-0.5"></lucide-icon>
+          <span>{{ errorMsg() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="space-y-5" #f="ngForm">
+
+        <!-- MRN -->
+        <div>
+          <label class="block text-mq-s400 text-xs font-semibold uppercase tracking-wider mb-2">
+            Medical Record Number (MRN)
+          </label>
+          <div class="relative">
+            <lucide-icon name="id-card" [size]="16"
+                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-mq-s400 pointer-events-none">
+            </lucide-icon>
+            <input
+              id="mrn-input"
+              type="text"
+              name="mrn"
+              [(ngModel)]="mrn"
+              placeholder="MRN-20260101-ABCD"
+              required
+              autocomplete="off"
+              class="w-full bg-mq-navy border border-mq-700 rounded-xl pl-10 pr-4 py-3.5
+                     text-white placeholder-mq-600 font-mono tracking-wide text-sm
+                     focus:outline-none focus:border-mq-teal focus:ring-2 focus:ring-mq-teal/20
+                     transition-all"/>
+          </div>
+        </div>
+
+        <!-- Date of Birth -->
+        <div>
+          <label class="block text-mq-s400 text-xs font-semibold uppercase tracking-wider mb-2">
+            Date of Birth
+          </label>
+          <div class="relative">
+            <lucide-icon name="calendar" [size]="16"
+                         class="absolute left-3.5 top-1/2 -translate-y-1/2 text-mq-s400 pointer-events-none">
+            </lucide-icon>
+            <input
+              id="dob-input"
+              type="date"
+              name="dateOfBirth"
+              [(ngModel)]="dateOfBirth"
+              required
+              class="w-full bg-mq-navy border border-mq-700 rounded-xl pl-10 pr-4 py-3.5
+                     text-white text-sm
+                     focus:outline-none focus:border-mq-teal focus:ring-2 focus:ring-mq-teal/20
+                     transition-all [color-scheme:dark]"/>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button
+          id="patient-login-btn"
+          type="submit"
+          [disabled]="isLoading()"
+          class="w-full bg-gradient-to-r from-mq-teal to-mq-t600 text-white font-bold
+                 rounded-xl py-4 flex items-center justify-center gap-2
+                 hover:opacity-90 active:scale-[0.98] transition-all
+                 disabled:opacity-50 disabled:cursor-not-allowed mt-2
+                 shadow-teal-glow-sm">
+          @if (isLoading()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            Signing in...
+          } @else {
+            <lucide-icon name="shield-check" [size]="16"></lucide-icon>
+            Access My Records
+          }
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3 my-8">
+        <div class="flex-1 h-px bg-mq-700"></div>
+        <span class="text-mq-600 text-xs">or</span>
+        <div class="flex-1 h-px bg-mq-700"></div>
+      </div>
+
+      <!-- Links -->
+      <div class="text-center space-y-3">
+        <p class="text-mq-s400 text-sm">
+          Don't have an MRN?
+          <a routerLink="/register" class="text-mq-t400 font-semibold hover:underline ml-1 transition-colors">
+            Register here
+          </a>
+        </p>
+        <p>
+          <a routerLink="/auth/login" class="text-mq-600 text-xs hover:text-mq-s400 transition-colors">
+            Staff Login (Admin / Doctor / Receptionist) →
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

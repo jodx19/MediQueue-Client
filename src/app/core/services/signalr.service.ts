@@ -4,6 +4,14 @@ import { AuthService } from '../auth/auth.service';
 import { NotificationService } from './notification.service';
 import { environment } from '../../../environments/environment';
 
+export interface NotificationItem {
+  id: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  type: 'info' | 'success' | 'warning';
+}
+
 @Injectable({ providedIn: 'root' })
 export class SignalRService {
   private readonly auth          = inject(AuthService);
@@ -12,6 +20,59 @@ export class SignalRService {
   private hub?: HubConnection;
   readonly connectionState = signal<'connected'|'connecting'|'disconnected'>('disconnected');
   readonly notificationCount = signal(0);
+  readonly notificationsList = signal<NotificationItem[]>([]);
+
+  constructor() {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage() {
+    try {
+      const stored = localStorage.getItem('mediqueue_notifications');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        this.notificationsList.set(parsed);
+        const unreadCount = parsed.filter((n: any) => !n.read).length;
+        this.notificationCount.set(unreadCount);
+      }
+    } catch (e) {
+      console.error('Failed to load notifications from localStorage', e);
+    }
+  }
+
+  private saveToStorage(list: NotificationItem[]) {
+    try {
+      localStorage.setItem('mediqueue_notifications', JSON.stringify(list));
+      const unreadCount = list.filter(n => !n.read).length;
+      this.notificationCount.set(unreadCount);
+    } catch (e) {
+      console.error('Failed to save notifications to localStorage', e);
+    }
+  }
+
+  addNotification(message: string, type: 'info' | 'success' | 'warning' = 'info') {
+    const newItem: NotificationItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      message,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type
+    };
+    const updated = [newItem, ...this.notificationsList()].slice(0, 20); // keep last 20
+    this.notificationsList.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  markAllAsRead() {
+    const updated = this.notificationsList().map(n => ({ ...n, read: true }));
+    this.notificationsList.set(updated);
+    this.saveToStorage(updated);
+  }
+
+  clearNotifications(): void {
+    this.notificationsList.set([]);
+    this.saveToStorage([]);
+  }
 
   async connect(): Promise<void> {
     if (this.hub?.state === HubConnectionState.Connected) return;
@@ -29,24 +90,21 @@ export class SignalRService {
 
     // ═══ Events from Backend (ClinicHub)
     this.hub.on('AppointmentBooked', (data: any) => {
-      this.notifications.info(
-        `New Appointment: ${data.patientName} with Dr. ${data.doctorName}`
-      );
-      this.incrementCount();
+      const msg = `New Appointment: ${data.patientName} with Dr. ${data.doctorName}`;
+      this.notifications.info(msg);
+      this.addNotification(msg, 'info');
     });
 
     this.hub.on('VisitStarted', (data: any) => {
-      this.notifications.success(
-        `Visit Started: ${data.patientName} — Dr. ${data.doctorName}`
-      );
-      this.incrementCount();
+      const msg = `Visit Started: ${data.patientName} — Dr. ${data.doctorName}`;
+      this.notifications.success(msg);
+      this.addNotification(msg, 'success');
     });
 
     this.hub.on('InvoicePaid', (data: any) => {
-      this.notifications.success(
-        `Payment Received: Invoice #${data.invoiceNumber} — EGP ${data.amount.toLocaleString()}`
-      );
-      this.incrementCount();
+      const msg = `Payment Received: Invoice #${data.invoiceNumber} — EGP ${data.amount.toLocaleString()}`;
+      this.notifications.success(msg);
+      this.addNotification(msg, 'success');
     });
 
     // ═══ Reconnection handlers
@@ -62,14 +120,6 @@ export class SignalRService {
       this.connectionState.set('disconnected');
       console.error('SignalR failed to connect:', err);
     }
-  }
-
-  clearNotifications(): void {
-    this.notificationCount.set(0);
-  }
-
-  private incrementCount(): void {
-    this.notificationCount.update(n => n + 1);
   }
 
   async disconnect(): Promise<void> {

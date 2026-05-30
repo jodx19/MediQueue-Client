@@ -1,0 +1,173 @@
+<div class="flex h-screen bg-mq-navy overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside [@sidebarToggle]="sidebarState()"
+         class="flex-shrink-0 bg-mq-navy border-r border-mq-700
+                flex flex-col transition-all duration-250 overflow-hidden">
+
+    <!-- Logo & Portal Identifier -->
+    <div class="flex items-center gap-3 px-5 py-5 border-b border-mq-700 flex-shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-mq-teal to-emerald-600
+                  flex items-center justify-center flex-shrink-0">
+        <lucide-icon name="activity" class="text-white" [size]="16"/>
+      </div>
+      @if (!collapsed()) {
+        <div class="flex flex-col min-w-0">
+          <span class="text-white font-bold text-base tracking-tight whitespace-nowrap">
+            MediQueue
+          </span>
+          <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">
+            Patient Portal
+          </span>
+        </div>
+      }
+      <button (click)="toggleSidebar()"
+              class="ml-auto text-mq-s400 hover:text-white transition-colors">
+        <lucide-icon [name]="collapsed()?'chevron-right':'chevron-left'" [size]="16"/>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
+      @for (item of navItems; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg text-mq-s400 hover:text-white hover:bg-mq-800 transition-all duration-150 group"
+           [title]="collapsed() ? item.label : ''">
+          <lucide-icon [name]="item.icon" [size]="18" class="flex-shrink-0 group-hover:scale-105 transition-transform"/>
+          @if (!collapsed()) {
+            <span class="whitespace-nowrap font-medium text-sm">{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <!-- Bottom Account Panel -->
+    <div class="border-t border-mq-700 p-3 space-y-2 flex-shrink-0">
+
+      <!-- SignalR Portal Connection Status -->
+      <div class="flex items-center gap-2 px-3 py-2">
+        <div [class]="connected()
+          ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0'
+          : 'w-2 h-2 rounded-full bg-rose-400 flex-shrink-0'"></div>
+        @if (!collapsed()) {
+          <span class="text-xs text-mq-s400 font-medium">
+            {{ connected() ? 'Portal Connected' : 'Connection Lost' }}
+          </span>
+        }
+      </div>
+
+      <!-- User Information -->
+      <div class="flex items-center gap-3 px-3 py-2 bg-mq-800 rounded-xl border border-mq-700/50">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600
+                    flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-md">
+          {{ initials() }}
+        </div>
+        @if (!collapsed()) {
+          <div class="flex-1 min-w-0">
+            <p class="text-white text-xs font-semibold truncate">{{ user()?.name }}</p>
+            <p class="text-emerald-400 text-[10px] font-medium uppercase tracking-wide">Patient</p>
+          </div>
+          <button (click)="logout()"
+                  class="text-mq-s400 hover:text-rose-400 transition-colors p-1"
+                  title="Logout">
+            <lucide-icon name="log-out" [size]="15"/>
+          </button>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Portal Workspace -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-mq-navy">
+
+    <!-- Topbar -->
+    <header class="h-16 bg-mq-800 border-b border-mq-700/80 flex items-center
+                   justify-between px-6 flex-shrink-0 shadow-sm z-10">
+      <div class="flex items-center gap-4">
+        <button class="lg:hidden text-mq-s400 hover:text-white transition-colors"
+                (click)="toggleSidebar()">
+          <lucide-icon name="menu" [size]="20"/>
+        </button>
+        <h1 class="text-white font-bold text-lg tracking-tight bg-gradient-to-r from-white to-mq-s300 bg-clip-text text-transparent">
+          {{ pageTitle() }}
+        </h1>
+      </div>
+      <div class="flex items-center gap-4">
+
+        <!-- Quick Actions / Support Badge -->
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs font-semibold">
+          <lucide-icon name="shield" [size]="12"/>
+          Secure Patient Session
+        </div>
+
+        <!-- Notification bell -->
+        <div class="relative">
+          <button (click)="showNotifs.set(!showNotifs())"
+                  class="relative text-mq-s400 hover:text-white hover:bg-mq-700/50 p-2 rounded-full transition-all block">
+            <lucide-icon name="bell" [size]="19"/>
+            @if (notifCount() > 0) {
+              <span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full
+                           bg-rose-500 text-white text-[9px] flex items-center justify-center
+                           font-bold animate-bounce">
+                {{ notifCount() > 9 ? '9+' : notifCount() }}
+              </span>
+            }
+          </button>
+
+          @if (showNotifs()) {
+            <div class="absolute right-0 top-10 w-80 bg-mq-800 border border-mq-700/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col z-50 animate-slide-in">
+              <!-- Header -->
+              <div class="px-4 py-3 bg-mq-navy border-b border-mq-700 flex items-center justify-between">
+                <span class="text-white font-bold text-sm">Notifications</span>
+                <div class="flex items-center gap-2">
+                  <button (click)="signalr.markAllAsRead(); $event.stopPropagation()" class="text-[10px] text-mq-teal hover:underline font-semibold bg-transparent border-0 cursor-pointer">
+                    Read All
+                  </button>
+                  <span class="text-mq-700 text-xs">|</span>
+                  <button (click)="signalr.clearNotifications(); $event.stopPropagation()" class="text-[10px] text-rose-400 hover:underline font-semibold bg-transparent border-0 cursor-pointer">
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <!-- List -->
+              <div class="max-h-72 overflow-y-auto divide-y divide-mq-700/50 custom-scrollbar">
+                @if (signalr.notificationsList().length === 0) {
+                  <div class="py-8 text-center text-mq-s500 text-xs">
+                    No notifications yet
+                  </div>
+                } @else {
+                  @for (notif of signalr.notificationsList(); track notif.id) {
+                    <div [class]="notif.read ? 'bg-mq-800/40' : 'bg-mq-750/30 font-medium'" class="px-4 py-3 hover:bg-mq-750/50 transition-colors flex items-start gap-3">
+                      <div [class]="notif.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'" class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <lucide-icon [name]="notif.type === 'success' ? 'check-circle' : 'bell'" [size]="14"/>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-white text-xs leading-normal">{{ notif.message }}</p>
+                        <span class="text-[9px] text-mq-s500 mt-1 block">{{ notif.timestamp | date:'shortTime' }}</span>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- User avatar dropdown indicator -->
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600
+                    flex items-center justify-center text-white text-xs font-bold ring-2 ring-mq-700">
+          {{ initials() }}
+        </div>
+      </div>
+    </header>
+
+    <!-- Router outlet for specific pages -->
+    <main class="flex-1 overflow-y-auto bg-gradient-to-b from-mq-navy to-mq-950">
+      <router-outlet/>
+    </main>
+  </div>
+</div>
+
+<!-- Toast container for live alerts -->
+<app-toast/>

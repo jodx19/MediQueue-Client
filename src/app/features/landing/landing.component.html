@@ -1,486 +1,876 @@
-<div class="min-h-screen bg-[var(--mq-navy)] text-white overflow-x-hidden font-sans" @pageEnter>
-  <!-- NAVBAR -->
-  <nav [class.bg-opacity-90]="scrolled()" [class.backdrop-blur-md]="scrolled()" [class.shadow-teal-glow]="scrolled()" class="fixed top-0 w-full z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center glass-card border-x-0 border-t-0 rounded-none">
+<!-- ══════════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════════ -->
+<nav [class]="'fixed top-0 w-full z-50 transition-all duration-500 ' +
+              (scrolled() ? 'bg-[#060D1A]/95 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl' : 'bg-transparent py-5')">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+
+    <!-- Logo -->
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--mq-teal)] to-[var(--mq-teal-900)] flex items-center justify-center text-white font-bold text-xl">MQ</div>
-      <span class="text-xl font-bold tracking-tight">MediQueue</span>
+      <div class="relative w-10 h-10">
+        <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+          <defs>
+            <linearGradient id="nLogoG" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0D9488"/>
+              <stop offset="1" stop-color="#0891B2"/>
+            </linearGradient>
+            <filter id="nGlow">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <rect width="44" height="44" rx="13" fill="url(#nLogoG)"/>
+          <!-- Pulse waveform path -->
+          <path d="M7 22H14L17 13L22 31L27 18L30 22H37" stroke="white" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" filter="url(#nGlow)"/>
+        </svg>
+        <div class="absolute inset-0 rounded-[13px]"
+             style="box-shadow:0 0 20px rgba(13,148,136,.5)"></div>
+      </div>
+      <div>
+        <span class="text-white font-black text-xl tracking-tight leading-none block">MediQueue</span>
+        <span class="text-teal-400 text-[10px] font-bold tracking-widest uppercase leading-none">EMR Platform</span>
+      </div>
     </div>
+
+    <!-- Nav Links -->
     <div class="hidden md:flex items-center gap-8">
-      <a href="#features" class="text-sm font-medium text-[var(--mq-slate-200)] hover:text-white transition-colors">Features</a>
-      <a href="#pricing" class="text-sm font-medium text-[var(--mq-slate-200)] hover:text-white transition-colors">Pricing</a>
-      <a href="#about" class="text-sm font-medium text-[var(--mq-slate-200)] hover:text-white transition-colors">About</a>
+      <a href="#workflow" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+        How it Works
+        <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
+      </a>
+      <a href="#features" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+        Features
+        <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
+      </a>
+      <a href="#portals" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+        Portals
+        <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
+      </a>
+      <a href="#stats" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+        Pricing
+        <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
+      </a>
     </div>
-    <div class="hidden md:flex items-center gap-4">
-      <button class="text-sm font-medium text-white hover:text-[var(--mq-teal-400)] transition-colors">Book Appointment</button>
-      <button class="btn-neon" routerLink="/dashboard">Staff Login</button>
-    </div>
-    <button class="md:hidden text-white" (click)="toggleMobileMenu()">
-      <lucide-icon [name]="mobileMenuOpen() ? 'X' : 'Menu'"></lucide-icon>
-    </button>
-  </nav>
 
-  <!-- Mobile Menu -->
-  <div *ngIf="mobileMenuOpen()" class="fixed inset-0 z-40 bg-[var(--mq-navy)] pt-24 px-6 flex flex-col gap-6 md:hidden">
-    <a href="#features" class="text-xl font-medium" (click)="toggleMobileMenu()">Features</a>
-    <a href="#pricing" class="text-xl font-medium" (click)="toggleMobileMenu()">Pricing</a>
-    <a href="#about" class="text-xl font-medium" (click)="toggleMobileMenu()">About</a>
-    <div class="flex flex-col gap-4 mt-8">
-      <button class="py-3 text-center border border-[var(--mq-slate-600)] rounded-xl">Book Appointment</button>
-      <button class="btn-neon text-center" routerLink="/dashboard">Staff Login</button>
+    <!-- CTA Buttons -->
+    <div class="flex items-center gap-3">
+      <a routerLink="/auth/patient-login"
+         class="hidden sm:inline-flex text-sm font-semibold text-slate-300 hover:text-white
+                transition-colors px-4 py-2 rounded-lg hover:bg-white/5">
+        Patient Portal
+      </a>
+      <a routerLink="/auth/login"
+         class="btn-primary !py-2.5 !px-5 !text-sm shadow-[0_0_20px_rgba(13,148,136,.4)]">
+        Clinic Login →
+      </a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════════════════ -->
+<section class="relative min-h-screen flex items-center pt-24 overflow-hidden"
+         style="background: linear-gradient(180deg, #060D1A 0%, #0D1829 50%, #060D1A 100%);">
+
+  <!-- Background grid -->
+  <div class="absolute inset-0 pointer-events-none"
+       style="background-image: linear-gradient(rgba(13,148,136,.035) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(13,148,136,.035) 1px, transparent 1px);
+              background-size: 64px 64px;"></div>
+
+  <!-- Orb glow effects -->
+  <div class="absolute -top-40 -right-40 w-[800px] h-[800px] pointer-events-none"
+       style="background: radial-gradient(circle, rgba(13,148,136,.18) 0%, transparent 65%);
+              border-radius: 50%; filter: blur(1px);"></div>
+  <div class="absolute top-1/2 -left-48 w-[600px] h-[600px] pointer-events-none"
+       style="background: radial-gradient(circle, rgba(124,58,237,.12) 0%, transparent 65%);
+              border-radius: 50%; filter: blur(1px);"></div>
+  <div class="absolute bottom-0 right-1/3 w-[400px] h-[400px] pointer-events-none"
+       style="background: radial-gradient(circle, rgba(8,145,178,.1) 0%, transparent 65%);
+              border-radius: 50%;"></div>
+
+  <!-- Hero Content -->
+  <div class="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center py-20" [@heroEnter]>
+
+    <!-- LEFT: Copy -->
+    <div>
+      <!-- Eyebrow badge -->
+      <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8
+                  border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs font-semibold
+                  backdrop-blur-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="ticker-wrap w-56 overflow-hidden whitespace-nowrap">
+          <span class="ticker-track inline-flex">
+            @for (item of tickerItems; track item) {
+              <span class="px-4">{{ item }}</span>
+            }
+            @for (item of tickerItems; track item) {
+              <span class="px-4">{{ item }}</span>
+            }
+          </span>
+        </span>
+      </div>
+
+      <!-- H1 -->
+      <h1 class="text-[clamp(46px,5.5vw,76px)] font-black text-white leading-[1.03]
+                 tracking-[-2.5px] mb-6">
+        <span class="hero-word block animate-fade-up">Healthcare OS</span>
+        <span class="hero-word block animate-fade-up" style="animation-delay:.08s">Built for</span>
+        <span class="hero-word block animate-fade-up" style="animation-delay:.16s">
+          <span style="background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 40%, #818CF8 100%);
+                       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                       background-clip: text;">Modern Clinics</span>
+        </span>
+      </h1>
+
+      <p class="text-slate-400 text-lg leading-relaxed max-w-lg mb-10 animate-fade-up"
+         style="animation-delay:.3s">
+        From booking to billing — one intelligent platform that powers
+        every role in your clinic seamlessly and securely in real time.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap gap-4 mb-14 animate-fade-up" style="animation-delay:.42s">
+        <a routerLink="/register"
+           class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base text-white
+                  transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+           style="background: linear-gradient(135deg, #0D9488, #0891B2);
+                  box-shadow: 0 8px 32px rgba(13,148,136,.45), inset 0 1px 0 rgba(255,255,255,.1)">
+          Start Free Trial
+          <lucide-icon name="arrow-right" [size]="18"/>
+        </a>
+        <a routerLink="/auth/login"
+           class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base
+                  text-slate-300 hover:text-white border border-white/10 hover:border-teal-500/40
+                  transition-all duration-200 hover:bg-white/5">
+          Live Demo
+          <lucide-icon name="play-circle" [size]="18"/>
+        </a>
+      </div>
+
+      <!-- Trust badges -->
+      <div class="flex items-center gap-6 animate-fade-up" style="animation-delay:.5s">
+        <div class="flex -space-x-2">
+          @for (c of ['#0D9488','#7C3AED','#0891B2','#059669']; track c) {
+            <div class="w-8 h-8 rounded-full border-2 border-[#060D1A] flex items-center justify-center
+                        text-white text-xs font-bold"
+                 [style.background]="c">D</div>
+          }
+        </div>
+        <div>
+          <p class="text-white text-sm font-semibold">Trusted by 50+ clinics</p>
+          <div class="flex gap-0.5 mt-0.5">
+            @for (s of [1,2,3,4,5]; track s) {
+              <lucide-icon name="star" [size]="11" class="text-amber-400" style="fill:#FBBF24"/>
+            }
+            <span class="text-slate-400 text-xs ml-1">4.9 rating</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Floating Dashboard UI -->
+    <div class="relative flex justify-center items-center animate-fade-up" style="animation-delay:.2s">
+
+      <!-- Main Dashboard Card -->
+      <div class="w-full max-w-[440px] relative z-10">
+        <!-- Card glow -->
+        <div class="absolute inset-0 rounded-2xl blur-2xl opacity-30"
+             style="background: linear-gradient(135deg, #0D9488, #0891B2);"></div>
+
+        <div class="relative rounded-2xl overflow-hidden border border-white/10"
+             style="background: rgba(15,28,50,.9); backdrop-filter: blur(24px);">
+
+          <!-- Window chrome bar -->
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-white/5"
+               style="background: rgba(255,255,255,.03)">
+            <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+            <span class="text-slate-500 text-[11px] font-mono ml-2">MediQueue · Dashboard</span>
+            <div class="ml-auto flex items-center gap-1.5 text-[10px] text-emerald-400 font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="p-4 grid grid-cols-3 gap-3 border-b border-white/5">
+            @for (m of [{icon:'users', label:'Patients', value: patientCount() + '', color:'#2DD4BF', change:'+12%'},
+                        {icon:'calendar', label:'Today Apts', value:'24', color:'#818CF8', change:'+5%'},
+                        {icon:'dollar-sign', label:'Revenue', value:'84K', color:'#34D399', change:'+8%'}]; track m.label) {
+              <div class="rounded-xl p-3 border border-white/5"
+                   style="background: rgba(255,255,255,.04)">
+                <div class="flex justify-between items-start mb-2">
+                  <lucide-icon [name]="m.icon" [size]="14" [style.color]="m.color"/>
+                  <span class="text-[9px] font-bold text-emerald-400">{{ m.change }}</span>
+                </div>
+                <p class="text-white text-xl font-black leading-none">{{ m.value }}</p>
+                <p class="text-slate-500 text-[10px] mt-1">{{ m.label }}</p>
+              </div>
+            }
+          </div>
+
+          <!-- Today's Queue -->
+          <div class="p-4 border-b border-white/5">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Today's Queue</span>
+              <span class="text-teal-400 text-[10px] font-semibold">View All →</span>
+            </div>
+            @for (apt of [{name:'Omar Tarek', doc:'Dr. Ahmed', time:'10:30 AM', status:'In Progress', color:'#2DD4BF'},
+                          {name:'Sara Hassan', doc:'Dr. Mona', time:'11:00 AM', status:'Waiting', color:'#FCD34D'},
+                          {name:'Ali Mahmoud', doc:'Dr. Samy', time:'11:30 AM', status:'Scheduled', color:'#818CF8'}]; track apt.name) {
+              <div class="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                     [style.background]="'linear-gradient(135deg,' + apt.color + '40,' + apt.color + '20)'">
+                  {{ apt.name[0] }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-white text-xs font-semibold truncate">{{ apt.name }}</p>
+                  <p class="text-slate-500 text-[10px] truncate">{{ apt.doc }}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-slate-400 text-[10px]">{{ apt.time }}</p>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        [style.color]="apt.color"
+                        [style.background]="apt.color + '20'">{{ apt.status }}</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Revenue sparkline -->
+          <div class="p-4">
+            <div class="flex justify-between mb-2">
+              <span class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Weekly Revenue</span>
+              <span class="text-white text-[10px] font-semibold">EGP 84,200</span>
+            </div>
+            <div class="flex items-end gap-1 h-12">
+              @for (h of [35, 55, 45, 70, 60, 85, 72]; track $index) {
+                <div class="flex-1 rounded-t-sm transition-all duration-500"
+                     [style.height.%]="h"
+                     [style.background]="'linear-gradient(180deg, rgba(13,148,136,.8), rgba(13,148,136,.2))'">
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Notification Pills -->
+      <div class="absolute -top-6 -left-6 flex items-center gap-2.5 px-3 py-2.5 rounded-xl
+                  border border-white/10 animate-float z-20"
+           style="background: rgba(15,28,50,.95); backdrop-filter: blur(16px)">
+        <div class="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+          <lucide-icon name="activity" [size]="14" class="text-rose-400"/>
+        </div>
+        <div>
+          <p class="text-white text-[11px] font-semibold">Vitals Logged</p>
+          <p class="text-slate-400 text-[9px]">Patient #2847 · Just now</p>
+        </div>
+      </div>
+
+      <div class="absolute -top-2 -right-8 flex items-center gap-2.5 px-3 py-2.5 rounded-xl
+                  border border-emerald-500/20 animate-float-slow z-20"
+           style="background: rgba(15,28,50,.95); backdrop-filter: blur(16px); animation-delay:.8s">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+          <lucide-icon name="check-circle" [size]="14" class="text-emerald-400"/>
+        </div>
+        <div>
+          <p class="text-white text-[11px] font-semibold">Invoice Paid</p>
+          <p class="text-emerald-400 text-[9px] font-bold">EGP 450.00 ✓</p>
+        </div>
+      </div>
+
+      <div class="absolute -bottom-4 -left-4 flex items-center gap-2.5 px-3 py-2.5 rounded-xl
+                  border border-purple-500/20 animate-float-fast z-20"
+           style="background: rgba(15,28,50,.95); backdrop-filter: blur(16px); animation-delay:1.2s">
+        <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+          <lucide-icon name="bell" [size]="14" class="text-purple-400"/>
+        </div>
+        <div>
+          <p class="text-white text-[11px] font-semibold">New Appointment</p>
+          <p class="text-slate-400 text-[9px]">Dr. Mona · 2:30 PM</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- SECTION 1: HERO -->
-  <section class="pt-32 pb-20 md:pt-48 md:pb-32 px-6 md:px-12 relative">
-    <!-- SVG Grid Background -->
-    <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(rgba(13,148,136,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(13,148,136,0.1) 1px, transparent 1px); background-size: 40px 40px;"></div>
-    <!-- Glowing Orbs -->
-    <div class="absolute top-20 left-1/4 w-64 h-64 bg-[var(--mq-teal)] rounded-full blur-[120px] opacity-20 z-0"></div>
-    <div class="absolute bottom-10 right-1/4 w-80 h-80 bg-[var(--mq-teal-900)] rounded-full blur-[100px] opacity-40 z-0"></div>
-    <div class="absolute top-1/2 left-1/2 w-48 h-48 bg-[var(--mq-teal-400)] rounded-full blur-[150px] opacity-10 z-0"></div>
+  <!-- Bottom gradient fade -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+       style="background: linear-gradient(to bottom, transparent, #060D1A)"></div>
+</section>
 
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
-      <!-- Left Content -->
-      <div class="flex-1 text-center md:text-left">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border-[var(--mq-teal)]/30 mb-8">
-          <div class="w-2 h-2 rounded-full bg-[var(--mq-teal-400)] animate-pulse-dot"></div>
-          <span class="text-xs font-medium tracking-wide uppercase text-[var(--mq-teal-400)]">Live — 247 patients served today</span>
+
+<!-- ══════════════════════════════════════════════════════
+     HOW CARE FLOWS — WORKFLOW SECTION
+══════════════════════════════════════════════════════ -->
+<section id="workflow" class="py-28 relative" style="background: #060D1A;">
+
+  <!-- Subtle glow background -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
+       style="background: radial-gradient(circle, rgba(13,148,136,.08) 0%, transparent 65%);"></div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+    <!-- Section Header -->
+    <div class="text-center mb-20" scroll-reveal>
+      <span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest
+                   text-teal-400 border border-teal-500/30 bg-teal-500/10 mb-5">
+        Workflow
+      </span>
+      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+        How Care <span style="background: linear-gradient(135deg, #2DD4BF, #0D9488);
+                              -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                              background-clip: text;">Flows</span>
+      </h2>
+      <p class="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+        A fully integrated journey from booking to billing in one seamless experience.
+      </p>
+    </div>
+
+    <!-- Steps with connector line -->
+    <div class="relative">
+      <!-- Connector line -->
+      <div class="hidden md:block absolute top-10 left-0 right-0 h-px"
+           style="background: linear-gradient(90deg, transparent 8%, rgba(13,148,136,.4) 25%, rgba(45,212,191,.6) 50%, rgba(13,148,136,.4) 75%, transparent 92%)">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        @for (step of pulseSteps; track step.num) {
+          <div class="relative flex flex-col items-center text-center group" scroll-reveal
+               [attr.scroll-reveal]="'delay-' + step.num">
+
+            <!-- Step icon circle -->
+            <div class="relative mb-8">
+              <div class="w-20 h-20 rounded-2xl flex items-center justify-center relative z-10
+                          transition-all duration-300 group-hover:scale-110"
+                   style="background: linear-gradient(135deg, rgba(13,148,136,.15), rgba(13,148,136,.05));
+                          border: 1px solid rgba(13,148,136,.3);
+                          box-shadow: 0 0 30px rgba(13,148,136,.2)">
+                <lucide-icon [name]="step.icon" [size]="28" class="text-teal-400"/>
+              </div>
+              <!-- Step number badge -->
+              <div class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-teal-500 flex items-center
+                          justify-center text-white text-xs font-black z-20"
+                   style="box-shadow: 0 0 12px rgba(13,148,136,.6)">
+                {{ step.num }}
+              </div>
+            </div>
+
+            <!-- Content card -->
+            <div class="w-full rounded-2xl p-6 border border-white/5 group-hover:border-teal-500/30
+                        transition-all duration-300 group-hover:-translate-y-1"
+                 style="background: rgba(15,28,50,.6); backdrop-filter: blur(12px)">
+              <h3 class="text-xl font-bold text-white mb-3">{{ step.title }}</h3>
+              <p class="text-slate-400 text-sm leading-relaxed mb-4">{{ step.desc }}</p>
+              <!-- Preview pill -->
+              <div class="px-3 py-2 rounded-lg text-left text-[11px] font-mono text-teal-300/80
+                          border border-teal-500/15"
+                   style="background: rgba(13,148,136,.08)">
+                {{ step.preview }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     DESIGNED FOR EVERY ROLE — BENTO FEATURES
+══════════════════════════════════════════════════════ -->
+<section id="features" class="py-28 relative"
+         style="background: linear-gradient(180deg, #060D1A 0%, #0A1628 100%);">
+
+  <!-- Background pattern -->
+  <div class="absolute inset-0 pointer-events-none opacity-30"
+       style="background-image: radial-gradient(circle at 20% 50%, rgba(124,58,237,.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(13,148,136,.08) 0%, transparent 50%);">
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+    <!-- Header -->
+    <div class="text-center mb-16" scroll-reveal>
+      <span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest
+                   text-purple-400 border border-purple-500/30 bg-purple-500/10 mb-5">
+        Features
+      </span>
+      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+        Designed for <span style="background: linear-gradient(135deg, #818CF8, #6366F1);
+                                  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                                  background-clip: text;">Every Role</span>
+      </h2>
+      <p class="text-slate-400 text-base max-w-xl mx-auto">
+        Six powerful modules, one unified system built for clinical excellence.
+      </p>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      @for (feature of features; track feature.id; let idx = $index) {
+        <div class="group relative rounded-2xl p-6 border border-white/5
+                    hover:border-white/15 transition-all duration-300 hover:-translate-y-1
+                    cursor-default overflow-hidden"
+             style="background: rgba(15,28,50,.7);"
+             scroll-reveal [attr.scroll-reveal]="'delay-' + ((idx % 3) + 1)">
+
+          <!-- Hover glow effect -->
+          <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
+               [style.background]="'radial-gradient(circle at 50% 0%, ' + feature.iconColor + '08 0%, transparent 70%)'">
+          </div>
+
+          <!-- Top row: icon + tag -->
+          <div class="flex items-start justify-between mb-5">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center
+                        group-hover:scale-110 transition-transform duration-300"
+                 [style.background]="feature.iconBg">
+              <lucide-icon [name]="feature.icon" [size]="22" [style.color]="feature.iconColor"/>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full border"
+                  [style.color]="feature.iconColor"
+                  [style.borderColor]="feature.iconColor + '40'"
+                  [style.background]="feature.iconBg">
+              {{ feature.tagline }}
+            </span>
+          </div>
+
+          <h3 class="text-lg font-bold text-white mb-3">{{ feature.title }}</h3>
+
+          <!-- Feature bullets -->
+          <div class="space-y-2">
+            @for (detail of feature.details; track detail) {
+              <div class="flex items-center gap-2 text-sm text-slate-400">
+                <div class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                     [style.background]="feature.iconColor"></div>
+                {{ detail }}
+              </div>
+            }
+          </div>
+
+          <!-- Bottom divider bar -->
+          <div class="absolute bottom-0 left-6 right-6 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+               [style.background]="'linear-gradient(90deg, transparent, ' + feature.iconColor + '60, transparent)'">
+          </div>
         </div>
-        
-        <h1 class="text-5xl md:text-[64px] font-bold leading-[1.05] tracking-tight mb-6" [@list]>
-          <span class="block">Healthcare OS</span>
-          <span class="block">Built for the</span>
-          <span class="block text-[var(--mq-teal)]">Modern Clinic</span>
-        </h1>
-        
-        <p class="text-lg md:text-xl text-[var(--mq-slate-400)] mb-10 max-w-xl mx-auto md:mx-0 leading-relaxed">
-          The all-in-one platform connecting doctors, patients, and admins with real-time intelligence and seamless workflows.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mb-10">
-          <button class="btn-neon w-full sm:w-auto">Book Appointment <lucide-icon name="ArrowRight" class="inline w-4 h-4 ml-2"></lucide-icon></button>
-          <button class="px-6 py-3 rounded-xl border border-[var(--mq-slate-600)] hover:bg-[var(--mq-slate-800)] transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
-            <lucide-icon name="Play" class="w-4 h-4"></lucide-icon> Watch Demo
+      }
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     ONE PLATFORM, THREE PORTALS
+══════════════════════════════════════════════════════ -->
+<section id="portals" class="py-28 relative" style="background: #060D1A;">
+
+  <div class="absolute inset-0 pointer-events-none"
+       style="background: radial-gradient(ellipse at 50% 100%, rgba(13,148,136,.07) 0%, transparent 60%);">
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+    <!-- Header -->
+    <div class="text-center mb-16" scroll-reveal>
+      <span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest
+                   text-cyan-400 border border-cyan-500/30 bg-cyan-500/10 mb-5">
+        Portals
+      </span>
+      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+        One Platform, <span style="background: linear-gradient(135deg, #22D3EE, #0891B2);
+                                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                                   background-clip: text;">Three Portals</span>
+      </h2>
+      <p class="text-slate-400 text-base max-w-xl mx-auto">
+        A dedicated, optimized experience for every role in your clinic.
+      </p>
+    </div>
+
+    <!-- Tab Selector -->
+    <div class="flex justify-center mb-12" scroll-reveal>
+      <div class="inline-flex p-1.5 rounded-2xl border border-white/10"
+           style="background: rgba(15,28,50,.8);">
+        @for (tab of portalTabs; track tab.id) {
+          <button class="relative px-7 py-3 rounded-xl text-sm font-semibold transition-all duration-300"
+                  [ngClass]="activePortal() === tab.id
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-white'"
+                  (click)="activePortal.set(tab.id)">
+            @if (activePortal() === tab.id) {
+              <span class="absolute inset-0 rounded-xl"
+                    style="background: linear-gradient(135deg, #0D9488, #0891B2);
+                           box-shadow: 0 4px 20px rgba(13,148,136,.4)"></span>
+            }
+            <span class="relative z-10">{{ tab.label }}</span>
           </button>
-        </div>
-        
-        <div class="text-sm text-[var(--mq-slate-400)] flex items-center justify-center md:justify-start gap-2">
-          <span>Trusted by 50+ clinics</span>
-          <span class="w-1 h-1 rounded-full bg-[var(--mq-slate-600)]"></span>
-          <span>12,000+ patients</span>
-          <span class="w-1 h-1 rounded-full bg-[var(--mq-slate-600)]"></span>
-          <span class="text-yellow-400">4.9★</span>
-        </div>
-      </div>
-
-      <!-- Right Floating Dashboard -->
-      <div class="flex-1 hidden md:block relative animate-float">
-        <div class="glass-card p-6 w-full max-w-lg mx-auto shadow-2xl relative z-10 border-[var(--mq-teal)]/30">
-          <div class="flex justify-between items-center mb-6">
-            <div class="text-sm font-semibold text-[var(--mq-slate-200)]">MediQueue OS v2</div>
-            <div class="flex gap-1.5">
-              <div class="w-3 h-3 rounded-full bg-red-500"></div>
-              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <div class="w-3 h-3 rounded-full bg-green-500"></div>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-3 gap-3 mb-6">
-            <div class="bg-[var(--mq-navy-800)] rounded-lg p-3 text-center border border-[var(--mq-navy-700)]">
-              <div class="text-xs text-[var(--mq-slate-400)] mb-1">Patients Today</div>
-              <div class="text-lg font-bold text-white">124</div>
-            </div>
-            <div class="bg-[var(--mq-navy-800)] rounded-lg p-3 text-center border border-[var(--mq-navy-700)]">
-              <div class="text-xs text-[var(--mq-slate-400)] mb-1">Revenue</div>
-              <div class="text-lg font-bold text-[var(--mq-teal-400)]">EGP 14K</div>
-            </div>
-            <div class="bg-[var(--mq-navy-800)] rounded-lg p-3 text-center border border-[var(--mq-navy-700)]">
-              <div class="text-xs text-[var(--mq-slate-400)] mb-1">Active Staff</div>
-              <div class="text-lg font-bold text-white">12</div>
-            </div>
-          </div>
-
-          <div class="space-y-3 mb-6">
-            <div class="flex items-center justify-between p-3 bg-[var(--mq-navy-800)] rounded-lg border border-[var(--mq-navy-700)]">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold">AS</div>
-                <div class="text-sm">Ahmed Samy</div>
-              </div>
-              <div class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">In Visit</div>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-[var(--mq-navy-800)] rounded-lg border border-[var(--mq-navy-700)]">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold">SM</div>
-                <div class="text-sm">Sara Magdy</div>
-              </div>
-              <div class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full">Waiting</div>
-            </div>
-          </div>
-
-          <div class="h-16 w-full bg-[var(--mq-navy-800)] rounded-lg border border-[var(--mq-navy-700)] flex items-end p-2 gap-1">
-             <div class="w-1/6 bg-[var(--mq-teal)]/20 h-[30%] rounded-t"></div>
-             <div class="w-1/6 bg-[var(--mq-teal)]/40 h-[50%] rounded-t"></div>
-             <div class="w-1/6 bg-[var(--mq-teal)]/60 h-[40%] rounded-t"></div>
-             <div class="w-1/6 bg-[var(--mq-teal)]/80 h-[70%] rounded-t"></div>
-             <div class="w-1/6 bg-[var(--mq-teal)] h-[60%] rounded-t"></div>
-             <div class="w-1/6 bg-[var(--mq-teal-400)] h-[90%] rounded-t"></div>
-          </div>
-        </div>
-
-        <!-- Floating Pills -->
-        <div class="absolute -top-4 -left-8 px-4 py-2 glass-card rounded-full text-xs font-bold flex items-center gap-2 border-[var(--mq-teal)]/40 animate-[float_5s_ease-in-out_infinite]" style="animation-delay: 0s;">
-          ❤️ 98 bpm
-        </div>
-        <div class="absolute top-1/4 -right-12 px-4 py-2 glass-card rounded-full text-xs font-bold flex items-center gap-2 border-[var(--mq-teal)]/40 animate-[float_6s_ease-in-out_infinite]" style="animation-delay: 1.5s;">
-          🩺 Dr. Ahmed
-        </div>
-        <div class="absolute bottom-1/4 -left-12 px-4 py-2 glass-card rounded-full text-xs font-bold flex items-center gap-2 border-[var(--mq-teal)]/40 animate-[float_5.5s_ease-in-out_infinite]" style="animation-delay: 3s;">
-          💊 Rx Ready
-        </div>
-        <div class="absolute -bottom-6 right-0 px-4 py-2 glass-card rounded-full text-xs font-bold flex items-center gap-2 border-[var(--mq-teal)]/40 animate-[float_4.5s_ease-in-out_infinite]" style="animation-delay: 4.5s;">
-          📊 Revenue ↑12%
-        </div>
+        }
       </div>
     </div>
-  </section>
 
-  <!-- SECTION 2: LIVE PULSE TICKER -->
-  <div class="bg-[var(--mq-navy-800)] border-y border-[var(--mq-navy-700)] py-4 overflow-hidden">
-    <div class="ticker-track text-sm font-medium tracking-wide">
-      <div class="flex items-center gap-12 px-6" *ngFor="let i of [1,2]">
-        <span class="text-[var(--mq-teal-400)] flex items-center gap-2">✦ <span class="text-white">247 Patients Today</span></span>
-        <span class="text-[var(--mq-teal-400)] flex items-center gap-2">✦ <span class="text-white">98% Satisfaction</span></span>
-        <span class="text-[var(--mq-teal-400)] flex items-center gap-2">✦ <span class="text-white">12 Active Doctors</span></span>
-        <span class="text-[var(--mq-teal-400)] flex items-center gap-2">✦ <span class="text-white">3 min Avg Wait</span></span>
-        <span class="text-[var(--mq-teal-400)] flex items-center gap-2">✦ <span class="text-white">EGP 84,200 Revenue</span></span>
+    <!-- Portal Preview -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch" scroll-reveal>
+
+      <!-- Description Panel -->
+      <div class="lg:col-span-4 flex flex-col justify-center space-y-6">
+        @if (activePortal() === 'patient') {
+          <div>
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center mb-5">
+              <lucide-icon name="user" [size]="26" class="text-emerald-400"/>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Patient Self-Service</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+              Empower patients to manage their own healthcare journey with full visibility into records, appointments, and bills.
+            </p>
+            <div class="space-y-3">
+              @for (item of ['Book appointments online 24/7','View medical history & lab results','Pay invoices securely','Receive real-time SMS alerts']; track item) {
+                <div class="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5">
+                  <lucide-icon name="check-circle" [size]="16" class="text-emerald-400 flex-shrink-0"/>
+                  <span class="text-sm text-slate-300">{{ item }}</span>
+                </div>
+              }
+            </div>
+            <a routerLink="/auth/patient-login" class="btn-primary mt-6 w-full justify-center"
+               style="background: linear-gradient(135deg, #059669, #0D9488)">
+              Access Patient Portal →
+            </a>
+          </div>
+        }
+        @if (activePortal() === 'doctor') {
+          <div>
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/15 flex items-center justify-center mb-5">
+              <lucide-icon name="stethoscope" [size]="26" class="text-purple-400"/>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Doctor Clinical Workspace</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+              Streamlined clinical tools that let doctors focus on care, not paperwork.
+            </p>
+            <div class="space-y-3">
+              @for (item of ['Fast SOAP note templates','ICD-10 diagnosis codes built-in','One-click prescriptions & labs','Real-time patient vitals dashboard']; track item) {
+                <div class="flex items-center gap-3 p-3 rounded-xl border border-purple-500/15 bg-purple-500/5">
+                  <lucide-icon name="check-circle" [size]="16" class="text-purple-400 flex-shrink-0"/>
+                  <span class="text-sm text-slate-300">{{ item }}</span>
+                </div>
+              }
+            </div>
+            <a routerLink="/auth/login" class="btn-primary mt-6 w-full justify-center"
+               style="background: linear-gradient(135deg, #7C3AED, #6366F1)">
+              Enter Clinical Workspace →
+            </a>
+          </div>
+        }
+        @if (activePortal() === 'admin') {
+          <div>
+            <div class="w-14 h-14 rounded-2xl bg-cyan-500/15 flex items-center justify-center mb-5">
+              <lucide-icon name="layout-dashboard" [size]="26" class="text-cyan-400"/>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Admin Command Center</h3>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+              Complete operational oversight with real-time analytics and staff management.
+            </p>
+            <div class="space-y-3">
+              @for (item of ['Real-time revenue tracking','Manage staff access & roles','Full system audit logs','Custom clinic settings & branding']; track item) {
+                <div class="flex items-center gap-3 p-3 rounded-xl border border-cyan-500/15 bg-cyan-500/5">
+                  <lucide-icon name="check-circle" [size]="16" class="text-cyan-400 flex-shrink-0"/>
+                  <span class="text-sm text-slate-300">{{ item }}</span>
+                </div>
+              }
+            </div>
+            <a routerLink="/auth/login" class="btn-primary mt-6 w-full justify-center"
+               style="background: linear-gradient(135deg, #0891B2, #0D9488)">
+              Open Admin Dashboard →
+            </a>
+          </div>
+        }
+      </div>
+
+      <!-- UI Mockup Panel -->
+      <div class="lg:col-span-8 relative">
+        <div class="absolute inset-0 rounded-2xl blur-xl opacity-20 pointer-events-none"
+             style="background: linear-gradient(135deg, #0D9488, #0891B2)"></div>
+        <div class="relative rounded-2xl overflow-hidden border border-white/10"
+             style="background: rgba(10,22,44,.95);">
+
+          <!-- Window chrome -->
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-white/5"
+               style="background: rgba(255,255,255,.03)">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+            <span class="text-slate-500 text-[10px] font-mono ml-2">
+              {{ activePortal() === 'patient' ? 'patient.mediqueue.io' : activePortal() === 'doctor' ? 'clinical.mediqueue.io' : 'admin.mediqueue.io' }}
+            </span>
+            <div class="ml-auto px-2 py-0.5 rounded text-[9px] font-bold"
+                 [ngClass]="activePortal() === 'patient' ? 'text-emerald-400 bg-emerald-500/15' : activePortal() === 'doctor' ? 'text-purple-400 bg-purple-500/15' : 'text-cyan-400 bg-cyan-500/15'">
+              {{ activePortal() === 'patient' ? 'Patient App' : activePortal() === 'doctor' ? 'Clinical App' : 'Admin Panel' }}
+            </div>
+          </div>
+
+          <!-- Mock UI Content -->
+          <div class="p-6">
+            <!-- Sidebar + content layout -->
+            <div class="flex gap-4 h-64">
+
+              <!-- Mini sidebar -->
+              <div class="w-32 flex flex-col gap-2 flex-shrink-0">
+                <div class="h-8 rounded-lg animate-pulse" style="background:rgba(255,255,255,.06)"></div>
+                @for (active of [true,false,false,false,false]; track $index) {
+                  <div class="h-7 rounded-lg flex items-center px-2 gap-2"
+                       [style.background]="active ? 'rgba(13,148,136,.15)' : 'rgba(255,255,255,.03)'"
+                       [style.borderLeft]="active ? '2px solid #0D9488' : '2px solid transparent'">
+                    <div class="w-3 h-3 rounded flex-shrink-0"
+                         [style.background]="active ? 'rgba(13,148,136,.5)' : 'rgba(255,255,255,.1)'"></div>
+                    <div class="flex-1 h-2 rounded"
+                         [style.background]="active ? 'rgba(13,148,136,.4)' : 'rgba(255,255,255,.06)'"></div>
+                  </div>
+                }
+              </div>
+
+              <!-- Content area -->
+              <div class="flex-1 flex flex-col gap-3">
+                <!-- Stats row -->
+                <div class="grid grid-cols-3 gap-3">
+                  @for (c of ['rgba(13,148,136,.3)','rgba(124,58,237,.3)','rgba(16,185,129,.3)']; track c) {
+                    <div class="rounded-lg p-3 border border-white/5"
+                         style="background:rgba(255,255,255,.04)">
+                      <div class="h-2 w-12 rounded mb-2" [style.background]="c"></div>
+                      <div class="h-5 w-10 rounded" [style.background]="c"></div>
+                    </div>
+                  }
+                </div>
+                <!-- Table area -->
+                <div class="flex-1 rounded-lg p-3 border border-white/5"
+                     style="background:rgba(255,255,255,.03)">
+                  <div class="h-2 w-20 rounded mb-3" style="background:rgba(255,255,255,.1)"></div>
+                  @for (i of [1,2,3,4]; track i) {
+                    <div class="flex gap-2 mb-2">
+                      <div class="w-6 h-6 rounded-full flex-shrink-0"
+                           style="background:rgba(13,148,136,.2)"></div>
+                      <div class="flex-1 h-6 rounded" style="background:rgba(255,255,255,.04)"></div>
+                      <div class="w-16 h-6 rounded" style="background:rgba(13,148,136,.15)"></div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     STATS SECTION
+══════════════════════════════════════════════════════ -->
+<section id="stats" class="py-24 relative"
+         style="background: linear-gradient(135deg, #0A1628 0%, #060D1A 100%);">
+
+  <div class="absolute inset-0"
+       style="background-image: linear-gradient(rgba(13,148,136,.025) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(13,148,136,.025) 1px, transparent 1px);
+              background-size: 80px 80px;"></div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20" scroll-reveal>
+      @for (stat of stats; track stat.label) {
+        <div class="text-center p-8 rounded-2xl border border-white/5 group hover:border-teal-500/30
+                    transition-all duration-300 hover:-translate-y-1"
+             style="background: rgba(15,28,50,.5);">
+          <h4 class="text-4xl md:text-5xl font-black mb-2"
+              style="background: linear-gradient(135deg, #2DD4BF, #0D9488);
+                     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                     background-clip: text;">
+            {{ stat.value }}
+          </h4>
+          <div class="w-8 h-px mx-auto mb-2"
+               style="background: linear-gradient(90deg, transparent, #0D9488, transparent)"></div>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">{{ stat.label }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Testimonials -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" scroll-reveal>
+      @for (t of testimonials; track t.name) {
+        <div class="p-6 rounded-2xl border border-white/5 hover:border-teal-500/20
+                    transition-all duration-300 group"
+             style="background: rgba(15,28,50,.6);">
+          <!-- Stars -->
+          <div class="flex gap-1 mb-4">
+            @for (s of [1,2,3,4,5]; track s) {
+              <lucide-icon name="star" [size]="14" class="text-amber-400" style="fill:#FBBF24"/>
+            }
+          </div>
+          <p class="text-slate-300 text-sm leading-relaxed mb-6 italic">
+            "{{ t.quote }}"
+          </p>
+          <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                 style="background: linear-gradient(135deg, #0D9488, #0891B2)">
+              {{ t.name[0] }}
+            </div>
+            <div>
+              <p class="text-white text-sm font-semibold">{{ t.name }}</p>
+              <p class="text-slate-500 text-xs">{{ t.role }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     READY TO TRANSFORM CTA
+══════════════════════════════════════════════════════ -->
+<section class="py-32 relative overflow-hidden" style="background: #060D1A;">
+
+  <!-- Centered glow -->
+  <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+    <div class="w-[800px] h-[400px]"
+         style="background: radial-gradient(ellipse, rgba(13,148,136,.15) 0%, transparent 65%);
+                filter: blur(2px);"></div>
+  </div>
+
+  <!-- Background grid -->
+  <div class="absolute inset-0 pointer-events-none"
+       style="background-image: linear-gradient(rgba(13,148,136,.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(13,148,136,.03) 1px, transparent 1px);
+              background-size: 40px 40px;"></div>
+
+  <div class="max-w-3xl mx-auto px-6 text-center relative z-10" scroll-reveal>
+
+    <!-- Pre-heading badge -->
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-500/30
+                bg-teal-500/10 text-teal-300 text-xs font-bold uppercase tracking-widest mb-8">
+      <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+      No Credit Card Required
+    </div>
+
+    <h2 class="text-4xl md:text-6xl font-black text-white tracking-tight mb-6 leading-[1.05]">
+      Ready to Transform
+      <br>
+      <span style="background: linear-gradient(135deg, #2DD4BF 0%, #0D9488 50%, #0891B2 100%);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                   background-clip: text;">Your Clinic?</span>
+    </h2>
+
+    <p class="text-slate-400 text-lg leading-relaxed mb-12 max-w-xl mx-auto">
+      Join the hundreds of clinics already running on MediQueue OS.
+      Get started in minutes, not months.
+    </p>
+
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+      <a routerLink="/register"
+         class="inline-flex items-center justify-center gap-2 px-10 py-5 rounded-xl font-bold text-lg text-white
+                transition-all duration-200 hover:-translate-y-1 active:scale-95"
+         style="background: linear-gradient(135deg, #0D9488, #0891B2);
+                box-shadow: 0 12px 40px rgba(13,148,136,.5), inset 0 1px 0 rgba(255,255,255,.1)">
+        Start Free Trial →
+      </a>
+      <a routerLink="/auth/login"
+         class="inline-flex items-center justify-center gap-2 px-10 py-5 rounded-xl font-semibold text-lg
+                text-slate-300 hover:text-white border border-white/10 hover:border-teal-500/40
+                transition-all duration-200 hover:bg-white/5">
+        <lucide-icon name="play-circle" [size]="20"/>
+        Watch Demo
+      </a>
+    </div>
+
+    <!-- Feature bullets under CTA -->
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-500">
+      @for (item of ['✓ Free 30-day trial', '✓ No setup fee', '✓ Cancel anytime', '✓ 24/7 Support']; track item) {
+        <span class="font-medium">{{ item }}</span>
+      }
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════ -->
+<footer style="background: #040B16; border-top: 1px solid rgba(255,255,255,.06);">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <!-- Top footer -->
+    <div class="py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+
+      <!-- Brand col -->
+      <div class="md:col-span-1">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 relative">
+            <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+              <defs>
+                <linearGradient id="ftLogoG" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#0D9488"/><stop offset="1" stop-color="#0891B2"/>
+                </linearGradient>
+              </defs>
+              <rect width="44" height="44" rx="13" fill="url(#ftLogoG)"/>
+              <path d="M7 22H14L17 13L22 31L27 18L30 22H37" stroke="white" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <span class="text-white font-black text-lg leading-none block">MediQueue</span>
+            <span class="text-teal-400 text-[10px] font-bold tracking-widest uppercase">EMR Platform</span>
+          </div>
+        </div>
+        <p class="text-slate-500 text-sm leading-relaxed mb-5">
+          The complete Healthcare OS for modern clinics. Booking, EMR, billing — all in one platform.
+        </p>
+        <div class="flex gap-3">
+          @for (icon of ['twitter','linkedin','github']; track icon) {
+            <div class="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center
+                        text-slate-400 hover:text-white hover:border-teal-500/40 transition-all cursor-pointer
+                        hover:bg-white/5">
+              <lucide-icon [name]="icon" [size]="15"/>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Links cols -->
+      @for (col of [
+        {title:'Platform', links:['Dashboard','Patients','Appointments','Invoices','Clinical Records']},
+        {title:'Portals', links:['Patient Portal','Doctor Workspace','Admin Panel','Staff Management','Settings']},
+        {title:'Company', links:['About Us','Careers','Blog','Privacy Policy','Terms of Service']}
+      ]; track col.title) {
+        <div>
+          <h5 class="text-white font-bold text-sm mb-5 tracking-wide">{{ col.title }}</h5>
+          <ul class="space-y-3">
+            @for (link of col.links; track link) {
+              <li>
+                <a href="#" class="text-slate-500 text-sm hover:text-teal-400 transition-colors duration-200">
+                  {{ link }}
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+
+    <!-- Bottom footer -->
+    <div class="py-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-slate-600 text-xs">
+        © 2026 MediQueue EMR. All rights reserved. Built with ❤️ for healthcare professionals.
+      </p>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/20 bg-teal-500/5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-teal-400 text-xs font-semibold">All Systems Operational</span>
       </div>
     </div>
   </div>
-
-  <!-- SECTION 3: THE PULSE FLOW -->
-  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto" scrollReveal>
-    <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-[40px] font-semibold tracking-tight mb-4">How Care Flows</h2>
-      <p class="text-[var(--mq-slate-400)] max-w-2xl mx-auto">A seamless journey from booking to billing, fully automated.</p>
-    </div>
-
-    <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative">
-      <!-- Connector Line (Desktop) -->
-      <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-[var(--mq-navy-700)] -z-10 transform -translate-y-1/2">
-        <div class="h-full bg-[var(--mq-teal)] w-full origin-left animate-[reveal_1.5s_ease-out_forwards]"></div>
-      </div>
-
-      <!-- Step 1 -->
-      <div class="glass-card p-8 flex-1 w-full text-center relative mq-card border-[var(--mq-teal)]/20">
-        <div class="w-16 h-16 mx-auto bg-[var(--mq-navy-800)] border border-[var(--mq-navy-700)] rounded-2xl flex items-center justify-center mb-6 text-[var(--mq-teal-400)]">
-          <lucide-icon name="CalendarPlus" class="w-8 h-8"></lucide-icon>
-        </div>
-        <h3 class="text-xl font-bold mb-2">Patient Books</h3>
-        <p class="text-[var(--mq-slate-400)] text-sm mb-6">Self-service booking with smart slot prediction.</p>
-        <div class="bg-[var(--mq-navy-800)] p-3 rounded-lg text-xs text-left border border-[var(--mq-navy-700)] text-[var(--mq-slate-200)]">
-          <div class="flex justify-between mb-2"><span>Tomorrow, 10:00 AM</span> <span class="text-[var(--mq-teal-400)]">Confirmed</span></div>
-          <div class="font-bold">General Checkup</div>
-        </div>
-      </div>
-
-      <!-- Step 2 -->
-      <div class="glass-card p-8 flex-1 w-full text-center relative mq-card border-[var(--mq-teal)]/20">
-        <div class="w-16 h-16 mx-auto bg-[var(--mq-navy-800)] border border-[var(--mq-navy-700)] rounded-2xl flex items-center justify-center mb-6 text-[var(--mq-teal-400)]">
-          <lucide-icon name="Stethoscope" class="w-8 h-8"></lucide-icon>
-        </div>
-        <h3 class="text-xl font-bold mb-2">Doctor Visits</h3>
-        <p class="text-[var(--mq-slate-400)] text-sm mb-6">Comprehensive SOAP notes and e-prescriptions.</p>
-        <div class="bg-[var(--mq-navy-800)] p-3 rounded-lg text-xs text-left border border-[var(--mq-navy-700)] text-[var(--mq-slate-200)]">
-          <div class="text-[var(--mq-teal-400)] mb-1">SOAP Note Saved</div>
-          <div class="text-gray-400">Rx: Amoxicillin 500mg</div>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="glass-card p-8 flex-1 w-full text-center relative mq-card border-[var(--mq-teal)]/20">
-        <div class="w-16 h-16 mx-auto bg-[var(--mq-navy-800)] border border-[var(--mq-navy-700)] rounded-2xl flex items-center justify-center mb-6 text-[var(--mq-teal-400)]">
-          <lucide-icon name="Receipt" class="w-8 h-8"></lucide-icon>
-        </div>
-        <h3 class="text-xl font-bold mb-2">Invoice Created</h3>
-        <p class="text-[var(--mq-slate-400)] text-sm mb-6">Auto-generated billing ready for checkout.</p>
-        <div class="bg-[var(--mq-navy-800)] p-3 rounded-lg text-xs text-left border border-[var(--mq-navy-700)] text-[var(--mq-slate-200)]">
-          <div class="flex justify-between mb-1"><span>Total</span> <span>EGP 450</span></div>
-          <button class="w-full bg-[var(--mq-teal)] text-white py-1 rounded mt-1">Pay Now</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 4: FEATURE SHOWCASE (Flip Cards) -->
-  <section class="py-24 px-6 md:px-12 bg-[var(--mq-navy-800)] relative" id="features" scrollReveal>
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-[40px] font-semibold tracking-tight mb-4">Designed for Every Role</h2>
-        <p class="text-[var(--mq-slate-400)] max-w-2xl mx-auto">Powerful tools customized for exactly what you need to do.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
-        <!-- Card 1 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="Users" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Smart Queue</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">Real-time queue management</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">Live SignalR updates · Auto-priority · Wait time prediction for enhanced patient satisfaction.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="FileText" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Clinical EMR</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">Full SOAP documentation</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">Vitals · Diagnoses · Prescriptions · Lab Requests · Attachments all in one fluid interface.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="DollarSign" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Instant Billing</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">One-click invoicing</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">Auto-generated from visits · Discounts · Multi-payment methods seamlessly integrated.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="Shield" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Role Access</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">3 specialized portals</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">Admin · Doctor · Receptionist — each sees only what they need with strict JWT security.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 5 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="ActivitySquare" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Analytics</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">Revenue intelligence</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">Daily/weekly/monthly charts · Export · Trend analysis to optimize clinic performance.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 6 -->
-        <div class="flip-container h-64 cursor-pointer">
-          <div class="flip-card">
-            <div class="flip-front glass-card p-8 flex flex-col items-center justify-center text-center">
-              <lucide-icon name="HeartPulse" class="w-12 h-12 text-[var(--mq-teal-400)] mb-4"></lucide-icon>
-              <h3 class="text-xl font-bold mb-2">Secure Records</h3>
-              <p class="text-[var(--mq-slate-400)] text-sm">Patient-first privacy</p>
-            </div>
-            <div class="flip-back glass-card p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-[var(--mq-navy)] to-[var(--mq-navy-800)] border-[var(--mq-teal)]">
-              <p class="text-sm text-[var(--mq-slate-200)] mb-6 leading-relaxed">JWT encrypted · Role-gated · Full audit trail ensuring complete compliance and safety.</p>
-              <button class="text-[var(--mq-teal-400)] font-semibold text-sm hover:text-white transition-colors">Learn More &rarr;</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 5: ROLE SHOWCASE (Tab switcher) -->
-  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto" scrollReveal>
-    <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-[40px] font-semibold tracking-tight mb-4">One Platform, Three Portals</h2>
-      <p class="text-[var(--mq-slate-400)] max-w-2xl mx-auto">Tailored experiences for every user in the clinic.</p>
-    </div>
-
-    <div class="flex justify-center mb-12">
-      <div class="glass-card p-1 inline-flex rounded-xl bg-[var(--mq-navy-800)]">
-        <button *ngFor="let tab of ['Patient', 'Doctor', 'Admin']" 
-                (click)="setTab($any(tab))"
-                [ngClass]="{'bg-[var(--mq-teal)]': activeTab() === tab}"
-                [class.text-white]="activeTab() === tab"
-                [ngClass]="{'text-[var(--mq-slate-400)]': activeTab() !== tab}"
-                class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300">
-          {{ tab }}
-        </button>
-      </div>
-    </div>
-
-    <div class="glass-card border-[var(--mq-teal)]/30 overflow-hidden relative">
-      <div class="absolute inset-0 bg-gradient-to-br from-[var(--mq-teal)]/5 to-transparent"></div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12 relative z-10">
-        
-        <div class="flex flex-col justify-center transition-all duration-500 transform" [class.translate-x-0]="true" [class.opacity-100]="true">
-          <h3 class="text-3xl font-bold mb-6 text-white">{{ activeTab() }} Portal</h3>
-          
-          <ul class="space-y-4" *ngIf="activeTab() === 'Admin'">
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Comprehensive revenue analytics dashboard.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Staff and role management with fine-grained access control.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Global clinic settings and multi-branch support.</span></li>
-          </ul>
-
-          <ul class="space-y-4" *ngIf="activeTab() === 'Doctor'">
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Streamlined Clinical Command Center for fast consultations.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Rapid SOAP note entry with auto-save capabilities.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Complete patient medical history at a glance.</span></li>
-          </ul>
-
-          <ul class="space-y-4" *ngIf="activeTab() === 'Patient'">
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Easy self-service booking with live slot availability.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Access to past visit notes, prescriptions, and invoices.</span></li>
-            <li class="flex items-start gap-3"><lucide-icon name="CheckCircle" class="w-6 h-6 text-[var(--mq-teal-400)] shrink-0"></lucide-icon> <span class="text-[var(--mq-slate-200)]">Secure profile management.</span></li>
-          </ul>
-          
-          <button class="mt-8 text-left text-[var(--mq-teal-400)] font-semibold hover:text-white transition-colors w-max">Explore {{activeTab()}} Features &rarr;</button>
-        </div>
-
-        <div class="bg-[var(--mq-navy-800)] rounded-xl border border-[var(--mq-navy-700)] p-4 shadow-2xl relative h-80 overflow-hidden group">
-           <!-- Mockup Window Header -->
-           <div class="flex gap-1.5 mb-4 border-b border-[var(--mq-navy-700)] pb-3">
-            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
-          <!-- Mockup Content based on Tab -->
-          <div class="space-y-4 opacity-70 group-hover:opacity-100 transition-opacity">
-            <div class="h-8 w-1/3 bg-[var(--mq-navy-700)] rounded"></div>
-            <div class="flex gap-4">
-               <div class="h-24 flex-1 bg-[var(--mq-teal)]/20 border border-[var(--mq-teal)]/30 rounded-lg"></div>
-               <div class="h-24 flex-1 bg-[var(--mq-teal)]/20 border border-[var(--mq-teal)]/30 rounded-lg"></div>
-            </div>
-            <div class="h-32 w-full bg-[var(--mq-navy-700)] rounded-lg"></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 6: SOCIAL PROOF -->
-  <section class="py-24 bg-[var(--mq-navy)] border-y border-[var(--mq-navy-800)] px-6" scrollReveal>
-    <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        <div class="glass-card p-8 mq-card" *ngFor="let i of [1,2,3]">
-          <div class="flex text-yellow-400 mb-4">★★★★★</div>
-          <p class="text-[var(--mq-slate-200)] italic mb-6">"MediQueue completely transformed how our clinic operates. The real-time updates and seamless EMR integration saved us hours daily."</p>
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-[var(--mq-navy-700)]"></div>
-            <div>
-              <div class="font-bold text-sm">Dr. {{ i === 1 ? 'Ahmed Hassan' : i === 2 ? 'Sara Ali' : 'Omar Tarek' }}</div>
-              <div class="text-xs text-[var(--mq-slate-400)]">Chief Medical Officer</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="flex flex-wrap justify-center gap-8 md:gap-16 text-center">
-        <div>
-          <div class="text-3xl md:text-4xl font-bold text-[var(--mq-teal-400)] mb-1">50+</div>
-          <div class="text-sm text-[var(--mq-slate-400)] uppercase tracking-wider font-semibold">Clinics</div>
-        </div>
-        <div>
-          <div class="text-3xl md:text-4xl font-bold text-[var(--mq-teal-400)] mb-1">12K</div>
-          <div class="text-sm text-[var(--mq-slate-400)] uppercase tracking-wider font-semibold">Patients</div>
-        </div>
-        <div>
-          <div class="text-3xl md:text-4xl font-bold text-[var(--mq-teal-400)] mb-1">99.9%</div>
-          <div class="text-sm text-[var(--mq-slate-400)] uppercase tracking-wider font-semibold">Uptime</div>
-        </div>
-        <div>
-          <div class="text-3xl md:text-4xl font-bold text-[var(--mq-teal-400)] mb-1">4.9/5</div>
-          <div class="text-sm text-[var(--mq-slate-400)] uppercase tracking-wider font-semibold">Rating</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 7: CTA FINAL -->
-  <section class="py-32 px-6 relative overflow-hidden text-center" scrollReveal>
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(13,148,136,0.15)_0%,transparent_50%)]"></div>
-    <div class="max-w-3xl mx-auto relative z-10">
-      <h2 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Ready to Transform Your Clinic?</h2>
-      <p class="text-xl text-[var(--mq-slate-400)] mb-10">Join the next generation of healthcare management. Simple, secure, and built for scale.</p>
-      <div class="flex flex-col sm:flex-row justify-center gap-4">
-        <button class="btn-neon">Book for Patient <lucide-icon name="ArrowRight" class="inline w-4 h-4 ml-2"></lucide-icon></button>
-        <button class="px-8 py-4 rounded-xl border border-[var(--mq-slate-600)] hover:bg-[var(--mq-slate-800)] transition-colors font-semibold bg-[var(--mq-navy-800)]" routerLink="/dashboard">Staff Login</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-[var(--mq-navy-800)] pt-16 pb-8 px-6 border-t border-[var(--mq-navy-700)]">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-      <div class="col-span-1 md:col-span-1">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-8 h-8 rounded-lg bg-[var(--mq-teal)] flex items-center justify-center text-white font-bold text-sm">MQ</div>
-          <span class="text-lg font-bold">MediQueue</span>
-        </div>
-        <p class="text-sm text-[var(--mq-slate-400)]">Healthcare OS built for the modern clinic. Streamlining operations from booking to billing.</p>
-      </div>
-      
-      <div>
-        <h4 class="font-bold mb-4 text-[var(--mq-slate-200)]">Product</h4>
-        <ul class="space-y-2 text-sm text-[var(--mq-slate-400)]">
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">Features</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">Pricing</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">Security</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">Updates</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="font-bold mb-4 text-[var(--mq-slate-200)]">Roles</h4>
-        <ul class="space-y-2 text-sm text-[var(--mq-slate-400)]">
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">For Doctors</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">For Admins</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">For Receptionists</a></li>
-          <li><a href="#" class="hover:text-[var(--mq-teal-400)]">For Patients</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="font-bold mb-4 text-[var(--mq-slate-200)]">Connect</h4>
-        <div class="flex gap-4">
-          <div class="w-10 h-10 rounded-full bg-[var(--mq-navy-700)] flex items-center justify-center hover:bg-[var(--mq-teal)] transition-colors cursor-pointer">X</div>
-          <div class="w-10 h-10 rounded-full bg-[var(--mq-navy-700)] flex items-center justify-center hover:bg-[var(--mq-teal)] transition-colors cursor-pointer">In</div>
-        </div>
-      </div>
-    </div>
-    <div class="max-w-7xl mx-auto pt-8 border-t border-[var(--mq-navy-700)] text-sm text-[var(--mq-slate-500)] flex flex-col md:flex-row justify-between items-center">
-      <p>&copy; 2026 MediQueue EMR. All rights reserved.</p>
-      <div class="flex gap-4 mt-4 md:mt-0">
-        <a href="#" class="hover:text-[var(--mq-slate-300)]">Privacy Policy</a>
-        <a href="#" class="hover:text-[var(--mq-slate-300)]">Terms of Service</a>
-      </div>
-    </div>
-  </footer>
-</div>
+</footer>

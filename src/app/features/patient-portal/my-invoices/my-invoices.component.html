@@ -1,0 +1,254 @@
+<div class="p-6 space-y-6 max-w-7xl mx-auto">
+
+  <!-- Header Section -->
+  <div class="border-b border-mq-700/60 pb-6">
+    <h2 class="text-white font-extrabold text-2xl tracking-tight">Billing & Invoices</h2>
+    <p class="text-mq-s400 text-sm mt-1">Review finalized clinic statements, pay medical bills, and track transaction history.</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="space-y-6 animate-pulse">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="h-28 bg-mq-800 rounded-xl"></div>
+        <div class="h-28 bg-mq-800 rounded-xl"></div>
+        <div class="h-28 bg-mq-800 rounded-xl"></div>
+      </div>
+      <div class="h-64 bg-mq-800 rounded-xl"></div>
+    </div>
+  } @else {
+
+    <!-- Financial Stats Banner -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Outstanding Balance -->
+      <div class="bg-mq-800 border border-mq-700/60 rounded-2xl p-5 shadow-sm">
+        <span class="text-[10px] text-rose-400 font-bold block uppercase tracking-wider">Outstanding Balance</span>
+        <h3 class="text-white font-extrabold text-3xl mt-2 tracking-tight">
+          ${{ totalOutstanding() | number:'1.2-2' }}
+        </h3>
+        <p class="text-mq-s400 text-xs mt-2 font-medium">Accumulated medical consultation charges</p>
+      </div>
+
+      <!-- Pending Bills Count -->
+      <div class="bg-mq-800 border border-mq-700/60 rounded-2xl p-5 shadow-sm">
+        <span class="text-[10px] text-amber-400 font-bold block uppercase tracking-wider">Unpaid Invoices</span>
+        <h3 class="text-white font-extrabold text-3xl mt-2 tracking-tight">
+          {{ unpaidCount() }}
+        </h3>
+        <p class="text-mq-s400 text-xs mt-2 font-medium">Statements requiring immediate attention</p>
+      </div>
+
+      <!-- Settled Bills Count -->
+      <div class="bg-mq-800 border border-mq-700/60 rounded-2xl p-5 shadow-sm">
+        <span class="text-[10px] text-emerald-400 font-bold block uppercase tracking-wider">Paid Statements</span>
+        <h3 class="text-emerald-400 font-extrabold text-3xl mt-2 tracking-tight">
+          {{ paidCount() }}
+        </h3>
+        <p class="text-mq-s400 text-xs mt-2 font-medium">Invoices settled in full</p>
+      </div>
+
+    </div>
+
+    <!-- Filter Navigation Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-mq-800">
+      <button (click)="activeFilter.set('all')"
+              [class]="activeFilter() === 'all' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="px-4 py-2 text-xs rounded-lg transition-all whitespace-nowrap">
+        All Statements
+      </button>
+      <button (click)="activeFilter.set('unpaid')"
+              [class]="activeFilter() === 'unpaid' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="px-4 py-2 text-xs rounded-lg transition-all whitespace-nowrap">
+        Unpaid Statements
+      </button>
+      <button (click)="activeFilter.set('paid')"
+              [class]="activeFilter() === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold' : 'text-mq-s400 hover:text-white border border-transparent'"
+              class="px-4 py-2 text-xs rounded-lg transition-all whitespace-nowrap">
+        Paid History
+      </button>
+    </div>
+
+    <!-- Invoices List -->
+    @if (filteredInvoices().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 bg-mq-800/40 rounded-2xl border border-mq-700/40 text-center">
+        <div class="w-16 h-16 rounded-full bg-mq-navy border border-mq-700/40 flex items-center justify-center text-mq-s400 mb-4 shadow-inner">
+          <lucide-icon name="receipt" [size]="28"/>
+        </div>
+        <h4 class="text-white font-semibold text-base">No statements logged</h4>
+        <p class="text-mq-s400 text-xs mt-1.5 max-w-sm leading-relaxed">
+          There are no medical statements that fit this category at this time.
+        </p>
+      </div>
+    } @else {
+      
+      <div class="bg-mq-800 border border-mq-700/60 rounded-2xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-mq-navy border-b border-mq-700 text-[10px] text-mq-s400 font-bold uppercase tracking-wider">
+                <th class="px-6 py-4">Invoice #</th>
+                <th class="px-6 py-4">Created Date</th>
+                <th class="px-6 py-4">Due Date</th>
+                <th class="px-6 py-4">Total Charge</th>
+                <th class="px-6 py-4">Balance Due</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-mq-700/40 text-sm text-mq-s400">
+              @for (inv of filteredInvoices(); track inv.id) {
+                <tr class="hover:bg-mq-750/30 transition-colors">
+                  <td class="px-6 py-4 font-bold text-white tracking-wider">
+                    INV-{{ inv.invoiceNumber || inv.id?.substring(0, 6) }}
+                  </td>
+                  <td class="px-6 py-4">
+                    {{ inv.issuedAt | date:'MMM d, y' }}
+                  </td>
+                  <td class="px-6 py-4">
+                    {{ inv.dueDate | date:'MMM d, y' }}
+                  </td>
+                  <td class="px-6 py-4 font-semibold text-white">
+                    ${{ inv.totalAmount | number:'1.2-2' }}
+                  </td>
+                  <td class="px-6 py-4 font-semibold text-white">
+                    ${{ getOutstandingAmount(inv) | number:'1.2-2' }}
+                  </td>
+                  <td class="px-6 py-4">
+                    <span [class]="getSeverityClass(inv.status)" class="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded">
+                      {{ getStatusLabel(inv.status) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    @if (needsPayment(inv)) {
+                      <button (click)="openPaymentModal(inv)"
+                              class="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs shadow-md shadow-emerald-500/10 transition-all flex items-center gap-1 inline-flex ml-auto">
+                        <lucide-icon name="credit-card" [size]="12"/>
+                        Pay Statement
+                      </button>
+                    } @else {
+                      <span class="text-xs text-emerald-400 font-semibold flex items-center justify-end gap-1">
+                        <lucide-icon name="check-circle" [size]="12"/>
+                        Settled
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    }
+
+  }
+
+  <!-- Credit Card Checkout Modal -->
+  @if (showPayModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div class="w-full max-w-md bg-mq-800 border border-mq-700/80 rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-slide-in">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-5 bg-mq-navy border-b border-mq-700 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <lucide-icon name="shield-check" class="text-emerald-400" [size]="20"/>
+            <h3 class="text-white font-bold text-base">Secure Portal Checkout</h3>
+          </div>
+          <button (click)="closePaymentModal()" class="text-mq-s400 hover:text-white transition-colors">
+            <lucide-icon name="x" [size]="20"/>
+          </button>
+        </div>
+
+        <!-- Checkout Form Body -->
+        <form (ngSubmit)="onPaySubmit()" class="p-6 space-y-4">
+          
+          <div class="p-4 bg-mq-navy/60 border border-mq-700 rounded-xl flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-mq-s400 font-bold block uppercase tracking-wider">Paying Statement</span>
+              <span class="text-white text-sm font-bold mt-0.5 block">
+                INV-{{ selectedInvoice()?.invoiceNumber || selectedInvoice()?.id?.substring(0, 6) }}
+              </span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-mq-s400 font-bold block uppercase tracking-wider">Amount Due</span>
+              <span class="text-emerald-400 font-extrabold text-base block">
+                ${{ (selectedInvoice()?.remainingAmount ?? selectedInvoice()?.totalAmount ?? 0) | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+
+          @if (errorMsg()) {
+            <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-semibold">
+              {{ errorMsg() }}
+            </div>
+          }
+          @if (successMsg()) {
+            <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-semibold">
+              {{ successMsg() }}
+            </div>
+          }
+
+          <!-- Form inputs -->
+          <div class="space-y-1.5">
+            <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Cardholder Full Name</label>
+            <input type="text" name="cardHolder" [(ngModel)]="paymentForm.cardHolder" required
+                   placeholder="John Doe"
+                   class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"/>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Credit Card Number</label>
+            <div class="relative">
+              <input type="text" name="cardNumber" [(ngModel)]="paymentForm.cardNumber" required
+                     placeholder="•••• •••• •••• ••••" max-length="16"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl pl-4 pr-10 py-3 text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"/>
+              <lucide-icon name="credit-card" class="absolute right-3.5 top-3.5 text-mq-s400" [size]="16"/>
+            </div>
+          </div>
+
+          <!-- Expiry & CVV Row -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">Expiration Date</label>
+              <input type="text" name="expiry" [(ngModel)]="paymentForm.expiry" required
+                     placeholder="MM/YY"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs text-mq-s400 font-bold uppercase tracking-wider block">CVV Code</label>
+              <input type="password" name="cvv" [(ngModel)]="paymentForm.cvv" required
+                     placeholder="•••" max-length="3"
+                     class="w-full bg-mq-navy border border-mq-700 rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"/>
+            </div>
+          </div>
+
+          <!-- Secure encryption tag -->
+          <div class="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-[10px] text-emerald-400 font-medium">
+            <lucide-icon name="lock" [size]="12" class="flex-shrink-0"/>
+            Your credentials are fully encrypted using secure clinic tokenized networks.
+          </div>
+
+          <!-- Modal footer actions -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-mq-700/60 mt-6">
+            <button type="button" (click)="closePaymentModal()"
+                    class="px-4 py-2.5 rounded-lg border border-mq-700 text-mq-s400 hover:text-white hover:bg-mq-navy text-sm font-semibold transition-all">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="isSubmitting()"
+                    class="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold shadow-lg shadow-emerald-500/10 transition-all flex items-center gap-1.5">
+              @if (isSubmitting()) {
+                <span class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                Processing...
+              } @else {
+                Authorize Payment
+              }
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</div>

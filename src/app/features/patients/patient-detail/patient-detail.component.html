@@ -1,0 +1,258 @@
+@if (isLoading()) {
+  <div class="p-6 space-y-3">
+    @for (i of [1,2,3,4]; track i) {
+      <div class="h-16 rounded-xl bg-mq-800/80 animate-pulse"></div>
+    }
+  </div>
+}
+
+@else if (patient()) {
+  <div class="flex gap-6 p-6 min-h-screen bg-mq-navy">
+
+    <!-- LEFT SIDEBAR: Demographics -->
+    <div class="w-64 flex-shrink-0 space-y-4">
+
+      <!-- Avatar + Name card -->
+      <div class="mq-card-dark p-5 text-center">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-mq-teal to-mq-t600
+                    flex items-center justify-center text-white text-2xl font-black
+                    mx-auto mb-4 shadow-teal-glow">
+          {{ (patient()!.fullName ?? 'P')[0].toUpperCase() }}
+        </div>
+        <h2 class="text-white font-black text-lg leading-tight">{{ patient()!.fullName }}</h2>
+        <p class="font-mono text-mq-t400 text-xs mt-1">{{ patient()!.medicalRecordNumber }}</p>
+        <div class="flex items-center justify-center gap-2 mt-3">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                       bg-mq-700/50 text-mq-s400 border border-mq-700">
+            {{ patient()!.gender }}
+          </span>
+          @if (patient()!.bloodType) {
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                         bg-rose-500/15 text-rose-400 border border-rose-500/30">
+              {{ patient()!.bloodType }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Info card -->
+      <div class="mq-card-dark p-5 space-y-3">
+        <h3 class="text-xs font-semibold text-mq-s400 uppercase tracking-wider">Details</h3>
+
+        @if (patient()!.dateOfBirth) {
+          <div>
+            <p class="text-xs text-mq-s400">Age</p>
+            <p class="text-white text-sm font-medium">{{ getAge(patient()!.dateOfBirth) }} years</p>
+          </div>
+        }
+        @if (patient()!.phone) {
+          <div>
+            <p class="text-xs text-mq-s400">Phone</p>
+            <p class="text-white text-sm font-medium">{{ patient()!.phone }}</p>
+          </div>
+        }
+        @if (patient()!.email) {
+          <div>
+            <p class="text-xs text-mq-s400">Email</p>
+            <p class="text-white text-sm font-medium truncate">{{ patient()!.email }}</p>
+          </div>
+        }
+        @if (patient()!.nationalId) {
+          <div>
+            <p class="text-xs text-mq-s400">National ID</p>
+            <p class="text-white text-sm font-mono">{{ patient()!.nationalId }}</p>
+          </div>
+        }
+        @if (patient()!.street) {
+          <div>
+            <p class="text-xs text-mq-s400">Address</p>
+            <p class="text-white text-sm">{{ patient()!.street }}{{ patient()!.city ? ', ' + patient()!.city : '' }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Actions -->
+      <div class="mq-card-dark p-5 space-y-2">
+        <button (click)="router.navigate(['/appointments'], {queryParams:{patientId:patient()!.id}})"
+                class="btn-primary w-full text-sm">
+          + Book Appointment
+        </button>
+        <button (click)="router.navigate(['/patients'])"
+                class="btn-ghost w-full text-sm">
+          ← Back to Patients
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT: Tabs -->
+    <div class="flex-1 min-w-0">
+
+      <!-- Tab bar -->
+      <div class="flex gap-1 mb-6 bg-mq-800/50 rounded-xl p-1 w-fit border border-mq-700">
+        @for (tab of [
+          {id:'overview', label:'Overview', icon:'user'},
+          {id:'visits',   label:'Medical Visits', icon:'clipboard'},
+          {id:'appointments', label:'Appointments', icon:'calendar'}
+        ]; track tab.id) {
+          <button (click)="setTab(tab.id)"
+                  [class]="activeTab() === tab.id
+                    ? 'flex items-center gap-2 px-4 py-2 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
+                    : 'flex items-center gap-2 px-4 py-2 rounded-lg text-mq-s400 hover:text-white text-sm transition-all'">
+            <lucide-icon [name]="tab.icon" [size]="14"/>
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <!-- OVERVIEW TAB -->
+      @if (activeTab() === 'overview') {
+        <div class="grid grid-cols-2 gap-4">
+          <div class="mq-card-dark p-5">
+            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Personal Info</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Full Name</span>
+                <span class="text-white font-medium">{{ patient()!.fullName }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Date of Birth</span>
+                <span class="text-white">{{ patient()!.dateOfBirth | date:'MMMM d, y' }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Gender</span>
+                <span class="text-white">{{ patient()!.gender }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Blood Type</span>
+                <span class="text-rose-400 font-semibold">{{ patient()!.bloodType || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mq-card-dark p-5">
+            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Contact & Insurance</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Phone</span>
+                <span class="text-white">{{ patient()!.phone || '—' }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Email</span>
+                <span class="text-white">{{ patient()!.email || '—' }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Status</span>
+                <span [class]="patient()!.isActive
+                  ? 'text-emerald-400 font-medium' : 'text-mq-s400'">
+                  {{ patient()!.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mq-card-dark p-5">
+            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Clinical Summary</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Total Visits</span>
+                <span class="text-white font-semibold">{{ visits().length }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-mq-s400">Total Appointments</span>
+                <span class="text-white font-semibold">{{ appointments().length }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- VISITS TAB -->
+      @if (activeTab() === 'visits') {
+        @if (visits().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center mq-card-dark">
+            <lucide-icon name="clipboard" class="text-mq-s400 mb-4" [size]="36"/>
+            <p class="text-white font-medium">No visits recorded</p>
+            <p class="text-mq-s400 text-sm mt-1">Medical visits will appear here</p>
+          </div>
+        } @else {
+          <div class="relative">
+            <!-- Timeline line -->
+            <div class="absolute left-5 top-0 bottom-0 w-px bg-mq-700"></div>
+            @for (v of visits(); track v.id) {
+              <div class="relative pl-14 pb-5">
+                <!-- Dot -->
+                <div class="absolute left-3.5 top-2 w-3 h-3 rounded-full
+                            bg-mq-teal border-2 border-mq-navy"></div>
+                <!-- Card -->
+                <div class="mq-card-dark p-4 cursor-pointer hover:border-mq-teal/40 transition-colors border border-mq-700"
+                     (click)="toggleVisit(v.id!)">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-white font-semibold text-sm">Visit</p>
+                      <p class="text-mq-s400 text-xs mt-0.5">
+                        {{ v.visitDate | date:'MMM d, y · h:mm a' }}
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span [class]="visitStatusClass(v.isFinalized ? 'Completed' : 'InProgress')">{{ v.isFinalized ? 'Completed' : 'In Progress' }}</span>
+                      <lucide-icon [name]="expandedVisit() === v.id ? 'chevron-up' : 'chevron-down'"
+                                   [size]="14" class="text-mq-s400"/>
+                    </div>
+                  </div>
+                  <!-- Expandable SOAP -->
+                  @if (expandedVisit() === v.id) {
+                    <div class="mt-4 pt-4 border-t border-mq-700 grid grid-cols-2 gap-4">
+                      @if (v.assessmentNote) {
+                        <div>
+                          <p class="text-xs text-mq-s400 uppercase tracking-wider mb-1">Assessment</p>
+                          <p class="text-white text-sm">{{ v.assessmentNote }}</p>
+                        </div>
+                      }
+                      @if (v.planNote) {
+                        <div>
+                          <p class="text-xs text-mq-s400 uppercase tracking-wider mb-1">Plan</p>
+                          <p class="text-white text-sm">{{ v.planNote }}</p>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- APPOINTMENTS TAB -->
+      @if (activeTab() === 'appointments') {
+        @if (appointments().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center mq-card-dark">
+            <lucide-icon name="calendar" class="text-mq-s400 mb-4" [size]="36"/>
+            <p class="text-white font-medium">No appointments found</p>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            @for (a of appointments(); track a.id) {
+              <div class="mq-card-dark p-4 flex items-center gap-4">
+                <div class="w-16 bg-mq-teal/10 border border-mq-teal/20 rounded-xl
+                            p-2 text-center flex-shrink-0">
+                  <p class="text-mq-t400 text-base font-black leading-none">
+                    {{ a.scheduledAt | date:'h:mm' }}
+                  </p>
+                  <p class="text-mq-s400 text-[10px]">{{ a.scheduledAt | date:'a' }}</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-white font-semibold text-sm">{{ a.doctorName }}</p>
+                  <p class="text-mq-s400 text-xs mt-0.5">
+                    {{ a.scheduledAt | date:'EEE, MMM d, y' }}
+                  </p>
+                </div>
+                <span [class]="apptStatusClass(a.status?.toString())">{{ a.status }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

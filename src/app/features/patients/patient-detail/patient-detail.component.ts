@@ -1,133 +1,101 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PatientsClient, PatientDetailDto } from '../../../core/api/api-facade.service';
-import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
-import { MrnPipe } from '../../../shared/pipes/mrn.pipe';
-import { BadgeComponent } from '../../../shared/components/badge/badge.component';
-import { pageEnter } from '../../../shared/animations/page-animations';
+import { LucideAngularModule } from 'lucide-angular';
+import { firstValueFrom } from 'rxjs';
+import {
+  PatientsClient, PatientDetailDto,
+  AppointmentsClient, AppointmentDto,
+  ClinicalVisitsClient, ClinicalVisitSummaryDto
+} from '../../../core/api/mediqueue-api';
+
+type Tab = 'overview' | 'visits' | 'appointments';
 
 @Component({
   selector: 'app-patient-detail',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent, LoadingSkeletonComponent, MrnPipe, BadgeComponent],
-  animations: [pageEnter],
-  template: `
-    <app-page-header
-      [title]="patient()?.fullName ?? 'Patient'"
-      [subtitle]="patient() ? (patient()!.medicalRecordNumber | mrn) : ''"
-    >
-      <button class="btn-secondary" (click)="goBack()">← Back</button>
-      <button class="btn-primary" (click)="bookAppointment()">Book Appointment</button>
-    </app-page-header>
-
-    @if (isLoading()) {
-      <app-loading-skeleton [count]="4" />
-    } @else if (patient()) {
-      <div class="detail-grid" @pageEnter>
-        <!-- Info Card -->
-        <div class="info-card">
-          <h3 class="card-title">Personal Information</h3>
-          <div class="info-rows">
-            <div class="info-row">
-              <span class="info-label">Full Name</span>
-              <span class="info-value">{{ patient()!.fullName }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Date of Birth</span>
-              <span class="info-value">{{ patient()!.dateOfBirth | date:'longDate' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Gender</span>
-              <span class="info-value">{{ patient()!.gender }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Blood Type</span>
-              <span class="info-value blood">{{ patient()!.bloodType ?? '—' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">National ID</span>
-              <span class="info-value mono">{{ patient()!.nationalId ?? '—' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contact Card -->
-        <div class="info-card">
-          <h3 class="card-title">Contact</h3>
-          <div class="info-rows">
-            <div class="info-row">
-              <span class="info-label">Phone</span>
-              <span class="info-value">{{ patient()!.phone ?? '—' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Email</span>
-              <span class="info-value">{{ patient()!.email ?? '—' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Address</span>
-              <span class="info-value">—</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
-  styles: [`
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: var(--space-2);
-      background: var(--color-accent); color: white; border: none;
-      border-radius: var(--radius-md); padding: var(--space-2) var(--space-5);
-      font-size: var(--text-sm); font-weight: 600; cursor: pointer;
-      font-family: var(--font-family); transition: all var(--duration-fast);
-    }
-    .btn-primary:hover { background: var(--color-accent-dark); }
-    .btn-secondary {
-      background: var(--color-surface-2); color: var(--color-text-primary);
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      padding: var(--space-2) var(--space-4); font-size: var(--text-sm);
-      cursor: pointer; font-family: var(--font-family); transition: all var(--duration-fast);
-    }
-    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
-    .info-card {
-      background: var(--color-surface); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: var(--shadow-sm);
-    }
-    .card-title {
-      font-size: var(--text-base); font-weight: 600; color: var(--color-text-primary);
-      margin-bottom: var(--space-4); padding-bottom: var(--space-3);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .info-rows { display: flex; flex-direction: column; gap: var(--space-4); }
-    .info-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .info-label { font-size: var(--text-sm); color: var(--color-text-secondary); }
-    .info-value { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-primary); }
-    .info-value.mono { font-family: var(--font-mono); font-size: var(--text-xs); }
-    .info-value.blood {
-      background: var(--color-danger-bg); color: var(--color-danger);
-      padding: 2px 10px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 700;
-    }
-  `],
+  imports: [CommonModule, LucideAngularModule],
+  templateUrl: './patient-detail.component.html',
 })
 export class PatientDetailComponent implements OnInit {
-  private readonly patientsClient = inject(PatientsClient);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  private readonly patientsClient      = inject(PatientsClient);
+  private readonly appointmentsClient  = inject(AppointmentsClient);
+  private readonly visitsClient        = inject(ClinicalVisitsClient);
+  private readonly route               = inject(ActivatedRoute);
+  public  readonly router              = inject(Router);
 
-  patient = signal<PatientDetailDto | null>(null);
-  isLoading = signal(true);
+  patient      = signal<PatientDetailDto | null>(null);
+  appointments = signal<AppointmentDto[]>([]);
+  visits       = signal<ClinicalVisitSummaryDto[]>([]);
+  isLoading    = signal(true);
+  activeTab    = signal<Tab>('overview');
+  expandedVisit = signal<string | null>(null);
+
+  patientId = '';
 
   async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id')!;
+    this.patientId = this.route.snapshot.paramMap.get('id')!;
+    await Promise.all([this.loadPatient(), this.loadVisits(), this.loadAppointments()]);
+    this.isLoading.set(false);
+  }
+
+  private async loadPatient() {
     try {
-      const result = await this.patientsClient.getById(id);
+      const result = await firstValueFrom(this.patientsClient.patientsGET2(this.patientId));
       this.patient.set(result);
-    } finally {
-      this.isLoading.set(false);
+    } catch (err) {
+      console.error('Failed to load patient', err);
     }
   }
 
-  goBack() { this.router.navigate(['/patients']); }
-  bookAppointment() { this.router.navigate(['/appointments/book'], { queryParams: { patientId: this.patient()?.id } }); }
+  private async loadVisits() {
+    try {
+      const result = await firstValueFrom(this.visitsClient.patient2(this.patientId, 1, 20));
+      this.visits.set(result?.items ?? []);
+    } catch (err) {
+      console.error('Failed to load visits', err);
+    }
+  }
+
+  private async loadAppointments() {
+    try {
+      const result = await firstValueFrom(this.appointmentsClient.patient(this.patientId, 1, 20));
+      this.appointments.set(result?.items ?? []);
+    } catch (err) {
+      console.error('Failed to load appointments', err);
+    }
+  }
+
+  setTab(tab: string) {
+    this.activeTab.set(tab as Tab);
+  }
+
+  toggleVisit(id: string) {
+    this.expandedVisit.set(this.expandedVisit() === id ? null : id);
+  }
+
+  getAge(dob: Date | undefined): number {
+    if (!dob) return 0;
+    return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  }
+
+  visitStatusClass(status: string | undefined): string {
+    const map: Record<string, string> = {
+      'InProgress': 'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-400 border border-amber-500/30',
+      'Completed':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      'Cancelled':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-rose-500/15 text-rose-400 border border-rose-500/30',
+    };
+    return map[status ?? ''] ?? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-mq-700 text-mq-s400';
+  }
+
+  apptStatusClass(status: string | undefined): string {
+    const map: Record<string, string> = {
+      'Scheduled':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-500/15 text-blue-400 border border-blue-500/30',
+      'CheckedIn':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-400 border border-amber-500/30',
+      'InSession':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-purple-500/15 text-purple-400 border border-purple-500/30',
+      'Completed':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      'Cancelled':  'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-rose-500/15 text-rose-400 border border-rose-500/30',
+    };
+    return map[status ?? ''] ?? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-mq-700 text-mq-s400';
+  }
 }

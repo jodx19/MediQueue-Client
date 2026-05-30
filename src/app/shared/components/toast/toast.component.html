@@ -1,0 +1,14 @@
+<div class="fixed top-5 right-5 z-[9999] space-y-2 w-80 pointer-events-none">
+  @for (t of toasts(); track t.id) {
+    <div [@toast]
+         [class]="'pointer-events-auto flex items-start gap-3 px-4 py-3.5
+                   rounded-xl border shadow-lg backdrop-blur-md ' + colorMap[t.type]">
+      <lucide-icon [name]="iconMap[t.type]" [size]="16" class="flex-shrink-0 mt-0.5"/>
+      <p class="text-sm flex-1 leading-snug">{{ t.message }}</p>
+      <button (click)="notify.remove(t.id)"
+              class="text-current opacity-60 hover:opacity-100 flex-shrink-0">
+        <lucide-icon name="x" [size]="13"/>
+      </button>
+    </div>
+  }
+</div>

@@ -1,18 +1,36 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Client as AuthClient, LoginCommand as LoginRequest } from '../api/mediqueue-api';
+import { AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../api/mediqueue-api';
 import { firstValueFrom } from 'rxjs';
 
 export interface UserSession {
   token: string;
   email: string;
-  role: 'Admin' | 'Doctor' | 'Receptionist';
+  role: 'Admin' | 'Doctor' | 'Receptionist' | 'Patient';
   name: string;
+  doctorId?: string;
+  patientId?: string;
   expiresAt: Date;
+}
+
+function decodeJwt(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly authClient = inject(AuthClient); // NSwag Generated
+  private readonly authClient = inject(AuthClient);
 
   private _session = signal<UserSession | null>(this.loadSession());
 
@@ -27,12 +45,17 @@ export class AuthService {
         this.authClient.login(new LoginRequest({ email, password }))
       );
 
-      // The role comes directly from JWT claims mapped by backend
+      const decoded = decodeJwt(response.token!);
+      const doctorId = decoded?.DoctorId || decoded?.doctorId;
+      const patientId = decoded?.PatientId || decoded?.patientId;
+
       const session: UserSession = {
         token:     response.token!,
         email:     response.username || email,
-        role:      (response.role as any) || 'Admin', // Ensure backend sends valid role string
+        role:      (response.role as any) || 'Patient',
         name:      response.username || 'User',
+        doctorId:  doctorId || undefined,
+        patientId: patientId || undefined,
         expiresAt: new Date(response.expiryTime!),
       };
 
@@ -44,6 +67,26 @@ export class AuthService {
       console.error('Login failed:', error);
       throw error;
     }
+  }
+
+  async loginFromResponse(response: AuthResponseDto): Promise<void> {
+    const decoded = decodeJwt(response.token!);
+    const doctorId = decoded?.DoctorId || decoded?.doctorId;
+    const patientId = decoded?.PatientId || decoded?.patientId;
+
+    const session: UserSession = {
+      token:     response.token!,
+      email:     response.username || 'patient@mediqueue.local',
+      role:      (response.role as any) || 'Patient',
+      name:      response.username || 'Patient',
+      doctorId:  doctorId || undefined,
+      patientId: patientId || undefined,
+      expiresAt: new Date(response.expiryTime!),
+    };
+
+    sessionStorage.setItem('mq_session', JSON.stringify(session));
+    this._session.set(session);
+    console.log('User logged in successfully from response:', session.email);
   }
 
   logout(): void {
@@ -67,7 +110,6 @@ export class AuthService {
       
       const s = JSON.parse(raw) as UserSession;
       
-      // Check for token expiration
       if (new Date(s.expiresAt) < new Date()) {
         sessionStorage.removeItem('mq_session');
         return null;
