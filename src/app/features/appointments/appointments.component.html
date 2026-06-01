@@ -1,33 +1,33 @@
-<div class="p-6 min-h-screen bg-mq-navy space-y-6">
+<div class="space-y-5">
 
   <!-- ══ HEADER ══ -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  <div class="page-header">
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight">Appointments</h1>
-      <p class="text-mq-s400 text-sm mt-1">Manage clinic schedule and bookings.</p>
+      <h1 class="page-title">Appointments</h1>
+      <p class="page-subtitle">Manage clinic schedule and bookings.</p>
     </div>
-    <div class="flex items-center gap-3 w-full sm:w-auto">
-      <!-- Toggle View -->
+    <div class="flex items-center gap-2">
+      <!-- View toggle -->
       <div class="bg-mq-800 border border-mq-700 p-1 rounded-xl flex gap-1">
         <button (click)="setView('list')"
                 [class]="view() === 'list'
-                  ? 'px-4 py-1.5 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
-                  : 'px-4 py-1.5 rounded-lg text-mq-s400 hover:text-white text-sm font-medium transition-all'">
-          <span class="flex items-center gap-2">
-            <lucide-icon name="list" [size]="14"></lucide-icon> List
+                  ? 'px-4 py-1.5 rounded-lg bg-mq-teal text-white text-xs font-semibold transition-all'
+                  : 'px-4 py-1.5 rounded-lg text-mq-s400 hover:text-white text-xs font-medium transition-all'">
+          <span class="flex items-center gap-1.5">
+            <lucide-icon name="list" [size]="13"/>List
           </span>
         </button>
         <button (click)="setView('calendar')"
                 [class]="view() === 'calendar'
-                  ? 'px-4 py-1.5 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
-                  : 'px-4 py-1.5 rounded-lg text-mq-s400 hover:text-white text-sm font-medium transition-all'">
-          <span class="flex items-center gap-2">
-            <lucide-icon name="calendar" [size]="14"></lucide-icon> Calendar
+                  ? 'px-4 py-1.5 rounded-lg bg-mq-teal text-white text-xs font-semibold transition-all'
+                  : 'px-4 py-1.5 rounded-lg text-mq-s400 hover:text-white text-xs font-medium transition-all'">
+          <span class="flex items-center gap-1.5">
+            <lucide-icon name="calendar" [size]="13"/>Calendar
           </span>
         </button>
       </div>
-      <button (click)="openBookModal()" class="btn-primary flex items-center gap-2 flex-1 sm:flex-none justify-center">
-        <lucide-icon name="calendar-plus" [size]="16"></lucide-icon>
+      <button (click)="openBookModal()" class="btn-primary">
+        <lucide-icon name="calendar-plus" [size]="15"/>
         Book Slot
       </button>
     </div>
@@ -36,76 +36,69 @@
   <!-- ══ LIST VIEW ══ -->
   @if (view() === 'list') {
     <div @fade class="mq-card overflow-hidden">
-      <!-- Filter Tabs -->
-      <div class="flex border-b border-mq-700 bg-mq-navy/40 overflow-x-auto">
+      <!-- Filter tabs -->
+      <div class="mq-tabs !mb-0 px-2 bg-mq-navy/40 overflow-x-auto">
         @for (tab of ['Today', 'Upcoming', 'Past', 'Cancelled']; track tab) {
           <button (click)="setFilter($any(tab))"
-                  [class]="filter() === tab
-                    ? 'px-6 py-4 border-b-2 border-mq-teal text-mq-t400 font-semibold text-sm whitespace-nowrap transition-all'
-                    : 'px-6 py-4 border-b-2 border-transparent text-mq-s400 hover:text-white font-medium text-sm whitespace-nowrap transition-all'">
+                  [class]="'mq-tab' + (filter() === tab ? ' active' : '')">
             {{ tab }}
           </button>
         }
       </div>
 
-      <!-- Cards List -->
-      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4" [@listAnimation]>
+      <!-- Appointment cards grid -->
+      <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4" [@listAnimation]>
         @for (apt of appointments(); track apt.id) {
-          <div class="p-5 rounded-xl border border-mq-700 hover:border-mq-teal/40
-                      bg-mq-800/50 hover:bg-mq-800 transition-all duration-200 group">
-
+          <div class="mq-card-interactive p-5 group">
+            <!-- Time + status -->
             <div class="flex justify-between items-start mb-4">
               <div class="flex items-center gap-2">
-                <lucide-icon name="clock" [size]="16" class="text-mq-t400"></lucide-icon>
-                <span class="font-bold text-white">{{ apt.time }}</span>
+                <div class="icon-box-sm bg-mq-teal/10 text-mq-teal-400">
+                  <lucide-icon name="clock" [size]="14"/>
+                </div>
+                <span class="font-bold text-mq-text font-mono">{{ apt.time }}</span>
               </div>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    [class]="apt.status === 'Completed'
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : apt.status === 'Cancelled'
-                      ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                      : 'bg-mq-700/60 text-mq-s400 border border-mq-700'">
+              <span [class]="apt.status === 'Completed' ? 'badge badge-success' :
+                             apt.status === 'Cancelled'  ? 'badge badge-danger'  :
+                                                           'badge badge-neutral'">
                 {{ apt.status }}
               </span>
             </div>
 
-            <div class="flex items-center gap-4 mb-4">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-mq-teal to-mq-t600
-                          flex items-center justify-center text-white font-bold flex-shrink-0">
-                <lucide-icon name="user" [size]="20"></lucide-icon>
+            <!-- Patient + doctor -->
+            <div class="flex items-center gap-3 mb-4">
+              <div class="mq-avatar-md text-sm flex-shrink-0">
+                {{ apt.patient[0] }}
               </div>
               <div>
-                <div class="font-bold text-white">{{ apt.patient }}</div>
-                <div class="text-sm text-mq-s400">
+                <p class="font-semibold text-mq-text text-sm">{{ apt.patient }}</p>
+                <p class="text-xs text-mq-s400 mt-0.5">
                   {{ apt.doctor }} •
-                  <span class="text-mq-t400">{{ apt.type }}</span>
-                </div>
+                  <span class="text-mq-teal-400">{{ apt.type }}</span>
+                </p>
               </div>
             </div>
 
-            <div class="pt-4 border-t border-mq-700/50 flex justify-end gap-2
+            <!-- Actions -->
+            <div class="pt-3.5 border-t border-mq-700/50 flex justify-end gap-2
                         opacity-0 group-hover:opacity-100 transition-opacity">
-              <button class="text-xs text-rose-400 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition-colors">
-                Cancel
-              </button>
-              <button class="text-xs text-mq-s400 hover:text-white hover:bg-mq-700 px-3 py-1.5 rounded-lg transition-colors">
-                Reschedule
-              </button>
-              <button class="text-xs text-white bg-mq-teal hover:bg-mq-t600 px-4 py-1.5 rounded-lg transition-colors font-semibold">
-                Start Visit
-              </button>
+              <button class="btn-danger !py-1.5 !px-3 !text-xs">Cancel</button>
+              <button class="btn-ghost !py-1.5 !px-3 !text-xs">Reschedule</button>
+              <button class="btn-primary !py-1.5 !px-3 !text-xs">Start Visit →</button>
             </div>
           </div>
         }
 
         @if (appointments().length === 0) {
-          <div class="col-span-2 flex flex-col items-center justify-center py-20 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-mq-teal/10 flex items-center justify-center mb-4">
-              <lucide-icon name="calendar" class="text-mq-s400" [size]="28"></lucide-icon>
+          <div class="col-span-2">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <lucide-icon name="calendar" class="text-mq-s400" [size]="26"/>
+              </div>
+              <h3 class="empty-title">No appointments found</h3>
+              <p class="empty-desc">Book a slot to get started</p>
+              <button (click)="openBookModal()" class="btn-primary">Book Slot →</button>
             </div>
-            <h3 class="text-white font-semibold mb-2">No appointments found</h3>
-            <p class="text-mq-s400 text-sm mb-6">Book a slot to get started</p>
-            <button (click)="openBookModal()" class="btn-primary">Book Slot →</button>
           </div>
         }
       </div>
@@ -115,68 +108,67 @@
   <!-- ══ CALENDAR VIEW ══ -->
   @if (view() === 'calendar') {
     <div @fade class="mq-card overflow-hidden flex flex-col min-h-[600px]">
-      <!-- Calendar Header -->
-      <div class="px-6 py-4 border-b border-mq-700 flex justify-between items-center bg-mq-navy/40">
-        <div class="font-bold text-white text-lg flex items-center gap-3">
-          <button class="p-1.5 hover:bg-mq-700/60 rounded-lg transition-colors text-mq-s400 hover:text-white">
-            <lucide-icon name="chevron-left" [size]="18"></lucide-icon>
+      <!-- Calendar header -->
+      <div class="px-5 py-4 border-b border-mq-700 flex justify-between items-center">
+        <div class="font-semibold text-mq-text flex items-center gap-3">
+          <button class="btn-icon !border-0">
+            <lucide-icon name="chevron-left" [size]="16"/>
           </button>
           May 10 – 16, 2026
-          <button class="p-1.5 hover:bg-mq-700/60 rounded-lg transition-colors text-mq-s400 hover:text-white">
-            <lucide-icon name="chevron-right" [size]="18"></lucide-icon>
+          <button class="btn-icon !border-0">
+            <lucide-icon name="chevron-right" [size]="16"/>
           </button>
         </div>
-        <button class="px-4 py-1.5 bg-mq-800 border border-mq-700 hover:border-mq-teal/50 rounded-xl text-sm font-semibold text-white transition-colors">
-          Today
-        </button>
+        <button class="btn-secondary !py-1.5 !px-4 !text-xs">Today</button>
       </div>
 
-      <!-- Calendar Grid -->
+      <!-- Calendar grid -->
       <div class="flex-1 overflow-auto">
         <div class="min-w-[800px]">
-          <!-- Day Headers -->
+          <!-- Day headers -->
           <div class="grid grid-cols-8 border-b border-mq-700 sticky top-0 bg-mq-navy z-10">
             <div class="p-3 text-center border-r border-mq-700/50">
-              <div class="text-xs text-mq-s400 font-semibold uppercase">Time</div>
+              <div class="text-[10px] text-mq-s500 font-semibold uppercase">Time</div>
             </div>
             @for (day of weekDays; track day; let i = $index) {
               <div class="p-3 text-center border-r border-mq-700/50">
-                <div class="text-xs text-mq-s400 font-semibold uppercase">{{ day }}</div>
+                <div class="text-[10px] text-mq-s400 font-semibold uppercase">{{ day }}</div>
                 <div class="text-lg font-bold mt-0.5"
-                     [class]="i === 1 ? 'text-mq-t400' : 'text-white'">
+                     [class]="i === 1 ? 'text-mq-teal-400' : 'text-mq-text'">
                   {{ 10 + i }}
                 </div>
               </div>
             }
           </div>
 
-          <!-- Time Slots -->
+          <!-- Time slots -->
           @for (time of calendarHours; track time) {
-            <div class="grid grid-cols-8 border-b border-mq-700/30 group">
-              <div class="p-2 text-right border-r border-mq-700/50 text-xs font-medium text-mq-s400 bg-mq-navy/20">
+            <div class="grid grid-cols-8 border-b border-mq-700/30">
+              <div class="p-2 text-right border-r border-mq-700/50
+                          text-[10px] font-medium text-mq-s500 bg-mq-navy/20">
                 {{ time }}
               </div>
               @for (day of weekDays; track day; let i = $index) {
-                <div class="p-1 border-r border-mq-700/30 min-h-[56px] relative
+                <div class="p-1 border-r border-mq-700/30 min-h-[52px] relative
                             hover:bg-mq-teal/5 transition-colors cursor-pointer group/cell"
                      (click)="openBookModal()">
                   <div class="absolute inset-0 opacity-0 group-hover/cell:opacity-100
                               flex items-center justify-center transition-opacity">
-                    <lucide-icon name="plus" [size]="14" class="text-mq-t400"></lucide-icon>
+                    <lucide-icon name="plus" [size]="14" class="text-mq-teal-400"/>
                   </div>
-                  <!-- Mock Appointment Pills -->
+                  <!-- Mock appointment pills -->
                   @if (time === '10:00 AM' && i === 1) {
                     <div class="absolute inset-1 bg-mq-teal/15 border border-mq-teal/30
                                 rounded-lg p-1.5 z-10 hover:bg-mq-teal/25 transition-colors">
-                      <div class="text-[10px] font-bold text-mq-t400 leading-tight truncate">Omar Tarek</div>
+                      <div class="text-[10px] font-bold text-mq-teal-400 leading-tight truncate">Omar Tarek</div>
                       <div class="text-[9px] text-mq-s400 truncate">Dr. Samy</div>
                     </div>
                   }
                   @if (time === '01:00 PM' && i === 3) {
-                    <div class="absolute inset-1 bg-purple-500/15 border border-purple-500/30
-                                rounded-lg p-1.5 z-10 hover:bg-purple-500/25 transition-colors">
-                      <div class="text-[10px] font-bold text-purple-400 leading-tight truncate">Mona Zaki</div>
-                      <div class="text-[9px] text-purple-300/70 truncate">Dr. Tarek</div>
+                    <div class="absolute inset-1 bg-mq-purple/15 border border-mq-purple/30
+                                rounded-lg p-1.5 z-10 hover:bg-mq-purple/25 transition-colors">
+                      <div class="text-[10px] font-bold text-mq-purple leading-tight truncate">Mona Zaki</div>
+                      <div class="text-[9px] text-mq-s400 truncate">Dr. Tarek</div>
                     </div>
                   }
                 </div>
@@ -192,38 +184,40 @@
 
 <!-- ══ BOOK APPOINTMENT MODAL ══ -->
 @if (isBookModalOpen()) {
-  <div class="fixed inset-0 bg-mq-navy/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div @modalEnter class="bg-mq-800 border border-mq-700 w-full max-w-lg rounded-2xl shadow-2xl
-                            overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="modal-overlay" (click)="closeBookModal()"
+       style="animation:scaleIn .2s ease both">
+    <div class="modal-panel max-w-lg"
+         (click)="$event.stopPropagation()"
+         style="animation:scaleIn .25s cubic-bezier(0.34,1.56,0.64,1) both">
 
-      <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-mq-700 flex justify-between items-center">
+      <!-- Header -->
+      <div class="modal-header">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-mq-teal/15 flex items-center justify-center">
-            <lucide-icon name="calendar-plus" class="text-mq-t400" [size]="18"></lucide-icon>
+          <div class="icon-box-md bg-mq-teal/10">
+            <lucide-icon name="calendar-plus" class="text-mq-teal-400" [size]="18"/>
           </div>
-          <h2 class="text-lg font-bold text-white">New Appointment</h2>
+          <h3 class="modal-title">New Appointment</h3>
         </div>
-        <button (click)="closeBookModal()"
-                class="w-8 h-8 rounded-lg text-mq-s400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition-colors">
-          <lucide-icon name="x" [size]="16"></lucide-icon>
+        <button (click)="closeBookModal()" class="btn-icon !border-0 hover:text-mq-danger">
+          <lucide-icon name="x" [size]="16"/>
         </button>
       </div>
 
-      <!-- Modal Body -->
-      <div class="p-6 overflow-y-auto flex-1 space-y-5">
-
+      <!-- Body -->
+      <div class="modal-body space-y-5 overflow-y-auto max-h-[65vh]">
         <div>
           <label class="mq-label">Patient Name / MRN</label>
           <div class="relative">
-            <lucide-icon name="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-mq-s400 pointer-events-none" [size]="15"></lucide-icon>
-            <input type="text" placeholder="Search patient..." class="mq-input pl-10">
+            <lucide-icon name="search"
+                         class="absolute left-3 top-1/2 -translate-y-1/2 text-mq-s500 pointer-events-none"
+                         [size]="14"/>
+            <input type="text" placeholder="Search patient..." class="mq-input pl-9"/>
           </div>
         </div>
 
         <div>
           <label class="mq-label">Doctor</label>
-          <select class="mq-input mq-select bg-mq-navy">
+          <select class="mq-select">
             <option>Dr. Ahmed Samy (Cardiology)</option>
             <option>Dr. Mona Hassan (Pediatrics)</option>
           </select>
@@ -232,11 +226,11 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="mq-label">Date</label>
-            <input type="date" class="mq-input [color-scheme:dark]">
+            <input type="date" class="mq-input [color-scheme:dark]"/>
           </div>
           <div>
             <label class="mq-label">Time</label>
-            <select class="mq-input mq-select bg-mq-navy">
+            <select class="mq-select">
               <option>10:00 AM</option>
               <option>10:30 AM</option>
               <option>11:00 AM</option>
@@ -248,30 +242,28 @@
 
         <div>
           <label class="mq-label">Reason / Chief Complaint</label>
-          <textarea rows="3" class="mq-input resize-none"
+          <textarea rows="3" class="mq-textarea"
                     placeholder="Chief complaint or reason for visit..."></textarea>
         </div>
 
         <div>
           <label class="mq-label">Priority</label>
-          <div class="flex gap-4 mt-1">
+          <div class="flex gap-5 mt-2">
             <label class="flex items-center gap-2 text-sm text-mq-s400 cursor-pointer">
               <input type="radio" name="priority" checked class="accent-teal-500"> Normal
             </label>
-            <label class="flex items-center gap-2 text-sm text-rose-400 cursor-pointer">
-              <input type="radio" name="priority" class="accent-rose-500"> Urgent
+            <label class="flex items-center gap-2 text-sm text-mq-danger cursor-pointer">
+              <input type="radio" name="priority" class="accent-red-500"> Urgent
             </label>
           </div>
         </div>
-
       </div>
 
-      <!-- Modal Footer -->
-      <div class="px-6 py-4 border-t border-mq-700 flex justify-end gap-3">
-        <button (click)="closeBookModal()" class="btn-ghost">Cancel</button>
-        <button class="btn-primary">Confirm Booking</button>
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button (click)="closeBookModal()" class="btn-secondary">Cancel</button>
+        <button class="btn-primary">Confirm Booking →</button>
       </div>
-
     </div>
   </div>
 }

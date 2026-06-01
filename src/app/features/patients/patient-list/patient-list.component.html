@@ -1,111 +1,120 @@
-<div class="p-6 bg-mq-navy min-h-screen">
+<div class="space-y-5">
 
-  <!-- Header -->
-  <div class="flex items-start justify-between mb-8">
+  <!-- ══ PAGE HEADER ══ -->
+  <div class="page-header">
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight">Patients</h1>
-      <p class="text-mq-s400 text-sm mt-1">{{ patients().length }} patients found</p>
+      <h1 class="page-title">Patients</h1>
+      <p class="page-subtitle">{{ patients().length }} registered patients</p>
     </div>
     <button (click)="router.navigate(['/patients/register'])"
-            class="btn-primary flex items-center gap-2">
+            class="btn-primary">
       <lucide-icon name="user-plus" [size]="16"/>
       Register Patient
     </button>
   </div>
 
-  <!-- Search -->
-  <div class="flex gap-4 mb-6">
-    <div class="relative flex-1 max-w-md">
+  <!-- ══ SEARCH + FILTERS ══ -->
+  <div class="flex flex-wrap gap-3">
+    <div class="relative flex-1 min-w-64">
       <lucide-icon name="search"
-                   class="absolute left-4 top-1/2 -translate-y-1/2 text-mq-s400"
-                   [size]="16"/>
+                   class="absolute left-3 top-1/2 -translate-y-1/2 text-mq-s500 pointer-events-none"
+                   [size]="15"/>
       <input type="text"
              [value]="searchTerm"
              (input)="onSearch()"
              #searchInput
              (change)="searchTerm = searchInput.value"
-             class="mq-input pl-11"
+             class="mq-input pl-10"
              placeholder="Search by name, MRN, phone..."/>
     </div>
   </div>
 
-  <!-- Loading skeleton -->
+  <!-- ══ LOADING SKELETON ══ -->
   @if (isLoading()) {
-    <div class="space-y-3">
+    <div class="space-y-2">
       @for (i of [1,2,3,4,5,6]; track i) {
-        <div class="h-16 rounded-xl bg-mq-800/80 animate-pulse"></div>
+        <div class="h-16 skeleton rounded-xl"></div>
       }
     </div>
   }
 
-  <!-- Empty state -->
+  <!-- ══ EMPTY STATE ══ -->
   @else if (patients().length === 0) {
-    <div class="flex flex-col items-center justify-center py-24 text-center">
-      <div class="w-16 h-16 rounded-2xl bg-mq-teal/10 flex items-center
-                  justify-center mb-4">
-        <lucide-icon name="users" class="text-mq-s400" [size]="28"/>
+    <div class="empty-state mq-card py-20">
+      <div class="empty-icon">
+        <lucide-icon name="users" class="text-mq-s400" [size]="26"/>
       </div>
-      <h3 class="text-white font-semibold mb-2">No patients found</h3>
-      <p class="text-mq-s400 text-sm mb-6">
-        Register your first patient to get started
+      <h3 class="empty-title">No patients found</h3>
+      <p class="empty-desc">
+        {{ searchTerm ? 'Try different search terms' : 'Register your first patient to get started' }}
       </p>
-      <button (click)="router.navigate(['/patients/register'])"
-              class="btn-primary">
-        Register Patient →
-      </button>
+      @if (!searchTerm) {
+        <button (click)="router.navigate(['/patients/register'])"
+                class="btn-primary">
+          Register Patient →
+        </button>
+      }
     </div>
   }
 
-  <!-- Table -->
+  <!-- ══ TABLE ══ -->
   @else {
-    <div class="mq-card-dark overflow-hidden">
-      <table class="w-full">
+    <div class="mq-table-wrapper">
+      <table class="mq-table">
         <thead>
-          <tr class="border-b border-mq-700">
-            <th class="text-left px-4 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Patient</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">MRN</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Phone</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Last Visit</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-mq-s400 uppercase tracking-wider">Status</th>
-            <th class="w-24 px-4 py-3"></th>
+          <tr>
+            <th class="mq-th">Patient</th>
+            <th class="mq-th">MRN</th>
+            <th class="mq-th">Phone</th>
+            <th class="mq-th">Last Visit</th>
+            <th class="mq-th">Status</th>
+            <th class="mq-th w-24"></th>
           </tr>
         </thead>
         <tbody>
           @for (p of patients(); track p.id) {
-            <tr class="border-b border-mq-700/50 hover:bg-mq-teal/5 cursor-pointer transition-colors group"
+            <tr class="mq-tr"
                 (click)="router.navigate(['/patients', p.id])">
-              <td class="px-4 py-3">
+
+              <!-- Patient name + avatar -->
+              <td class="mq-td">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full bg-gradient-to-br
-                              from-mq-teal to-mq-t600 flex items-center
-                              justify-center text-white text-xs font-bold flex-shrink-0">
+                  <div class="mq-avatar-sm text-[11px] flex-shrink-0">
                     {{ (p.fullName ?? 'P')[0].toUpperCase() }}
                   </div>
                   <div>
-                    <p class="text-white font-semibold text-sm">{{ p.fullName }}</p>
-                    <p class="text-mq-s400 text-xs">{{ p.nationalId }}</p>
+                    <p class="text-mq-text font-semibold text-sm">{{ p.fullName }}</p>
+                    <p class="text-mq-s500 text-xs">{{ p.nationalId }}</p>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3">
-                <span class="font-mono text-mq-t400 text-xs">{{ p.medicalRecordNumber }}</span>
+
+              <!-- MRN -->
+              <td class="mq-td">
+                <span class="font-mono text-[11px] text-mq-teal-400">
+                  {{ p.medicalRecordNumber }}
+                </span>
               </td>
-              <td class="px-4 py-3 text-mq-s400 text-sm">{{ p.phone }}</td>
-              <td class="px-4 py-3 text-mq-s400 text-sm">
+
+              <!-- Phone -->
+              <td class="mq-td text-xs text-mq-s300">{{ p.phone }}</td>
+
+              <!-- Last visit -->
+              <td class="mq-td text-xs text-mq-s400">
                 {{ p.lastVisitDate ? (p.lastVisitDate | date:'MMM d, y') : '—' }}
               </td>
-              <td class="px-4 py-3">
-                <span [class]="p.isActive
-                  ? 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-mq-700/50 text-mq-s400 border border-mq-700'">
+
+              <!-- Status badge -->
+              <td class="mq-td">
+                <span [class]="p.isActive ? 'badge badge-success' : 'badge badge-neutral'">
                   {{ p.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button class="text-xs text-mq-s400 hover:text-mq-t400
-                                 transition-colors px-2 py-1 rounded-lg
-                                 hover:bg-mq-teal/10"
+
+              <!-- Row actions -->
+              <td class="mq-td">
+                <div class="row-actions flex gap-1">
+                  <button class="btn-ghost !px-2.5 !py-1 !text-xs !border-0"
                           (click)="$event.stopPropagation();
                                    router.navigate(['/patients', p.id])">
                     View
@@ -118,4 +127,5 @@
       </table>
     </div>
   }
+
 </div>

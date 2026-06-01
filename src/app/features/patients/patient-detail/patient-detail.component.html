@@ -1,104 +1,101 @@
 @if (isLoading()) {
-  <div class="p-6 space-y-3">
+  <div class="space-y-3">
     @for (i of [1,2,3,4]; track i) {
-      <div class="h-16 rounded-xl bg-mq-800/80 animate-pulse"></div>
+      <div class="h-16 skeleton rounded-xl"></div>
     }
   </div>
 }
 
 @else if (patient()) {
-  <div class="flex gap-6 p-6 min-h-screen bg-mq-navy">
+  <div class="flex gap-6 min-h-full">
 
-    <!-- LEFT SIDEBAR: Demographics -->
+    <!-- ══ LEFT SIDEBAR ══ -->
     <div class="w-64 flex-shrink-0 space-y-4">
 
-      <!-- Avatar + Name card -->
-      <div class="mq-card-dark p-5 text-center">
-        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-mq-teal to-mq-t600
-                    flex items-center justify-center text-white text-2xl font-black
-                    mx-auto mb-4 shadow-teal-glow">
+      <!-- Avatar + Name -->
+      <div class="mq-card p-5 text-center">
+        <div class="mq-avatar-xl mx-auto mb-4 text-2xl shadow-teal-glow">
           {{ (patient()!.fullName ?? 'P')[0].toUpperCase() }}
         </div>
-        <h2 class="text-white font-black text-lg leading-tight">{{ patient()!.fullName }}</h2>
-        <p class="font-mono text-mq-t400 text-xs mt-1">{{ patient()!.medicalRecordNumber }}</p>
+        <h2 class="text-mq-text font-bold text-base leading-tight">
+          {{ patient()!.fullName }}
+        </h2>
+        <p class="font-mono text-mq-teal-400 text-xs mt-1">
+          {{ patient()!.medicalRecordNumber }}
+        </p>
         <div class="flex items-center justify-center gap-2 mt-3">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                       bg-mq-700/50 text-mq-s400 border border-mq-700">
-            {{ patient()!.gender }}
-          </span>
+          <span class="badge badge-neutral">{{ patient()!.gender }}</span>
           @if (patient()!.bloodType) {
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                         bg-rose-500/15 text-rose-400 border border-rose-500/30">
-              {{ patient()!.bloodType }}
-            </span>
+            <span class="badge badge-danger">{{ patient()!.bloodType }}</span>
           }
         </div>
       </div>
 
       <!-- Info card -->
-      <div class="mq-card-dark p-5 space-y-3">
-        <h3 class="text-xs font-semibold text-mq-s400 uppercase tracking-wider">Details</h3>
-
+      <div class="mq-card p-5 space-y-3">
+        <h3 class="mq-label">Details</h3>
         @if (patient()!.dateOfBirth) {
           <div>
-            <p class="text-xs text-mq-s400">Age</p>
-            <p class="text-white text-sm font-medium">{{ getAge(patient()!.dateOfBirth) }} years</p>
+            <p class="text-[10px] text-mq-s500 uppercase font-semibold tracking-wider">Age</p>
+            <p class="text-mq-text text-sm font-medium mt-0.5">{{ getAge(patient()!.dateOfBirth) }} years</p>
           </div>
         }
         @if (patient()!.phone) {
           <div>
-            <p class="text-xs text-mq-s400">Phone</p>
-            <p class="text-white text-sm font-medium">{{ patient()!.phone }}</p>
+            <p class="text-[10px] text-mq-s500 uppercase font-semibold tracking-wider">Phone</p>
+            <p class="text-mq-text text-sm mt-0.5">{{ patient()!.phone }}</p>
           </div>
         }
         @if (patient()!.email) {
           <div>
-            <p class="text-xs text-mq-s400">Email</p>
-            <p class="text-white text-sm font-medium truncate">{{ patient()!.email }}</p>
+            <p class="text-[10px] text-mq-s500 uppercase font-semibold tracking-wider">Email</p>
+            <p class="text-mq-text text-sm truncate mt-0.5">{{ patient()!.email }}</p>
           </div>
         }
         @if (patient()!.nationalId) {
           <div>
-            <p class="text-xs text-mq-s400">National ID</p>
-            <p class="text-white text-sm font-mono">{{ patient()!.nationalId }}</p>
+            <p class="text-[10px] text-mq-s500 uppercase font-semibold tracking-wider">National ID</p>
+            <p class="text-mq-text text-sm font-mono mt-0.5">{{ patient()!.nationalId }}</p>
           </div>
         }
         @if (patient()!.street) {
           <div>
-            <p class="text-xs text-mq-s400">Address</p>
-            <p class="text-white text-sm">{{ patient()!.street }}{{ patient()!.city ? ', ' + patient()!.city : '' }}</p>
+            <p class="text-[10px] text-mq-s500 uppercase font-semibold tracking-wider">Address</p>
+            <p class="text-mq-text text-sm mt-0.5">
+              {{ patient()!.street }}{{ patient()!.city ? ', ' + patient()!.city : '' }}
+            </p>
           </div>
         }
       </div>
 
       <!-- Actions -->
-      <div class="mq-card-dark p-5 space-y-2">
+      <div class="mq-card p-5 space-y-2.5">
         <button (click)="router.navigate(['/appointments'], {queryParams:{patientId:patient()!.id}})"
-                class="btn-primary w-full text-sm">
-          + Book Appointment
+                class="btn-primary w-full">
+          <lucide-icon name="calendar-plus" [size]="15"/>
+          Book Appointment
         </button>
         <button (click)="router.navigate(['/patients'])"
-                class="btn-ghost w-full text-sm">
-          ← Back to Patients
+                class="btn-secondary w-full">
+          <lucide-icon name="arrow-left" [size]="15"/>
+          Back to Patients
         </button>
       </div>
     </div>
 
-    <!-- MAIN CONTENT: Tabs -->
+    <!-- ══ MAIN CONTENT ══ -->
     <div class="flex-1 min-w-0">
 
       <!-- Tab bar -->
-      <div class="flex gap-1 mb-6 bg-mq-800/50 rounded-xl p-1 w-fit border border-mq-700">
+      <div class="mq-tabs">
         @for (tab of [
-          {id:'overview', label:'Overview', icon:'user'},
-          {id:'visits',   label:'Medical Visits', icon:'clipboard'},
-          {id:'appointments', label:'Appointments', icon:'calendar'}
+          {id:'overview',      label:'Overview',      icon:'user'},
+          {id:'visits',        label:'Medical Visits', icon:'clipboard'},
+          {id:'appointments',  label:'Appointments',  icon:'calendar'}
         ]; track tab.id) {
           <button (click)="setTab(tab.id)"
-                  [class]="activeTab() === tab.id
-                    ? 'flex items-center gap-2 px-4 py-2 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
-                    : 'flex items-center gap-2 px-4 py-2 rounded-lg text-mq-s400 hover:text-white text-sm transition-all'">
-            <lucide-icon [name]="tab.icon" [size]="14"/>
+                  [class]="'mq-tab' + (activeTab() === tab.id ? ' active' : '')">
+            <lucide-icon [name]="tab.icon" [size]="13" class="mr-1.5"/>
             {{ tab.label }}
           </button>
         }
@@ -107,59 +104,64 @@
       <!-- OVERVIEW TAB -->
       @if (activeTab() === 'overview') {
         <div class="grid grid-cols-2 gap-4">
-          <div class="mq-card-dark p-5">
-            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Personal Info</h3>
+          <div class="mq-card p-5">
+            <h3 class="text-sm font-semibold text-mq-text mb-4 pb-3 border-b border-mq-700">
+              Personal Info
+            </h3>
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Full Name</span>
-                <span class="text-white font-medium">{{ patient()!.fullName }}</span>
+                <span class="text-mq-text font-medium">{{ patient()!.fullName }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Date of Birth</span>
-                <span class="text-white">{{ patient()!.dateOfBirth | date:'MMMM d, y' }}</span>
+                <span class="text-mq-s300">{{ patient()!.dateOfBirth | date:'MMMM d, y' }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Gender</span>
-                <span class="text-white">{{ patient()!.gender }}</span>
+                <span class="text-mq-s300">{{ patient()!.gender }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Blood Type</span>
-                <span class="text-rose-400 font-semibold">{{ patient()!.bloodType || '—' }}</span>
+                <span class="text-mq-danger font-semibold">{{ patient()!.bloodType || '—' }}</span>
               </div>
             </div>
           </div>
 
-          <div class="mq-card-dark p-5">
-            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Contact & Insurance</h3>
+          <div class="mq-card p-5">
+            <h3 class="text-sm font-semibold text-mq-text mb-4 pb-3 border-b border-mq-700">
+              Contact & Insurance
+            </h3>
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Phone</span>
-                <span class="text-white">{{ patient()!.phone || '—' }}</span>
+                <span class="text-mq-s300">{{ patient()!.phone || '—' }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Email</span>
-                <span class="text-white">{{ patient()!.email || '—' }}</span>
+                <span class="text-mq-s300">{{ patient()!.email || '—' }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Status</span>
-                <span [class]="patient()!.isActive
-                  ? 'text-emerald-400 font-medium' : 'text-mq-s400'">
+                <span [class]="patient()!.isActive ? 'badge badge-success' : 'badge badge-neutral'">
                   {{ patient()!.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </div>
             </div>
           </div>
 
-          <div class="mq-card-dark p-5">
-            <h3 class="text-white font-semibold mb-4 pb-2 border-b border-mq-700">Clinical Summary</h3>
+          <div class="mq-card p-5">
+            <h3 class="text-sm font-semibold text-mq-text mb-4 pb-3 border-b border-mq-700">
+              Clinical Summary
+            </h3>
             <div class="space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Total Visits</span>
-                <span class="text-white font-semibold">{{ visits().length }}</span>
+                <span class="text-mq-text font-semibold">{{ visits().length }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-mq-s400">Total Appointments</span>
-                <span class="text-white font-semibold">{{ appointments().length }}</span>
+                <span class="text-mq-text font-semibold">{{ appointments().length }}</span>
               </div>
             </div>
           </div>
@@ -169,32 +171,32 @@
       <!-- VISITS TAB -->
       @if (activeTab() === 'visits') {
         @if (visits().length === 0) {
-          <div class="flex flex-col items-center justify-center py-16 text-center mq-card-dark">
-            <lucide-icon name="clipboard" class="text-mq-s400 mb-4" [size]="36"/>
-            <p class="text-white font-medium">No visits recorded</p>
-            <p class="text-mq-s400 text-sm mt-1">Medical visits will appear here</p>
+          <div class="empty-state mq-card py-16">
+            <div class="empty-icon">
+              <lucide-icon name="clipboard" class="text-mq-s400" [size]="26"/>
+            </div>
+            <h3 class="empty-title">No visits recorded</h3>
+            <p class="empty-desc">Medical visits will appear here</p>
           </div>
         } @else {
-          <div class="relative">
-            <!-- Timeline line -->
-            <div class="absolute left-5 top-0 bottom-0 w-px bg-mq-700"></div>
+          <div class="timeline">
             @for (v of visits(); track v.id) {
-              <div class="relative pl-14 pb-5">
-                <!-- Dot -->
-                <div class="absolute left-3.5 top-2 w-3 h-3 rounded-full
-                            bg-mq-teal border-2 border-mq-navy"></div>
-                <!-- Card -->
-                <div class="mq-card-dark p-4 cursor-pointer hover:border-mq-teal/40 transition-colors border border-mq-700"
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <!-- Visit card -->
+                <div class="mq-card p-4 cursor-pointer hover:border-mq-teal/30 transition-colors"
                      (click)="toggleVisit(v.id!)">
                   <div class="flex items-center justify-between">
                     <div>
-                      <p class="text-white font-semibold text-sm">Visit</p>
+                      <p class="text-mq-text font-semibold text-sm">Clinical Visit</p>
                       <p class="text-mq-s400 text-xs mt-0.5">
                         {{ v.visitDate | date:'MMM d, y · h:mm a' }}
                       </p>
                     </div>
                     <div class="flex items-center gap-3">
-                      <span [class]="visitStatusClass(v.isFinalized ? 'Completed' : 'InProgress')">{{ v.isFinalized ? 'Completed' : 'In Progress' }}</span>
+                      <span [class]="visitStatusClass(v.isFinalized ? 'Completed' : 'InProgress')">
+                        {{ v.isFinalized ? 'Completed' : 'In Progress' }}
+                      </span>
                       <lucide-icon [name]="expandedVisit() === v.id ? 'chevron-up' : 'chevron-down'"
                                    [size]="14" class="text-mq-s400"/>
                     </div>
@@ -204,14 +206,14 @@
                     <div class="mt-4 pt-4 border-t border-mq-700 grid grid-cols-2 gap-4">
                       @if (v.assessmentNote) {
                         <div>
-                          <p class="text-xs text-mq-s400 uppercase tracking-wider mb-1">Assessment</p>
-                          <p class="text-white text-sm">{{ v.assessmentNote }}</p>
+                          <p class="mq-label !mb-1">Assessment</p>
+                          <p class="text-mq-s300 text-sm">{{ v.assessmentNote }}</p>
                         </div>
                       }
                       @if (v.planNote) {
                         <div>
-                          <p class="text-xs text-mq-s400 uppercase tracking-wider mb-1">Plan</p>
-                          <p class="text-white text-sm">{{ v.planNote }}</p>
+                          <p class="mq-label !mb-1">Plan</p>
+                          <p class="text-mq-s300 text-sm">{{ v.planNote }}</p>
                         </div>
                       }
                     </div>
@@ -226,23 +228,24 @@
       <!-- APPOINTMENTS TAB -->
       @if (activeTab() === 'appointments') {
         @if (appointments().length === 0) {
-          <div class="flex flex-col items-center justify-center py-16 text-center mq-card-dark">
-            <lucide-icon name="calendar" class="text-mq-s400 mb-4" [size]="36"/>
-            <p class="text-white font-medium">No appointments found</p>
+          <div class="empty-state mq-card py-16">
+            <div class="empty-icon">
+              <lucide-icon name="calendar" class="text-mq-s400" [size]="26"/>
+            </div>
+            <h3 class="empty-title">No appointments found</h3>
           </div>
         } @else {
           <div class="space-y-3">
             @for (a of appointments(); track a.id) {
-              <div class="mq-card-dark p-4 flex items-center gap-4">
-                <div class="w-16 bg-mq-teal/10 border border-mq-teal/20 rounded-xl
-                            p-2 text-center flex-shrink-0">
-                  <p class="text-mq-t400 text-base font-black leading-none">
+              <div class="mq-card p-4 flex items-center gap-4">
+                <div class="icon-box-md bg-mq-teal/10 text-mq-teal-400 flex-shrink-0 flex-col rounded-xl p-3 text-center">
+                  <p class="font-black text-base text-mq-teal-400 leading-none">
                     {{ a.scheduledAt | date:'h:mm' }}
                   </p>
-                  <p class="text-mq-s400 text-[10px]">{{ a.scheduledAt | date:'a' }}</p>
+                  <p class="text-[10px] text-mq-s400">{{ a.scheduledAt | date:'a' }}</p>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-white font-semibold text-sm">{{ a.doctorName }}</p>
+                  <p class="text-mq-text font-semibold text-sm">{{ a.doctorName }}</p>
                   <p class="text-mq-s400 text-xs mt-0.5">
                     {{ a.scheduledAt | date:'EEE, MMM d, y' }}
                   </p>
