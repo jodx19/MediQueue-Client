@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 export interface UserSession {
   token: string;
+  refreshToken: string;
   email: string;
   role: 'Admin' | 'Doctor' | 'Receptionist' | 'Patient';
   name: string;
@@ -38,6 +39,7 @@ export class AuthService {
   readonly isLoggedIn   = computed(() => !!this._session());
   readonly userRole     = computed(() => this._session()?.role ?? null);
   readonly isSuperAdmin = computed(() => this._session()?.role === 'Admin');
+  readonly refreshToken = computed(() => this._session()?.refreshToken ?? null);
 
   async login(email: string, password: string): Promise<void> {
     try {
@@ -50,13 +52,14 @@ export class AuthService {
       const patientId = decoded?.PatientId || decoded?.patientId;
 
       const session: UserSession = {
-        token:     response.token!,
-        email:     response.username || email,
-        role:      (response.role as any) || 'Patient',
-        name:      response.username || 'User',
-        doctorId:  doctorId || undefined,
-        patientId: patientId || undefined,
-        expiresAt: new Date(response.expiryTime!),
+        token:        response.token!,
+        refreshToken: response.refreshToken!,
+        email:        response.username || email,
+        role:         (response.role as any) || 'Patient',
+        name:         response.username || 'User',
+        doctorId:     doctorId || undefined,
+        patientId:    patientId || undefined,
+        expiresAt:    new Date(response.expiryTime!),
       };
 
       sessionStorage.setItem('mq_session', JSON.stringify(session));
@@ -75,13 +78,14 @@ export class AuthService {
     const patientId = decoded?.PatientId || decoded?.patientId;
 
     const session: UserSession = {
-      token:     response.token!,
-      email:     response.username || 'patient@mediqueue.local',
-      role:      (response.role as any) || 'Patient',
-      name:      response.username || 'Patient',
-      doctorId:  doctorId || undefined,
-      patientId: patientId || undefined,
-      expiresAt: new Date(response.expiryTime!),
+      token:        response.token!,
+      refreshToken: response.refreshToken!,
+      email:        response.username || 'patient@mediqueue.local',
+      role:         (response.role as any) || 'Patient',
+      name:         response.username || 'Patient',
+      doctorId:     doctorId || undefined,
+      patientId:    patientId || undefined,
+      expiresAt:    new Date(response.expiryTime!),
     };
 
     sessionStorage.setItem('mq_session', JSON.stringify(session));
@@ -96,6 +100,25 @@ export class AuthService {
 
   getToken(): string | null {
     return this._session()?.token ?? null;
+  }
+
+  /**
+   * Replace the stored token, refresh token and expiry without logging the user out.
+   * Called by the refresh-token interceptor after a successful silent refresh.
+   */
+  updateTokens(token: string, refreshToken: string, expiryTime: string): void {
+    const session = this._session();
+    if (!session) return;
+
+    const updated: UserSession = {
+      ...session,
+      token,
+      refreshToken,
+      expiresAt: new Date(expiryTime),
+    };
+
+    sessionStorage.setItem('mq_session', JSON.stringify(updated));
+    this._session.set(updated);
   }
 
   hasRole(...roles: string[]): boolean {

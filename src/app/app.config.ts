@@ -7,6 +7,7 @@ import { LucideAngularModule, icons } from 'lucide-angular';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { refreshTokenInterceptor } from './core/interceptors/refresh-token.interceptor';
 import { API_BASE_URL, AuthClient, PatientsClient, DoctorsClient, AppointmentsClient, ClinicalVisitsClient, InvoicesClient, DashboardClient } from './core/api/mediqueue-api';
 import { environment } from '../environments/environment';
 
@@ -16,7 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor])
+      withInterceptors([authInterceptor, errorInterceptor, refreshTokenInterceptor])
     ),
     { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
     AuthClient, PatientsClient, DoctorsClient,

@@ -6,18 +6,44 @@ module.exports = {
     extend: {
       colors: {
         mq: {
-          navy:    '#0F172A',
-          '800':   '#1E293B',
-          '700':   '#334155',
-          '600':   '#475569',
-          teal:    '#0D9488',
-          't400':  '#2DD4BF',
-          't600':  '#0F766E',
-          't900':  '#042F2E',
-          slate:   '#F8FAFC',
-          's200':  '#E2E8F0',
-          's400':  '#94A3B8',
-          's600':  '#475569',
+          /* ─── Backgrounds ─── */
+          'bg':       '#0A0F1E',   /* page background — darkest */
+          'navy':     '#0F172A',   /* sections / sidebar */
+          '800':      '#1E293B',   /* cards */
+          '700':      '#334155',   /* borders */
+          '600':      '#475569',   /* subtle bg / hover */
+          '750':      '#293548',   /* between 700 and 800 */
+
+          /* ─── Text ─── */
+          'text':     '#F1F5F9',   /* primary text */
+          's300':     '#CBD5E1',   /* secondary text */
+          's400':     '#94A3B8',   /* muted */
+          's500':     '#64748B',   /* very muted */
+          's600':     '#475569',   /* extra muted (alias for 600) */
+
+          /* ─── Legacy slate tokens (backward compat) ─── */
+          'slate':    '#F8FAFC',
+          's200':     '#E2E8F0',
+
+          /* ─── Accent — Medical Teal ─── */
+          'teal':     '#0D9488',
+          'teal-300': '#5EEAD4',
+          'teal-400': '#2DD4BF',
+          'teal-500': '#14B8A6',
+          'teal-600': '#0F766E',
+          'teal-900': '#042F2E',
+
+          /* ─── Legacy teal aliases (backward compat) ─── */
+          't400':     '#2DD4BF',
+          't600':     '#0F766E',
+          't900':     '#042F2E',
+
+          /* ─── Status colors ─── */
+          'success':  '#10B981',
+          'warning':  '#F59E0B',
+          'danger':   '#EF4444',
+          'info':     '#3B82F6',
+          'purple':   '#8B5CF6',
         }
       },
       fontFamily: {
@@ -43,7 +69,7 @@ module.exports = {
         'scale-in':     'scaleIn .5s cubic-bezier(.34,1.56,.64,1) both',
         'slide-right':  'slideRight .4s cubic-bezier(.34,1.56,.64,1) both',
         'glow-pulse':   'glowPulse 3s ease-in-out infinite',
-        'skeleton':     'skeleton 1.8s ease-in-out infinite',
+        'skeleton':     'shimmer 1.5s ease-in-out infinite',
         'spin-slow':    'spin 8s linear infinite',
         'count-up':     'countUp .8s ease-out both',
         'draw-line':    'drawLine 1.5s ease forwards',
@@ -56,17 +82,17 @@ module.exports = {
                       '100%': { transform: 'translateX(-50%)' } },
         pulseDot:   { '0%,100%': { opacity: '1', transform: 'scale(1)' },
                       '50%':     { opacity: '.3', transform: 'scale(.6)' } },
-        fadeUp:     { from: { opacity: '0', transform: 'translateY(28px)' },
+        fadeUp:     { from: { opacity: '0', transform: 'translateY(20px)' },
                       to:   { opacity: '1', transform: 'translateY(0)' } },
-        scaleIn:    { from: { opacity: '0', transform: 'scale(.88)' },
+        scaleIn:    { from: { opacity: '0', transform: 'scale(.94)' },
                       to:   { opacity: '1', transform: 'scale(1)' } },
-        slideRight: { from: { opacity: '0', transform: 'translateX(40px)' },
+        slideRight: { from: { opacity: '0', transform: 'translateX(24px)' },
                       to:   { opacity: '1', transform: 'translateX(0)' } },
         glowPulse:  { '0%,100%': { boxShadow: '0 0 20px rgba(13,148,136,.2)' },
-                      '50%':     { boxShadow: '0 0 60px rgba(13,148,136,.6)' } },
-        skeleton:   { '0%,100%': { opacity: '.4' },
-                      '50%':     { opacity: '.9' } },
-        countUp:    { from: { opacity: '0', transform: 'translateY(10px)' },
+                      '50%':     { boxShadow: '0 0 50px rgba(13,148,136,.5)' } },
+        shimmer:    { '0%':   { backgroundPosition: '-400px 0' },
+                      '100%': { backgroundPosition: '400px 0' } },
+        countUp:    { from: { opacity: '0', transform: 'translateY(6px)' },
                       to:   { opacity: '1', transform: 'translateY(0)' } },
         drawLine:   { from: { strokeDashoffset: '400' },
                       to:   { strokeDashoffset: '0' } },
@@ -74,13 +100,14 @@ module.exports = {
                       '100%': { transform: 'translateY(80px) rotate(360deg)', opacity: '0' } },
       },
       boxShadow: {
-        'teal-glow':    '0 0 50px rgba(13,148,136,.4)',
+        'teal-glow':    '0 0 30px rgba(13,148,136,.25)',
         'teal-glow-sm': '0 0 20px rgba(13,148,136,.2)',
-        'teal-glow-lg': '0 0 90px rgba(13,148,136,.55)',
+        'teal-glow-md': '0 0 50px rgba(13,148,136,.4)',
+        'teal-glow-lg': '0 0 60px rgba(13,148,136,.4)',
+        'card':         '0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2)',
+        'card-hover':   '0 4px 24px rgba(0,0,0,.4)',
+        'modal':        '0 20px 80px rgba(0,0,0,.6)',
         'glass':        '0 8px 40px rgba(0,0,0,.35)',
-        'glass-lg':     '0 20px 80px rgba(0,0,0,.5)',
-        'card':         '0 2px 16px rgba(0,0,0,.08)',
-        'card-hover':   '0 8px 32px rgba(0,0,0,.14)',
         'navy':         '0 8px 32px rgba(15,23,42,.6)',
         'purple-glow':  '0 0 30px rgba(124,58,237,.3)',
         'inner-teal':   'inset 0 1px 0 rgba(45,212,191,.15)',
