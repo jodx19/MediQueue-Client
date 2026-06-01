@@ -140,7 +140,7 @@ export class VisitDetailComponent implements OnInit {
       await firstValueFrom(this.visitsClient.soap(this.visitId, command));
       this.lastSaved.set(new Date());
     } catch (err: any) {
-      console.error('Auto-save failed:', err);
+      this.notifications.error('Auto-save failed');
     } finally {
       this.isSaving.set(false);
     }

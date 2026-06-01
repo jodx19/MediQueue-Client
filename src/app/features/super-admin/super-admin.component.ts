@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
-import { AuthClient, RegisterCommand } from '../../core/api/mediqueue-api';
+import { AuthClient, RegisterCommand, UsersClient } from '../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { firstValueFrom } from 'rxjs';
 import { pageEnter, fadeSlideIn } from '../../shared/animations/page-animations';
@@ -18,7 +18,8 @@ import { pageEnter, fadeSlideIn } from '../../shared/animations/page-animations'
 })
 export class SuperAdminComponent implements OnInit {
   private readonly authClient = inject(AuthClient);
-  private readonly http = inject(HttpClient);
+  private readonly usersClient = inject(UsersClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
   staffList = signal<any[]>([]);
@@ -42,16 +43,16 @@ export class SuperAdminComponent implements OnInit {
   async loadStaff() {
     this.isLoading.set(true);
     try {
-      const result = await firstValueFrom(this.http.get<any[]>('/api/users'));
+      const result = await firstValueFrom(this.usersClient.users());
       this.staffList.set((result ?? []).map(u => ({
-        firstName: u.firstName ?? u.userName,
+        firstName: u.firstName ?? '',
         lastName: u.lastName ?? '',
         email: u.email,
         role: u.role,
         status: u.isActive ? 'Active' : 'Inactive'
       })));
     } catch (err: any) {
-      this.notify.error(err?.error?.detail ?? 'Failed to load staff');
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }
@@ -85,7 +86,7 @@ export class SuperAdminComponent implements OnInit {
       this.closeModal();
       await this.loadStaff();
     } catch (err: any) {
-      this.notify.error(err?.error?.detail ?? 'Failed to create staff account');
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }

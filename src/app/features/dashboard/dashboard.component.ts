@@ -10,6 +10,7 @@ import {
   AppointmentListItemDto 
 } from '../../core/api/mediqueue-api';
 import { InteractiveTableComponent, TableColumn } from '../../shared/components/interactive-table/interactive-table.component';
+import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { CurrencyEgpPipe } from '../../shared/pipes/currency-egp.pipe';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
@@ -50,6 +51,7 @@ interface MetricStat {
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardClient = inject(DashboardClient);
   private readonly appointmentsClient = inject(AppointmentsClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly router = inject(Router);
 
   // State Signals
@@ -137,7 +139,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const data = await firstValueFrom(this.dashboardClient.stats());
       this.stats.set(data ?? null);
     } catch (err) {
-      console.error('Failed to load stats', err);
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }
@@ -149,7 +151,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const data = await firstValueFrom(this.appointmentsClient.today());
       this.todayAppointments.set(data?.slice(0, 6) ?? []);
     } catch (err) {
-      console.error('Failed to load appointments', err);
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoadingAppointments.set(false);
     }

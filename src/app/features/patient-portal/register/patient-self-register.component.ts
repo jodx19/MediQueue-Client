@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PatientsClient, SelfRegisterPatientCommand, Gender, BloodType } from '../../../core/api/mediqueue-api';
-import { NotificationService } from '../../../core/services/notification.service';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -15,7 +15,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class PatientSelfRegisterComponent {
   private patientsClient = inject(PatientsClient);
-  private notify         = inject(NotificationService);
+  private apiErrorHandler = inject(ApiErrorHandlerService);
 
   step = signal<1|2|3>(1);
   isLoading = signal(false);
@@ -74,10 +74,9 @@ export class PatientSelfRegisterComponent {
           address:     this.form.address || undefined,
         })
       ));
-      // NSwag might return the object directly or wrapped
-      this.result.set((res as any)?.data ?? res);
+      this.result.set(res);
     } catch(e:any) {
-      this.notify.error(e?.error?.detail ?? 'Registration failed');
+      this.apiErrorHandler.handle(e);
     } finally {
       this.isLoading.set(false);
     }
@@ -86,7 +85,6 @@ export class PatientSelfRegisterComponent {
   copyMrn() {
     if (this.result()?.mrn) {
       navigator.clipboard.writeText(this.result().mrn);
-      this.notify.success('MRN copied to clipboard');
     }
   }
 }

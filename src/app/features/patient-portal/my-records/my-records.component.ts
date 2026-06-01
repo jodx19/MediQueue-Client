@@ -7,6 +7,7 @@ import {
   ClinicalVisitSummaryDto, 
   ClinicalVisitDetailDto 
 } from '../../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 @Component({
   selector: 'app-my-records',
@@ -17,6 +18,7 @@ import {
 export class MyRecordsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly visitsClient = inject(ClinicalVisitsClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
   visits = signal<ClinicalVisitSummaryDto[]>([]);
@@ -47,7 +49,7 @@ export class MyRecordsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        console.error('Failed to load clinical records:', err);
+        this.apiErrorHandler.handle(err);
         this.isLoading.set(false);
       }
     });
@@ -66,7 +68,7 @@ export class MyRecordsComponent implements OnInit {
         this.isLoadingDetail.set(false);
       },
       error: (err: any) => {
-        console.error('Failed to load visit details:', err);
+        this.apiErrorHandler.handle(err);
         this.isLoadingDetail.set(false);
         this.showDetailModal.set(false);
       }

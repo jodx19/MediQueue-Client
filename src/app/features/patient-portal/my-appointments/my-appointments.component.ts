@@ -14,6 +14,7 @@ import {
   AppointmentPriority,
   AppointmentStatus
 } from '../../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 const AS = AppointmentStatus;
 
@@ -27,6 +28,7 @@ export class MyAppointmentsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly doctorsClient = inject(DoctorsClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
   appointments = signal<AppointmentDto[]>([]);
@@ -96,7 +98,7 @@ export class MyAppointmentsComponent implements OnInit {
         this.loadDoctors();
       },
       error: (err: any) => {
-        console.error('Failed to load appointments:', err);
+        this.apiErrorHandler.handle(err);
         this.loadDoctors();
       }
     });
@@ -111,7 +113,7 @@ export class MyAppointmentsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        console.error('Failed to load doctors list:', err);
+        this.apiErrorHandler.handle(err);
         this.isLoading.set(false);
       }
     });
@@ -170,8 +172,8 @@ export class MyAppointmentsComponent implements OnInit {
         }, 1500);
       },
       error: (err: any) => {
-        console.error('Failed to book appointment:', err);
-        this.errorMsg.set(err?.error?.detail || err?.error || 'An error occurred while booking. Please try again.');
+        this.apiErrorHandler.handle(err);
+        this.errorMsg.set('An error occurred while booking. Please try again.');
         this.isSubmitting.set(false);
       }
     });
@@ -185,7 +187,7 @@ export class MyAppointmentsComponent implements OnInit {
         this.loadData();
       },
       error: (err: any) => {
-        console.error('Failed to cancel appointment:', err);
+        this.apiErrorHandler.handle(err);
         alert('Could not cancel appointment. It may already be in progress.');
       }
     });

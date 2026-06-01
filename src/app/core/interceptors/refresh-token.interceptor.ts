@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { ApiResponse } from '../models/api-response.model';
 import { environment } from '../../../environments/environment';
 
 /** Shape of token data inside the ApiResponse wrapper. */
@@ -17,12 +18,6 @@ interface RefreshTokenData {
   token: string;
   refreshToken: string;
   expiryTime: string;
-}
-
-/** Backend ApiResponse wrapper. */
-interface ApiResponseWrapper {
-  isSuccess: boolean;
-  data?: RefreshTokenData;
 }
 
 /* ── Module-level refresh-cycle guard ── */
@@ -49,8 +44,8 @@ function startRefresh(auth: AuthService, http: HttpClient, router: Router): void
   const refreshUrl = `${environment.apiBaseUrl}/api/auth/refresh-token`;
   const body = { token: auth.getToken(), refreshToken: auth.refreshToken() };
 
-  http.post<ApiResponseWrapper>(refreshUrl, body).subscribe({
-    next(wrapper: ApiResponseWrapper) {
+  http.post<ApiResponse<RefreshTokenData>>(refreshUrl, body).subscribe({
+    next(wrapper: ApiResponse<RefreshTokenData>) {
       isRefreshing = false;
       if (wrapper.isSuccess && wrapper.data) {
         const { token, refreshToken, expiryTime } = wrapper.data;

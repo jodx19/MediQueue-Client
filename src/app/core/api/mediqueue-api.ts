@@ -2386,9 +2386,9 @@ export class DashboardClient implements IDashboardClient {
 export interface IDoctorsClient {
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<DoctorDto>;
     /**
      * @param page (optional) 
      * @param size (optional) 
@@ -2398,7 +2398,7 @@ export interface IDoctorsClient {
     /**
      * @return OK
      */
-    doctorsGET2(id: string): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    doctorsGET2(id: string): Observable<DoctorDto>;
     /**
      * @param body (optional) 
      * @return No Content
@@ -2442,9 +2442,9 @@ export class DoctorsClient implements IDoctorsClient {
 
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    doctorsPOST(body?: CreateDoctorCommand | undefined): Observable<DoctorDto> {
         let url_ = this.baseUrl + "/api/Doctors";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2467,26 +2467,26 @@ export class DoctorsClient implements IDoctorsClient {
                 try {
                     return this.processDoctorsPOST(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                    return _observableThrow(e) as any as Observable<DoctorDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                return _observableThrow(response_) as any as Observable<DoctorDto>;
         }));
     }
 
-    protected processDoctorsPOST(response: HttpResponseBase): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    protected processDoctorsPOST(response: HttpResponseBase): Observable<DoctorDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result201: any = null;
-            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result201 = ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData201);
-            return _observableOf(result201);
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = DoctorDto.fromJS(resultData200);
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -2560,7 +2560,7 @@ export class DoctorsClient implements IDoctorsClient {
     /**
      * @return OK
      */
-    doctorsGET2(id: string): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    doctorsGET2(id: string): Observable<DoctorDto> {
         let url_ = this.baseUrl + "/api/Doctors/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -2582,14 +2582,14 @@ export class DoctorsClient implements IDoctorsClient {
                 try {
                     return this.processDoctorsGET2(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                    return _observableThrow(e) as any as Observable<DoctorDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                return _observableThrow(response_) as any as Observable<DoctorDto>;
         }));
     }
 
-    protected processDoctorsGET2(response: HttpResponseBase): Observable<ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    protected processDoctorsGET2(response: HttpResponseBase): Observable<DoctorDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -2600,7 +2600,7 @@ export class DoctorsClient implements IDoctorsClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData200);
+            result200 = DoctorDto.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -3760,17 +3760,17 @@ export interface IPatientsClient {
      * @param size (optional) 
      * @return OK
      */
-    patientsGET(page?: number | undefined, size?: number | undefined): Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    patientsGET(page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<PatientDto>;
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<PatientDto>;
     /**
      * @return OK
      */
@@ -3831,7 +3831,7 @@ export class PatientsClient implements IPatientsClient {
      * @param size (optional) 
      * @return OK
      */
-    patientsGET(page?: number | undefined, size?: number | undefined): Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    patientsGET(page?: number | undefined, size?: number | undefined): Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
         let url_ = this.baseUrl + "/api/Patients?";
         if (page === null)
             throw new globalThis.Error("The parameter 'page' cannot be null.");
@@ -3858,14 +3858,14 @@ export class PatientsClient implements IPatientsClient {
                 try {
                     return this.processPatientsGET(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                    return _observableThrow(e) as any as Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                return _observableThrow(response_) as any as Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
         }));
     }
 
-    protected processPatientsGET(response: HttpResponseBase): Observable<ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    protected processPatientsGET(response: HttpResponseBase): Observable<PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -3876,7 +3876,7 @@ export class PatientsClient implements IPatientsClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData200);
+            result200 = PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -3889,9 +3889,9 @@ export class PatientsClient implements IPatientsClient {
 
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    patientsPOST(body?: RegisterPatientCommand | undefined): Observable<PatientDto> {
         let url_ = this.baseUrl + "/api/Patients";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3914,26 +3914,26 @@ export class PatientsClient implements IPatientsClient {
                 try {
                     return this.processPatientsPOST(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                    return _observableThrow(e) as any as Observable<PatientDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                return _observableThrow(response_) as any as Observable<PatientDto>;
         }));
     }
 
-    protected processPatientsPOST(response: HttpResponseBase): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    protected processPatientsPOST(response: HttpResponseBase): Observable<PatientDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result201: any = null;
-            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result201 = ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData201);
-            return _observableOf(result201);
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PatientDto.fromJS(resultData200);
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -3945,9 +3945,9 @@ export class PatientsClient implements IPatientsClient {
 
     /**
      * @param body (optional) 
-     * @return Created
+     * @return OK
      */
-    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    selfRegister(body?: SelfRegisterPatientCommand | undefined): Observable<PatientDto> {
         let url_ = this.baseUrl + "/api/Patients/self-register";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3970,26 +3970,26 @@ export class PatientsClient implements IPatientsClient {
                 try {
                     return this.processSelfRegister(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                    return _observableThrow(e) as any as Observable<PatientDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null>;
+                return _observableThrow(response_) as any as Observable<PatientDto>;
         }));
     }
 
-    protected processSelfRegister(response: HttpResponseBase): Observable<ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null> {
+    protected processSelfRegister(response: HttpResponseBase): Observable<PatientDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result201: any = null;
-            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result201 = ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(resultData201);
-            return _observableOf(result201);
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PatientDto.fromJS(resultData200);
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -4627,174 +4627,6 @@ export class UsersClient implements IUsersClient {
         }
         return _observableOf(null as any);
     }
-}
-
-export class ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null implements IApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null;
-    message?: string | undefined;
-    errors?: string[] | undefined;
-
-    constructor(data?: IApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isSuccess = _data["isSuccess"];
-            this.data = _data["data"] ? PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null.fromJS(_data["data"]) : undefined as any;
-            this.message = _data["message"];
-            if (Array.isArray(_data["errors"])) {
-                this.errors = [] as any;
-                for (let item of _data["errors"])
-                    this.errors!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isSuccess"] = this.isSuccess;
-        data["data"] = this.data ? this.data.toJSON() : undefined as any;
-        data["message"] = this.message;
-        if (Array.isArray(this.errors)) {
-            data["errors"] = [];
-            for (let item of this.errors)
-                data["errors"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IApiResponse_1OfOfPagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_nullAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: PagedResult_1OfOfPatientSummaryDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null;
-    message?: string | undefined;
-    errors?: string[] | undefined;
-}
-
-export class ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null implements IApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: DoctorDto;
-    message?: string | undefined;
-    errors?: string[] | undefined;
-
-    constructor(data?: IApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isSuccess = _data["isSuccess"];
-            this.data = _data["data"] ? DoctorDto.fromJS(_data["data"]) : undefined as any;
-            this.message = _data["message"];
-            if (Array.isArray(_data["errors"])) {
-                this.errors = [] as any;
-                for (let item of _data["errors"])
-                    this.errors!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isSuccess"] = this.isSuccess;
-        data["data"] = this.data ? this.data.toJSON() : undefined as any;
-        data["message"] = this.message;
-        if (Array.isArray(this.errors)) {
-            data["errors"] = [];
-            for (let item of this.errors)
-                data["errors"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IApiResponse_1OfOfDoctorDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: DoctorDto;
-    message?: string | undefined;
-    errors?: string[] | undefined;
-}
-
-export class ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null implements IApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: PatientDto;
-    message?: string | undefined;
-    errors?: string[] | undefined;
-
-    constructor(data?: IApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isSuccess = _data["isSuccess"];
-            this.data = _data["data"] ? PatientDto.fromJS(_data["data"]) : undefined as any;
-            this.message = _data["message"];
-            if (Array.isArray(_data["errors"])) {
-                this.errors = [] as any;
-                for (let item of _data["errors"])
-                    this.errors!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-        data = typeof data === 'object' ? data : {};
-        let result = new ApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isSuccess"] = this.isSuccess;
-        data["data"] = this.data ? this.data.toJSON() : undefined as any;
-        data["message"] = this.message;
-        if (Array.isArray(this.errors)) {
-            data["errors"] = [];
-            for (let item of this.errors)
-                data["errors"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IApiResponse_1OfOfPatientDtoAndApplicationAnd_0AndCulture_neutralAndPublicKeyToken_null {
-    isSuccess?: boolean;
-    data?: PatientDto;
-    message?: string | undefined;
-    errors?: string[] | undefined;
 }
 
 export class BookAppointmentCommand implements IBookAppointmentCommand {
