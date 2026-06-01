@@ -17,6 +17,7 @@ import {
 } from '../../../core/api/mediqueue-api';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 const IS = InvoiceStatus;
 const AS = AppointmentStatus;
@@ -33,6 +34,7 @@ export class PatientDashboardComponent implements OnInit {
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly visitsClient = inject(ClinicalVisitsClient);
   private readonly invoicesClient = inject(InvoicesClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
   patientDetails = signal<PatientDetailDto | null>(null);
@@ -93,7 +95,7 @@ export class PatientDashboardComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        console.error('Error loading patient dashboard data:', err);
+        this.apiErrorHandler.handle(err);
         this.isLoading.set(false);
       }
     });

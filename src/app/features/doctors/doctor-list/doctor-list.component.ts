@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { DoctorsClient, DoctorSummaryDto } from '../../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 @Component({
   selector: 'app-doctor-list',
@@ -13,6 +14,7 @@ import { DoctorsClient, DoctorSummaryDto } from '../../../core/api/mediqueue-api
 })
 export class DoctorListComponent implements OnInit {
   private readonly doctorsClient = inject(DoctorsClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   public  readonly router        = inject(Router);
 
   isLoading = signal(true);
@@ -24,7 +26,7 @@ export class DoctorListComponent implements OnInit {
       const data = result?.items ?? [];
       this.doctors.set(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Failed to load doctors', err);
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }

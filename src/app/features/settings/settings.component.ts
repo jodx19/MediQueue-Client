@@ -82,7 +82,7 @@ export class SettingsComponent implements OnInit {
       const storedIntegrations = localStorage.getItem('mq_settings_integrations');
       if (storedIntegrations) this.integrationKeys.set(JSON.parse(storedIntegrations));
     } catch (e) {
-      console.error('Failed to load clinic settings from storage', e);
+      this.notifications.error('Failed to load clinic settings from storage');
     }
   }
 
@@ -98,7 +98,6 @@ export class SettingsComponent implements OnInit {
 
         this.notifications.success('Clinic configuration settings updated successfully!');
       } catch (e) {
-        console.error('Failed to save settings', e);
         this.notifications.error('Failed to save clinic configurations. Storage quota exceeded.');
       } finally {
         this.isSaving.set(false);

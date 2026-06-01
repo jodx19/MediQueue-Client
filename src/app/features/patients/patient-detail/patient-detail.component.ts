@@ -8,6 +8,7 @@ import {
   AppointmentsClient, AppointmentDto,
   ClinicalVisitsClient, ClinicalVisitSummaryDto
 } from '../../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 type Tab = 'overview' | 'visits' | 'appointments';
 
@@ -21,6 +22,7 @@ export class PatientDetailComponent implements OnInit {
   private readonly patientsClient      = inject(PatientsClient);
   private readonly appointmentsClient  = inject(AppointmentsClient);
   private readonly visitsClient        = inject(ClinicalVisitsClient);
+  private readonly apiErrorHandler     = inject(ApiErrorHandlerService);
   private readonly route               = inject(ActivatedRoute);
   public  readonly router              = inject(Router);
 
@@ -44,7 +46,7 @@ export class PatientDetailComponent implements OnInit {
       const result = await firstValueFrom(this.patientsClient.patientsGET2(this.patientId));
       this.patient.set(result);
     } catch (err) {
-      console.error('Failed to load patient', err);
+      this.apiErrorHandler.handle(err);
     }
   }
 
@@ -53,7 +55,7 @@ export class PatientDetailComponent implements OnInit {
       const result = await firstValueFrom(this.visitsClient.patient2(this.patientId, 1, 20));
       this.visits.set(result?.items ?? []);
     } catch (err) {
-      console.error('Failed to load visits', err);
+      this.apiErrorHandler.handle(err);
     }
   }
 
@@ -62,7 +64,7 @@ export class PatientDetailComponent implements OnInit {
       const result = await firstValueFrom(this.appointmentsClient.patient(this.patientId, 1, 20));
       this.appointments.set(result?.items ?? []);
     } catch (err) {
-      console.error('Failed to load appointments', err);
+      this.apiErrorHandler.handle(err);
     }
   }
 

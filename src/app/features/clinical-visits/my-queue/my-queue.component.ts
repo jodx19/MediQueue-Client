@@ -4,8 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { AppointmentsClient, ClinicalVisitsClient, AppointmentListItemDto } from '../../../core/api/mediqueue-api';
-import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 import { pageEnter, listStagger } from '../../../shared/animations/page-animations';
 
 @Component({
@@ -18,7 +18,7 @@ import { pageEnter, listStagger } from '../../../shared/animations/page-animatio
 export class MyQueueComponent implements OnInit {
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly visitsClient = inject(ClinicalVisitsClient);
-  private readonly notify = inject(NotificationService);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -53,10 +53,9 @@ export class MyQueueComponent implements OnInit {
 
       const list = await firstValueFrom(this.appointmentsClient.today(doctorId));
       this.appointments.set(list ?? []);
-    } catch (e: any) {
-      const detail = e?.error?.detail ?? e?.message ?? 'Failed to load queue';
-      this.error.set(typeof detail === 'string' ? detail : 'Failed to load queue');
-      this.notify.error(this.error()!);
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+      this.error.set('Failed to load queue');
     } finally {
       this.loading.set(false);
     }
@@ -65,14 +64,12 @@ export class MyQueueComponent implements OnInit {
   async startVisit(appt: AppointmentListItemDto): Promise<void> {
     if (!appt.id) return;
     try {
-      // Get or Start the clinical visit for this appointment
       const visit = await firstValueFrom(this.visitsClient.appointment(appt.id));
       if (visit && visit.id) {
         void this.router.navigate(['/clinical-visits', visit.id]);
       }
-    } catch (e: any) {
-      const detail = e?.error?.detail ?? e?.message ?? 'Could not open visit';
-      this.notify.error(typeof detail === 'string' ? detail : 'Could not open visit');
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
     }
   }
 }

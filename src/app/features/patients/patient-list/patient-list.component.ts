@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { PatientsClient, PatientSummaryDto } from '../../../core/api/mediqueue-api';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
 @Component({
   selector: 'app-patient-list',
@@ -14,6 +15,7 @@ import { PatientsClient, PatientSummaryDto } from '../../../core/api/mediqueue-a
 })
 export class PatientListComponent implements OnInit {
   private readonly patientsClient = inject(PatientsClient);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   public readonly router = inject(Router);
 
   isLoading = signal(true);
@@ -27,11 +29,10 @@ export class PatientListComponent implements OnInit {
   async loadPatients() {
     this.isLoading.set(true);
     try {
-      const response = await firstValueFrom(this.patientsClient.patientsGET(1, 50));
-      const data = response?.data?.items ?? [];
-      this.patients.set(Array.isArray(data) ? data : []);
+      const result = await firstValueFrom(this.patientsClient.patientsGET(1, 50));
+      this.patients.set(result?.items ?? []);
     } catch (err) {
-      console.error('Failed to load patients', err);
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }
@@ -46,11 +47,10 @@ export class PatientListComponent implements OnInit {
         await this.loadPatients();
         return;
       }
-      const response = await firstValueFrom(this.patientsClient.search(q, 1, 50));
-      const data = response?.items ?? [];
-      this.patients.set(Array.isArray(data) ? data : []);
+      const result = await firstValueFrom(this.patientsClient.search(q, 1, 50));
+      this.patients.set(result?.items ?? []);
     } catch (err) {
-      console.error('Search failed', err);
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }
