@@ -37,6 +37,12 @@ yarn-error.log
 testem.log
 /typings
 
+# Local documentation (keep local, not tracked)
+CHANGE_LOG.md
+SYSTEM_REQUIREMENTS.md
+FROZEN_FILES.md
+full final anaylsis.md
+
 # System files
 .DS_Store
 Thumbs.db
