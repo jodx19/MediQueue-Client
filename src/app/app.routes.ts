@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
+import { unsavedChangesGuard } from './core/guards/unsaved-changes.guard';
+import { superAdminGuard } from './core/auth/super-admin.guard';
 
 export const routes: Routes = [
 
@@ -110,10 +112,17 @@ export const routes: Routes = [
       },
       {
         path: 'super-admin',
-        canActivate: [roleGuard(['Admin'])],
+        canActivate: [roleGuard(['Admin']), superAdminGuard],
         loadComponent: () =>
           import('./features/super-admin/super-admin.component')
             .then(m => m.SuperAdminComponent),
+      },
+      {
+        path: 'reports',
+        canActivate: [roleGuard(['Admin', 'Doctor'])],
+        loadComponent: () =>
+          import('./features/reports/reports.component')
+            .then(m => m.ReportsComponent),
       },
       {
         path: 'settings',
@@ -166,6 +175,21 @@ export const routes: Routes = [
           import('./features/invoices/invoice-list/invoice-list.component')
             .then(m => m.InvoiceListComponent),
       },
+      // IMPORTANT: static segments must come BEFORE the :id parameter route
+      {
+        path: 'invoices/create',
+        canActivate: [roleGuard(['Admin', 'Receptionist'])],
+        loadComponent: () =>
+          import('./features/invoices/components/create-invoice/create-invoice.component')
+            .then(m => m.CreateInvoiceComponent),
+      },
+      {
+        path: 'invoices/revenue',
+        canActivate: [roleGuard(['Admin'])],
+        loadComponent: () =>
+          import('./features/invoices/components/revenue-report/revenue-report.component')
+            .then(m => m.RevenueReportComponent),
+      },
       {
         path: 'invoices/:id',
         canActivate: [roleGuard(['Admin', 'Receptionist'])],
@@ -185,6 +209,7 @@ export const routes: Routes = [
       {
         path: 'clinical-visits/:id',
         canActivate: [roleGuard(['Doctor'])],
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/clinical-visits/visit-detail/visit-detail.component')
             .then(m => m.VisitDetailComponent),

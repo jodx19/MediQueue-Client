@@ -2,7 +2,8 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
-import { AuthClient, RegisterCommand, UsersClient } from '../../core/api/mediqueue-api';
+import { AuthClient, RegisterCommand } from '../../core/api/mediqueue-api';
+import { UsersApiService } from '../../core/services/users-api.service';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { firstValueFrom } from 'rxjs';
@@ -18,7 +19,7 @@ import { pageEnter, fadeSlideIn } from '../../shared/animations/page-animations'
 })
 export class SuperAdminComponent implements OnInit {
   private readonly authClient = inject(AuthClient);
-  private readonly usersClient = inject(UsersClient);
+  private readonly usersApi = inject(UsersApiService);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
@@ -43,7 +44,7 @@ export class SuperAdminComponent implements OnInit {
   async loadStaff() {
     this.isLoading.set(true);
     try {
-      const result = await firstValueFrom(this.usersClient.users());
+      const result = await firstValueFrom(this.usersApi.getAll());
       this.staffList.set((result ?? []).map(u => ({
         firstName: u.firstName ?? '',
         lastName: u.lastName ?? '',
@@ -78,7 +79,6 @@ export class SuperAdminComponent implements OnInit {
         lastName: this.newStaff.lastName,
         phoneNumber: '01000000000',
       });
-      // Pass role as extra property — backend accepts it via RegisterCommand
       (command as any).role = this.newStaff.role;
 
       await firstValueFrom(this.authClient.register(command));
@@ -92,9 +92,17 @@ export class SuperAdminComponent implements OnInit {
     }
   }
 
-  deactivateStaff(email: string) {
-    if (confirm(`Are you sure you want to deactivate ${email}?`)) {
-      this.staffList.update(list => list.map(s => s.email === email ? { ...s, status: 'Inactive' } : s));
+  async deactivateStaff(email: string) {
+    if (!confirm(`Are you sure you want to deactivate ${email}?`)) return;
+    this.isLoading.set(true);
+    try {
+      await firstValueFrom(this.usersApi.deactivate(email));
+      this.notify.success(`Staff account ${email} deactivated successfully`);
+      await this.loadStaff();
+    } catch (err: any) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 }

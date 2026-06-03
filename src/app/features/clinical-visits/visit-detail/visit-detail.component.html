@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-mq-navy" @pageEnter>
+<div class="min-h-screen bg-mq-navy">
   
   <!-- WORKSPACE HEADER -->
   <header class="h-20 bg-mq-navy/80 backdrop-blur-xl border-b border-mq-700 px-6 flex items-center justify-between sticky top-0 z-30">
@@ -133,48 +133,66 @@
 
         <div class="min-h-[600px] relative">
           @if (activeTab() === 'soap') {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" @tabContent>
-              <div class="mq-card-dark p-6 transition-colors">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">S</div>
-                  <h3 class="text-white font-bold">Subjective</h3>
-                </div>
-                <textarea [ngModel]="soap.subjective()" (ngModelChange)="soap.subjective.set($event); onSoapChange()"
-                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
-                          placeholder="Patient's complaints..."></textarea>
+            <div class="relative" [formGroup]="soapForm">
+              <div class="auto-save-indicator">
+                @switch (autoSaveStatus()) {
+                  @case ('saving') { <span class="badge-warning">Saving...</span> }
+                  @case ('saved')  { <span class="badge-success">Saved ✓</span> }
+                  @case ('error')  { <span class="badge-danger">Save failed</span> }
+                }
               </div>
-              <div class="mq-card-dark p-6 transition-colors">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">O</div>
-                  <h3 class="text-white font-bold">Objective</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mq-card-dark p-6 transition-colors">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">S</div>
+                    <h3 class="text-white font-bold">Subjective</h3>
+                  </div>
+                  <textarea formControlName="subjective"
+                            class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                            placeholder="Patient's complaints..."></textarea>
+                  @if (soapForm.controls.subjective.invalid && soapForm.controls.subjective.touched) {
+                    <p class="form-error">This field is required and must be at least 10 characters</p>
+                  }
                 </div>
-                <textarea [ngModel]="soap.objective()" (ngModelChange)="soap.objective.set($event); onSoapChange()"
-                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
-                          placeholder="Physical exam findings..."></textarea>
-              </div>
-              <div class="mq-card-dark p-6 transition-colors">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-black text-xs">A</div>
-                  <h3 class="text-white font-bold">Assessment</h3>
+                <div class="mq-card-dark p-6 transition-colors">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-mq-teal/10 text-mq-t400 flex items-center justify-center font-black text-xs">O</div>
+                    <h3 class="text-white font-bold">Objective</h3>
+                  </div>
+                  <textarea formControlName="objective"
+                            class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                            placeholder="Physical exam findings..."></textarea>
                 </div>
-                <textarea [ngModel]="soap.assessment()" (ngModelChange)="soap.assessment.set($event); onSoapChange()"
-                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
-                          placeholder="Diagnosis..."></textarea>
-              </div>
-              <div class="mq-card-dark p-6 transition-colors">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-xs">P</div>
-                  <h3 class="text-white font-bold">Plan</h3>
+                <div class="mq-card-dark p-6 transition-colors">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-black text-xs">A</div>
+                    <h3 class="text-white font-bold">Assessment</h3>
+                  </div>
+                  <textarea formControlName="assessment"
+                            class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                            placeholder="Diagnosis..."></textarea>
+                  @if (soapForm.controls.assessment.invalid && soapForm.controls.assessment.touched) {
+                    <p class="form-error">This field is required and must be at least 5 characters</p>
+                  }
                 </div>
-                <textarea [ngModel]="soap.plan()" (ngModelChange)="soap.plan.set($event); onSoapChange()"
-                          class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
-                          placeholder="Treatment plan..."></textarea>
+                <div class="mq-card-dark p-6 transition-colors">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-xs">P</div>
+                    <h3 class="text-white font-bold">Plan</h3>
+                  </div>
+                  <textarea formControlName="plan"
+                            class="w-full bg-transparent border-none focus:ring-0 text-mq-s400 text-sm leading-relaxed min-h-[180px]"
+                            placeholder="Treatment plan..."></textarea>
+                  @if (soapForm.controls.plan.invalid && soapForm.controls.plan.touched) {
+                    <p class="form-error">This field is required and must be at least 5 characters</p>
+                  }
+                </div>
               </div>
             </div>
           }
 
           @if (activeTab() === 'vitals') {
-            <div class="space-y-8" @tabContent>
+            <div class="space-y-8">
               <div class="mq-card-dark p-8 border-l-4 border-mq-teal">
                 <h3 class="text-white font-bold mb-6">Record New Vital Signs</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -197,7 +215,7 @@
                   </div>
                 </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" @staggerList>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @for (v of visit()?.vitalSigns; track v.id) {
                   <div class="mq-card-dark p-6 list-item">
                     <p class="text-xs text-mq-s400 font-bold uppercase mb-1">{{ v.type }}</p>
@@ -209,44 +227,33 @@
           }
 
           @if (activeTab() === 'diagnoses') {
-            <div class="space-y-8" @tabContent>
-              <div class="mq-card-dark p-8 border-l-4 border-purple-500">
-                <div class="flex flex-col md:flex-row gap-6">
-                  <input type="text" class="mq-input w-48" placeholder="ICD-10" [ngModel]="diagnosis().icdCode" (ngModelChange)="updateDiagnosis('icdCode', $event)">
-                  <input type="text" class="mq-input flex-1" placeholder="Description" [ngModel]="diagnosis().description" (ngModelChange)="updateDiagnosis('description', $event)">
-                  <button class="btn-primary !bg-purple-600 px-10" (click)="addDiagnosis()">Add</button>
-                </div>
-              </div>
-              @for (d of visit()?.diagnoses; track d.id) {
-                <div class="flex items-center justify-between p-5 mq-card-dark list-item border-l-2 border-purple-500/50">
-                  <p class="text-white font-bold">{{ d.icD10Code }} - {{ d.codeDescription }}</p>
-                </div>
-              }
-            </div>
+            <app-diagnoses-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"/>
           }
 
           @if (activeTab() === 'prescriptions') {
-            <div class="space-y-8" @tabContent>
-              <button (click)="showRxForm.set(!showRxForm())" class="btn-neon">New Medication</button>
-              @if (showRxForm()) {
-                <div class="mq-card-dark p-8 border-l-4 border-emerald-500">
-                  <div class="grid grid-cols-2 gap-4">
-                    <input type="text" class="mq-input" placeholder="Medication" [ngModel]="newRx().medicationName" (ngModelChange)="updateNewRx('medicationName', $event)">
-                    <input type="text" class="mq-input" placeholder="Dosage" [ngModel]="newRx().dosage" (ngModelChange)="updateNewRx('dosage', $event)">
-                    <input type="text" class="mq-input" placeholder="Frequency" [ngModel]="newRx().frequency" (ngModelChange)="updateNewRx('frequency', $event)">
-                    <input type="text" class="mq-input" placeholder="Duration" [ngModel]="newRx().duration" (ngModelChange)="updateNewRx('duration', $event)">
-                  </div>
-                  <button class="btn-primary w-full mt-4" (click)="addPrescription()">Add</button>
-                </div>
-              }
-              @for (rx of visit()?.prescriptions; track rx.id) {
-                @for (item of rx.items; track $index) {
-                  <div class="mq-card-dark p-6 list-item">
-                    <p class="text-white font-bold">{{ item.medicationName }} - {{ item.dosage }}</p>
-                  </div>
-                }
-              }
-            </div>
+            <app-prescriptions-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"/>
+          }
+
+          @if (activeTab() === 'labs') {
+            <app-lab-requests-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"/>
+          }
+
+          @if (activeTab() === 'imaging') {
+            <app-imaging-requests-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"/>
+          }
+
+          @if (activeTab() === 'procedures') {
+            <app-procedures-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"
+                                (addToInvoice)="onAddToInvoice($event)"/>
+          }
+
+          @if (activeTab() === 'referrals') {
+            <app-referrals-tab [visitId]="visitId" [visitData]="visit()" [readonly]="isReadonly()"/>
+          }
+
+          @if (activeTab() === 'history') {
+            <app-empty-state icon="history" title="Visit History"
+                             description="Patient visit history will appear here."/>
           }
         </div>
       </div>

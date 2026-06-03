@@ -23,7 +23,7 @@
       <p class="text-mq-s400 text-sm mt-1">Staff-administered patient registration</p>
     </div>
 
-    <!-- Progress -->
+    <!-- Progress bar -->
     @if (!mrn()) {
       <div class="mb-8">
         <div class="flex justify-between text-xs text-mq-s400 mb-2">
@@ -38,128 +38,183 @@
       </div>
     }
 
-    <!-- STEP 1 -->
-    @if (step() === 1 && !mrn()) {
-      <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
-        <h2 class="text-white font-bold text-lg mb-2">Personal Information</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="mq-label">First Name *</label>
-            <input type="text" [(ngModel)]="form.firstName"
-                   class="mq-input" placeholder="Mohamed"/>
-          </div>
-          <div>
-            <label class="mq-label">Last Name *</label>
-            <input type="text" [(ngModel)]="form.lastName"
-                   class="mq-input" placeholder="Ahmed"/>
-          </div>
-        </div>
-        <div>
-          <label class="mq-label">Date of Birth *</label>
-          <input type="date" [(ngModel)]="form.dateOfBirth"
-                 class="mq-input" [max]="today"/>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="mq-label">Gender *</label>
-            <select [(ngModel)]="form.gender" class="mq-input">
-              @for (g of genderOptions; track g.value) {
-                <option [value]="g.value">{{ g.label }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label class="mq-label">Blood Type</label>
-            <select [(ngModel)]="form.bloodType" class="mq-input">
-              @for (b of bloodTypeOptions; track b.value) {
-                <option [value]="b.value">{{ b.label }}</option>
-              }
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="mq-label">National ID *</label>
-          <input type="text" [(ngModel)]="form.nationalId"
-                 class="mq-input" placeholder="14 digits" maxlength="14"/>
-          @if (form.nationalId && form.nationalId.length !== 14) {
-            <p class="text-rose-400 text-xs mt-1">Must be exactly 14 digits</p>
-          }
-        </div>
-        <button (click)="step.set(2)"
-                class="btn-primary w-full"
-                [disabled]="!step1Valid()">
-          Next: Contact Info →
-        </button>
-      </div>
-    }
+    <!-- ═══════════════════════════ FORM ═══════════════════════════ -->
+    <form [formGroup]="form" autocomplete="off" novalidate>
 
-    <!-- STEP 2 -->
-    @if (step() === 2 && !mrn()) {
-      <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
-        <h2 class="text-white font-bold text-lg mb-2">Contact Information</h2>
-        <div>
-          <label class="mq-label">Phone Number *</label>
-          <input type="tel" [(ngModel)]="form.phone"
-                 class="mq-input" placeholder="01x-xxxx-xxxx"/>
-        </div>
-        <div>
-          <label class="mq-label">Email (optional)</label>
-          <input type="email" [(ngModel)]="form.email"
-                 class="mq-input" placeholder="patient@email.com"/>
-        </div>
-        <div>
-          <label class="mq-label">Address</label>
-          <textarea [(ngModel)]="form.address"
-                    class="mq-input h-20 resize-none"
-                    placeholder="Cairo, Egypt"></textarea>
-        </div>
-        <div class="flex gap-3">
-          <button (click)="step.set(1)" class="btn-ghost flex-1">← Back</button>
-          <button (click)="step.set(3)"
-                  class="btn-primary flex-1"
-                  [disabled]="!step2Valid()">
-            Review →
+      <!-- STEP 1 — Personal Information -->
+      @if (step() === 1 && !mrn()) {
+        <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
+          <h2 class="text-white font-bold text-lg mb-2">Personal Information</h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mq-label">First Name *</label>
+              <input formControlName="firstName"
+                     type="text"
+                     [class]="inputClass('firstName')"
+                     placeholder="Mohamed"/>
+              <app-form-error [control]="c.firstName"/>
+            </div>
+            <div>
+              <label class="mq-label">Last Name *</label>
+              <input formControlName="lastName"
+                     type="text"
+                     [class]="inputClass('lastName')"
+                     placeholder="Ahmed"/>
+              <app-form-error [control]="c.lastName"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="mq-label">Date of Birth *</label>
+            <input formControlName="dateOfBirth"
+                   type="date"
+                   [class]="inputClass('dateOfBirth')"
+                   [max]="today"/>
+            <app-form-error [control]="c.dateOfBirth"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mq-label">Gender *</label>
+              <select formControlName="gender" [class]="inputClass('gender')">
+                @for (g of genderOptions; track g.value) {
+                  <option [value]="g.value">{{ g.label }}</option>
+                }
+              </select>
+              <app-form-error [control]="c.gender"/>
+            </div>
+            <div>
+              <label class="mq-label">Blood Type</label>
+              <select formControlName="bloodType" class="mq-input">
+                @for (b of bloodTypeOptions; track b.value) {
+                  <option [value]="b.value">{{ b.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="mq-label">National ID *</label>
+            <input formControlName="nationalId"
+                   type="text"
+                   [class]="inputClass('nationalId')"
+                   placeholder="14 digits"
+                   maxlength="14"/>
+            <app-form-error [control]="c.nationalId"/>
+          </div>
+
+          <button type="button"
+                  (click)="nextStep1()"
+                  class="btn-primary w-full">
+            Next: Contact Info →
           </button>
         </div>
-      </div>
-    }
+      }
 
-    <!-- STEP 3: Review -->
-    @if (step() === 3 && !mrn()) {
-      <div class="mq-card-dark p-8 rounded-2xl">
-        <h2 class="text-white font-bold text-lg mb-6">Review & Register</h2>
-        <div class="space-y-2 mb-8">
-          @for (row of [
-            {label:'First Name', value:form.firstName},
-            {label:'Last Name', value:form.lastName},
-            {label:'Date of Birth', value:form.dateOfBirth},
-            {label:'National ID', value:form.nationalId},
-            {label:'Phone', value:form.phone},
-            {label:'Email', value:form.email||'—'},
-            {label:'Address', value:form.address||'—'}
-          ]; track row.label) {
-            <div class="flex justify-between py-2.5 border-b border-mq-700/60 text-sm">
-              <span class="text-mq-s400">{{ row.label }}</span>
-              <span class="text-white font-medium">{{ row.value }}</span>
+      <!-- STEP 2 — Contact Information -->
+      @if (step() === 2 && !mrn()) {
+        <div class="mq-card-dark p-8 space-y-5 rounded-2xl">
+          <h2 class="text-white font-bold text-lg mb-2">Contact Information</h2>
+
+          <div>
+            <label class="mq-label">Phone Number *</label>
+            <input formControlName="phone"
+                   type="tel"
+                   [class]="inputClass('phone')"
+                   placeholder="01x-xxxx-xxxx"/>
+            <app-form-error [control]="c.phone"/>
+          </div>
+
+          <div>
+            <label class="mq-label">Email (optional)</label>
+            <input formControlName="email"
+                   type="email"
+                   [class]="inputClass('email')"
+                   placeholder="patient@email.com"/>
+            <app-form-error [control]="c.email"/>
+          </div>
+
+          <div>
+            <label class="mq-label">Address</label>
+            <textarea formControlName="address"
+                      class="mq-input h-20 resize-none"
+                      placeholder="Cairo, Egypt"></textarea>
+          </div>
+
+          <!-- Conditional: Pregnancy Status — only for Female patients -->
+          @if (isFemale()) {
+            <div>
+              <label class="mq-label">Pregnancy Status</label>
+              <select formControlName="pregnancyStatus" class="mq-input">
+                <option value="">-- Select --</option>
+                @for (p of pregnancyStatusOptions; track p.value) {
+                  <option [value]="p.value">{{ p.label }}</option>
+                }
+              </select>
             </div>
           }
-        </div>
-        <div class="flex gap-3">
-          <button (click)="step.set(2)" class="btn-ghost flex-1">← Edit</button>
-          <button (click)="onSubmit()"
-                  class="btn-primary flex-1 flex items-center justify-center gap-2"
-                  [disabled]="isLoading()">
-            @if (isLoading()) {
-              <span class="w-4 h-4 rounded-full border-2 border-white/30
-                           border-t-white animate-spin"></span>
-            }
-            Register Patient
-          </button>
-        </div>
-      </div>
-    }
 
-    <!-- SUCCESS -->
+          <div class="flex gap-3">
+            <button type="button" (click)="step.set(1)" class="btn-ghost flex-1">← Back</button>
+            <button type="button"
+                    (click)="nextStep2()"
+                    class="btn-primary flex-1">
+              Review →
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 3 — Review & Submit -->
+      @if (step() === 3 && !mrn()) {
+        <div class="mq-card-dark p-8 rounded-2xl">
+          <h2 class="text-white font-bold text-lg mb-6">Review & Register</h2>
+
+          <div class="space-y-2 mb-8">
+            @for (row of [
+              { label: 'First Name',   value: c.firstName.value   },
+              { label: 'Last Name',    value: c.lastName.value    },
+              { label: 'Date of Birth',value: c.dateOfBirth.value },
+              { label: 'Gender',       value: c.gender.value      },
+              { label: 'National ID',  value: c.nationalId.value  },
+              { label: 'Phone',        value: c.phone.value       },
+              { label: 'Email',        value: c.email.value || '—'},
+              { label: 'Address',      value: c.address.value || '—' }
+            ]; track row.label) {
+              <div class="flex justify-between py-2.5 border-b border-mq-700/60 text-sm">
+                <span class="text-mq-s400">{{ row.label }}</span>
+                <span class="text-white font-medium">{{ row.value }}</span>
+              </div>
+            }
+            @if (isFemale() && c.pregnancyStatus.value) {
+              <div class="flex justify-between py-2.5 border-b border-mq-700/60 text-sm">
+                <span class="text-mq-s400">Pregnancy Status</span>
+                <span class="text-white font-medium">{{ c.pregnancyStatus.value }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="flex gap-3">
+            <button type="button" (click)="step.set(2)" class="btn-ghost flex-1">← Edit</button>
+            <button type="button"
+                    (click)="onSubmit()"
+                    class="btn-primary flex-1 flex items-center justify-center gap-2"
+                    [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="w-4 h-4 rounded-full border-2 border-white/30
+                             border-t-white animate-spin"></span>
+              }
+              Register Patient
+            </button>
+          </div>
+        </div>
+      }
+
+    </form>
+    <!-- ════════════════════════ END FORM ════════════════════════ -->
+
+    <!-- SUCCESS — Step 4 -->
     @if (mrn()) {
       <div class="mq-card-dark p-10 text-center rounded-2xl"
            style="animation: scaleIn .6s cubic-bezier(0.34,1.56,0.64,1) both">
@@ -194,5 +249,6 @@
         </div>
       </div>
     }
+
   </div>
 </div>

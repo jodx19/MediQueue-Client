@@ -1,21 +1,24 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import {
   PatientsClient, PatientDetailDto,
   AppointmentsClient, AppointmentDto,
-  ClinicalVisitsClient, ClinicalVisitSummaryDto
+  ClinicalVisitsClient, ClinicalVisitSummaryDto, AttachmentDto
 } from '../../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { AttachmentsListComponent } from '../../../shared/components/attachments-list/attachments-list.component';
 
-type Tab = 'overview' | 'visits' | 'appointments';
+type Tab = 'overview' | 'visits' | 'appointments' | 'files';
 
 @Component({
   selector: 'app-patient-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, FileUploadComponent, AttachmentsListComponent],
   templateUrl: './patient-detail.component.html',
 })
 export class PatientDetailComponent implements OnInit {
@@ -23,6 +26,7 @@ export class PatientDetailComponent implements OnInit {
   private readonly appointmentsClient  = inject(AppointmentsClient);
   private readonly visitsClient        = inject(ClinicalVisitsClient);
   private readonly apiErrorHandler     = inject(ApiErrorHandlerService);
+  private readonly authService         = inject(AuthService);
   private readonly route               = inject(ActivatedRoute);
   public  readonly router              = inject(Router);
 
@@ -33,7 +37,12 @@ export class PatientDetailComponent implements OnInit {
   activeTab    = signal<Tab>('overview');
   expandedVisit = signal<string | null>(null);
 
+  attachments = signal<AttachmentDto[]>([]);
   patientId = '';
+
+  canDeleteAttachments = computed(() =>
+    ['Admin', 'Receptionist'].includes(this.authService.currentUser()?.role ?? '')
+  );
 
   async ngOnInit() {
     this.patientId = this.route.snapshot.paramMap.get('id')!;
@@ -66,6 +75,28 @@ export class PatientDetailComponent implements OnInit {
     } catch (err) {
       this.apiErrorHandler.handle(err);
     }
+  }
+
+  async loadAttachments() {
+    const allAttachments: AttachmentDto[] = [];
+    const seen = new Set<string>();
+    for (const v of this.visits()) {
+      if (!v.id) continue;
+      try {
+        const detail = await firstValueFrom(this.visitsClient.clinicalVisitsGET(v.id));
+        for (const att of detail.attachments ?? []) {
+          if (att.id && !seen.has(att.id)) {
+            seen.add(att.id);
+            allAttachments.push(att);
+          }
+        }
+      } catch { /* skip failed */ }
+    }
+    this.attachments.set(allAttachments);
+  }
+
+  onAttachmentDeleted(id: string) {
+    this.attachments.update(list => list.filter(a => a.id !== id));
   }
 
   setTab(tab: string) {

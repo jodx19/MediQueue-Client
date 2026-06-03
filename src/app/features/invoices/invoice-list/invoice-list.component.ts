@@ -4,13 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
-import { InvoicesClient, InvoiceListItemDto } from '../../../core/api/mediqueue-api';
+import { InvoicesClient, InvoiceListItemDto, InvoiceStatus } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
+import { InvoiceStatusPipe } from '../../../shared/pipes/invoice-status.pipe';
+import { invoiceStatusFromNumber } from '../../../core/utils/invoice-status.utils';
+import { HasRoleDirective } from '../../../shared/directives/has-role.directive';
+
+const IS = InvoiceStatus;
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, InvoiceStatusPipe, HasRoleDirective],
   templateUrl: './invoice-list.component.html',
 })
 export class InvoiceListComponent implements OnInit {
@@ -20,23 +25,23 @@ export class InvoiceListComponent implements OnInit {
 
   isLoading = signal(true);
   invoices  = signal<InvoiceListItemDto[]>([]);
-  filter    = signal<string>('');
+  filter    = signal<InvoiceStatus | null>(null);
 
   get filtered() {
     const f = this.filter();
-    if (!f) return this.invoices();
-    return this.invoices().filter(i => (i.status as any) === f);
+    if (f == null) return this.invoices();
+    return this.invoices().filter(i => invoiceStatusFromNumber(i.status as any) === f);
   }
 
   get totalRevenue(): number {
     return this.invoices()
-      .filter(i => (i.status as any) === 'Paid')
+      .filter(i => invoiceStatusFromNumber(i.status as any) === IS._3)
       .reduce((sum, i) => sum + (i.totalAmount ?? 0), 0);
   }
 
   get pendingAmount(): number {
     return this.invoices()
-      .filter(i => (i.status as any) === 'Pending')
+      .filter(i => invoiceStatusFromNumber(i.status as any) === IS._2)
       .reduce((sum, i) => sum + (i.totalAmount ?? 0), 0);
   }
 
@@ -57,14 +62,15 @@ export class InvoiceListComponent implements OnInit {
     }
   }
 
-  statusClass(status: any): string {
-    const map: Record<string, string> = {
-      'Paid':     'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-      'Pending':  'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-400 border border-amber-500/30',
-      'Overdue':  'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-rose-500/15 text-rose-400 border border-rose-500/30',
-      'Cancelled':'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-mq-700/50 text-mq-s400 border border-mq-700',
-    };
-    return map[status] ?? 'inline-flex px-2.5 py-0.5 rounded-full text-xs bg-mq-700 text-mq-s400';
+  setFilter(value: string) {
+    if (!value) { this.filter.set(null); return; }
+    for (const key of Object.keys(IS)) {
+      if (IS[key as keyof typeof IS] === parseInt(value)) {
+        this.filter.set(parseInt(value) as InvoiceStatus);
+        return;
+      }
+    }
+    this.filter.set(null);
   }
 
   exportCSV() {

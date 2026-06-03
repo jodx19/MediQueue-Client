@@ -89,9 +89,10 @@
       <!-- Tab bar -->
       <div class="mq-tabs">
         @for (tab of [
-          {id:'overview',      label:'Overview',      icon:'user'},
+          {id:'overview',      label:'Overview',       icon:'user'},
           {id:'visits',        label:'Medical Visits', icon:'clipboard'},
-          {id:'appointments',  label:'Appointments',  icon:'calendar'}
+          {id:'appointments',  label:'Appointments',   icon:'calendar'},
+          {id:'files',         label:'Medical Files',  icon:'file'}
         ]; track tab.id) {
           <button (click)="setTab(tab.id)"
                   [class]="'mq-tab' + (activeTab() === tab.id ? ' active' : '')">
@@ -255,6 +256,41 @@
             }
           </div>
         }
+      }
+
+      <!-- MEDICAL FILES TAB -->
+      @if (activeTab() === 'files') {
+        <div class="space-y-6">
+          <div class="mq-card p-5">
+            <h3 class="text-sm font-semibold text-mq-text mb-4 pb-3 border-b border-mq-700 flex items-center gap-2">
+              <lucide-icon name="upload" [size]="16" class="text-mq-teal"/>
+              Upload New Files
+            </h3>
+            <app-file-upload
+              [patientId]="patientId"
+              (uploaded)="loadAttachments()"
+              (completed)="loadAttachments()"
+            />
+          </div>
+
+          <div class="mq-card p-5">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-mq-700">
+              <h3 class="text-sm font-semibold text-mq-text flex items-center gap-2">
+                <lucide-icon name="file" [size]="16" class="text-mq-teal"/>
+                All Attachments ({{ attachments().length }})
+              </h3>
+              <button (click)="loadAttachments()"
+                      class="text-xs text-mq-teal hover:underline flex items-center gap-1">
+                <lucide-icon name="refresh-cw" [size]="12"/>
+                Refresh
+              </button>
+            </div>
+            <app-attachments-list
+              [attachments]="attachments()"
+              (deleted)="onAttachmentDeleted($event)"
+            />
+          </div>
+        </div>
       }
     </div>
   </div>

@@ -20,7 +20,7 @@ interface WorkingDay {
 export class SettingsComponent implements OnInit {
   private readonly notifications = inject(NotificationService);
 
-  activeTab = signal<'profile' | 'hours' | 'medical' | 'integrations'>('profile');
+  activeTab = signal<'profile' | 'hours' | 'medical' | 'specialties' | 'notifications' | 'integrations'>('profile');
   isSaving = signal(false);
 
   // Clinic Profile State
@@ -64,6 +64,16 @@ export class SettingsComponent implements OnInit {
     enableEmailReminders: true,
   });
 
+  // Specialties State
+  specialties = signal<string[]>(['General Medicine', 'Cardiology', 'Pediatrics', 'Dermatology', 'Orthopedics']);
+
+  // Notification Preferences State
+  notificationPrefs = signal([
+    { id: 'sms_appointment', label: 'SMS on appointment booked', desc: 'Send SMS when a patient books', enabled: true },
+    { id: 'email_invoice', label: 'Email on invoice paid', desc: 'Send receipt via email', enabled: true },
+    { id: 'sms_reminder', label: 'SMS reminder 24h before', desc: 'Remind patients of upcoming appointments', enabled: false },
+  ]);
+
   ngOnInit() {
     this.loadSettings();
   }
@@ -81,6 +91,12 @@ export class SettingsComponent implements OnInit {
 
       const storedIntegrations = localStorage.getItem('mq_settings_integrations');
       if (storedIntegrations) this.integrationKeys.set(JSON.parse(storedIntegrations));
+
+      const storedSpecialties = localStorage.getItem('mq_settings_specialties');
+      if (storedSpecialties) this.specialties.set(JSON.parse(storedSpecialties));
+
+      const storedNotifPrefs = localStorage.getItem('mq_settings_notif_prefs');
+      if (storedNotifPrefs) this.notificationPrefs.set(JSON.parse(storedNotifPrefs));
     } catch (e) {
       this.notifications.error('Failed to load clinic settings from storage');
     }
@@ -95,6 +111,8 @@ export class SettingsComponent implements OnInit {
         localStorage.setItem('mq_settings_hours', JSON.stringify(this.workingDays()));
         localStorage.setItem('mq_settings_medical', JSON.stringify(this.medicalSettings()));
         localStorage.setItem('mq_settings_integrations', JSON.stringify(this.integrationKeys()));
+        localStorage.setItem('mq_settings_specialties', JSON.stringify(this.specialties()));
+        localStorage.setItem('mq_settings_notif_prefs', JSON.stringify(this.notificationPrefs()));
 
         this.notifications.success('Clinic configuration settings updated successfully!');
       } catch (e) {
@@ -103,5 +121,16 @@ export class SettingsComponent implements OnInit {
         this.isSaving.set(false);
       }
     }, 800);
+  }
+
+  addSpecialty() {
+    const name = prompt('Enter specialty name:');
+    if (name?.trim()) {
+      this.specialties.update(list => [...list, name.trim()]);
+    }
+  }
+
+  removeSpecialty(index: number) {
+    this.specialties.update(list => list.filter((_, i) => i !== index));
   }
 }

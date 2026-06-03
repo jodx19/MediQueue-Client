@@ -1,37 +1,62 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import {
   RecordPaymentCommand, ApplyDiscountCommand,
-  InvoicesClient, PaymentMethod
+  InvoicesClient, PaymentMethod, InvoiceStatus
 } from '../../../core/api/mediqueue-api';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
+import { InvoiceStatusPipe } from '../../../shared/pipes/invoice-status.pipe';
+import { InvoiceService } from '../services/invoice.service';
+
+const IS = InvoiceStatus;
 
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, InvoiceStatusPipe],
   templateUrl: './invoice-detail.component.html',
 })
 export class InvoiceDetailComponent implements OnInit {
   private readonly invoicesClient = inject(InvoicesClient);
-  private readonly notify         = inject(NotificationService);
-  private readonly route          = inject(ActivatedRoute);
-  public  readonly router         = inject(Router);
+  private readonly notify = inject(NotificationService);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
+  private readonly invoiceService = inject(InvoiceService);
+  private readonly route = inject(ActivatedRoute);
+  public readonly router = inject(Router);
+
+  readonly IS = IS;
 
   invoiceId = '';
-  invoice   = signal<any>(null);
+  invoice = signal<any>(null);
   isLoading = signal(true);
+  isProcessingPayment = signal(false);
+  isApplyingDiscount = signal(false);
 
-  payment = { amount: 0, method: PaymentMethod._1, notes: '' };
-  discountValue = 0;
+  showPaymentForm = signal(false);
+  paymentAmount = signal<number>(0);
+  paymentMethod = signal<PaymentMethod>(PaymentMethod._1);
+  paymentDate = signal<string>('');
+  paymentNote = signal<string>('');
+
+  discountAmount = signal<number>(0);
+  isDraft = computed(() => this.invoice()?.status === IS._1);
+  isSent = computed(() => this.invoice()?.status === IS._2);
+  isPaid = computed(() => this.invoice()?.status === IS._3);
+  isPartial = computed(() => this.invoice()?.status === IS._4);
+  isOverdue = computed(() => this.invoice()?.status === IS._5);
+  isCancelled = computed(() => this.invoice()?.status === IS._6);
+  canRecordPayment = computed(() => !this.isPaid() && !this.isCancelled());
+  canApplyDiscount = computed(() => this.isDraft());
 
   paymentMethodKeys = [
-    { label: 'Cash',      value: PaymentMethod._1 },
-    { label: 'Card',      value: PaymentMethod._2 },
+    { label: 'Cash', value: PaymentMethod._1 },
+    { label: 'Card', value: PaymentMethod._2 },
+    { label: 'Transfer', value: PaymentMethod._4 },
     { label: 'Insurance', value: PaymentMethod._3 },
   ];
 
@@ -41,55 +66,75 @@ export class InvoiceDetailComponent implements OnInit {
   }
 
   private async loadInvoice() {
+    this.isLoading.set(true);
     try {
       const result = await firstValueFrom(this.invoicesClient.invoicesGET2(this.invoiceId));
       this.invoice.set(result);
-      this.payment.amount = (result as any).totalAmount ?? 0;
+      this.paymentAmount.set((result as any).totalAmount ?? 0);
+      this.paymentDate.set(new Date().toISOString().substring(0, 10));
     } catch (err) {
-      this.notify.error('Failed to load invoice');
+      this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  async applyDiscount() {
+  async onApplyDiscount() {
+    if (!this.discountAmount() || this.discountAmount() <= 0) return;
+    this.isApplyingDiscount.set(true);
     try {
       const command = new ApplyDiscountCommand({
-        invoiceId:      this.invoiceId,
-        discountAmount: this.discountValue,
-        reason:         'Applied via UI',
+        invoiceId: this.invoiceId,
+        discountAmount: this.discountAmount(),
+        reason: 'Applied via UI',
       });
-      await firstValueFrom(this.invoicesClient.discount(this.invoiceId, command));
+      await this.invoiceService.applyDiscount(this.invoiceId, command);
       this.notify.success('Discount applied.');
+      this.discountAmount.set(0);
       await this.loadInvoice();
-    } catch (err: any) {
-      this.notify.error(err?.error?.detail ?? 'Failed to apply discount.');
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isApplyingDiscount.set(false);
     }
   }
 
-  async recordPayment() {
+  async onRecordPayment() {
+    if (!this.paymentAmount() || this.paymentAmount() <= 0) return;
+    this.isProcessingPayment.set(true);
     try {
       const command = new RecordPaymentCommand({
-        invoiceId:     this.invoiceId,
-        amount:        this.payment.amount,
-        paymentMethod: this.payment.method as any,
-        notes:         this.payment.notes,
+        invoiceId: this.invoiceId,
+        amount: this.paymentAmount(),
+        paymentMethod: this.paymentMethod(),
+        notes: this.paymentNote() || undefined,
       });
-      await firstValueFrom(this.invoicesClient.payments(this.invoiceId, command));
-      this.notify.success('Payment recorded successfully!');
+      await this.invoiceService.recordPayment(this.invoiceId, command);
       await this.loadInvoice();
-    } catch (err: any) {
-      this.notify.error(err?.error?.detail ?? 'Failed to record payment.');
+      if (this.invoiceService.isFullyPaid(this.invoice())) {
+        this.notify.success('Invoice fully paid.');
+      } else {
+        const remaining = this.invoiceService.getRemainingBalance(this.invoice());
+        this.notify.info(`Partial payment recorded — EGP ${remaining.toLocaleString()} remaining.`);
+      }
+      this.showPaymentForm.set(false);
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isProcessingPayment.set(false);
     }
   }
 
-  statusBadgeClass(status: string | undefined): string {
-    const map: Record<string, string> = {
-      'Paid':      'px-3 py-1 rounded-full text-sm bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-      'Pending':   'px-3 py-1 rounded-full text-sm bg-amber-500/15 text-amber-400 border border-amber-500/30',
-      'Overdue':   'px-3 py-1 rounded-full text-sm bg-rose-500/15 text-rose-400 border border-rose-500/30',
-      'Cancelled': 'px-3 py-1 rounded-full text-sm bg-mq-700 text-mq-s400',
-    };
-    return map[status ?? ''] ?? 'px-3 py-1 rounded-full text-sm bg-mq-700 text-mq-s400';
+  async sendInvoice() {
+    this.notify.info('Send invoice — will be implemented in a future step.');
+  }
+
+  async cancelInvoice() {
+    if (!confirm('Cancel this invoice? This action cannot be undone.')) return;
+    this.notify.info('Cancel invoice — will be implemented in a future step.');
+  }
+
+  downloadPdf() {
+    this.notify.info('PDF download — will be implemented in a future step.');
   }
 }

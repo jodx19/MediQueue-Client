@@ -147,6 +147,11 @@
                     class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
               Lab & Imaging
             </button>
+            <button (click)="activeTab.set('attachments')"
+                    [class]="activeTab() === 'attachments' ? 'border-b-2 border-emerald-400 text-white font-semibold' : 'text-mq-s400 hover:text-white'"
+                    class="px-4 py-3 text-xs tracking-wide transition-all whitespace-nowrap">
+              Attachments
+            </button>
           </div>
 
           <!-- Tab Content Scrollable Area -->
@@ -311,6 +316,41 @@
                   }
                 </div>
 
+              </div>
+            }
+
+            <!-- TAB 5: Attachments -->
+            @if (activeTab() === 'attachments') {
+              <div class="space-y-5">
+                <div>
+                  <h4 class="text-white font-bold text-sm mb-3 flex items-center gap-1.5">
+                    <lucide-icon name="upload" class="text-teal-400" [size]="15"/>
+                    Upload to this Visit
+                  </h4>
+                  @if (selectedVisit()?.patientId) {
+                    <app-file-upload
+                      [patientId]="selectedVisit()!.patientId!"
+                      [clinicalVisitId]="selectedVisit()!.id"
+                      [showCategory]="true"
+                    />
+                  }
+                </div>
+                <div>
+                  <h4 class="text-white font-bold text-sm mb-3 flex items-center gap-1.5">
+                    <lucide-icon name="file" class="text-teal-400" [size]="15"/>
+                    Attached Files
+                  </h4>
+                  @if (!selectedVisit()?.attachments || selectedVisit()!.attachments!.length === 0) {
+                    <p class="text-mq-s400 text-xs italic bg-mq-800/25 p-3 rounded-lg border border-mq-750">
+                      No files attached to this visit.
+                    </p>
+                  } @else {
+                    <app-attachments-list
+                      [attachments]="selectedVisit()?.attachments ?? []"
+                      [showDelete]="false"
+                    />
+                  }
+                </div>
               </div>
             }
 

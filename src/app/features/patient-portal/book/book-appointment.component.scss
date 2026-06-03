@@ -240,8 +240,36 @@
 /* Step 3 specific */
 .slots-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.slot-btn {
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1.5px solid var(--mq-primary-200, #99f6e4);
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: inherit;
+
+  &:hover:not(:disabled) {
+    border-color: var(--mq-primary-500, #14b8a6);
+    background: var(--mq-primary-50, rgba(20,184,166,.08));
+  }
+
+  &.active {
+    background: var(--mq-primary-500, #14b8a6);
+    border-color: var(--mq-primary-500, #14b8a6);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .slot-item {

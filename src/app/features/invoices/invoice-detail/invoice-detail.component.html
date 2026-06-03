@@ -32,8 +32,8 @@
               <p class="text-mq-s400 text-sm mt-1">{{ invoice().issuedAt | date:'longDate' }}</p>
               <p class="text-white font-semibold mt-1">{{ invoice().patientName }}</p>
             </div>
-            <span [class]="statusBadgeClass(invoice().status)">
-              {{ invoice().status }}
+            <span [class]="invoice().status | invoiceStatus:'badge'">
+              {{ invoice().status | invoiceStatus:'label' }}
             </span>
           </div>
 
@@ -102,61 +102,133 @@
       <!-- RIGHT: Actions panel -->
       <div class="space-y-4">
 
-        @if (invoice().status !== 'Paid') {
-          <!-- Discount -->
+        <!-- Status Action Buttons -->
+        <div class="mq-card-dark p-5">
+          <h3 class="text-white font-semibold mb-4 text-sm">Actions</h3>
+          <div class="space-y-2">
+            @if (isDraft()) {
+              <button (click)="router.navigate(['/invoices/create'], { queryParams: { patientId: invoice().patientId } })"
+                      class="btn-ghost w-full text-sm flex items-center justify-center gap-2">
+                <lucide-icon name="pencil" [size]="14"/>
+                Edit
+              </button>
+              <button (click)="sendInvoice()"
+                      class="btn-primary w-full text-sm flex items-center justify-center gap-2">
+                <lucide-icon name="send" [size]="14"/>
+                Send Invoice
+              </button>
+              <button (click)="cancelInvoice()"
+                      class="btn-danger w-full text-sm flex items-center justify-center gap-2">
+                <lucide-icon name="x-circle" [size]="14"/>
+                Cancel Invoice
+              </button>
+            }
+            @if (isSent() || isPartial() || isOverdue()) {
+              <button (click)="showPaymentForm.set(!showPaymentForm())"
+                      data-testid="record-payment-btn"
+                      class="btn-primary w-full text-sm flex items-center justify-center gap-2">
+                <lucide-icon name="credit-card" [size]="14"/>
+                Record Payment
+              </button>
+            }
+            @if (isOverdue()) {
+              <button (click)="sendInvoice()"
+                      class="btn-ghost w-full text-sm flex items-center justify-center gap-2 border border-amber-500/30">
+                <lucide-icon name="bell" [size]="14"/>
+                Send Reminder
+              </button>
+            }
+            @if (isPaid()) {
+              <button (click)="downloadPdf()"
+                      class="btn-ghost w-full text-sm flex items-center justify-center gap-2">
+                <lucide-icon name="file-text" [size]="14"/>
+                Download PDF
+              </button>
+            }
+            @if (isCancelled()) {
+              <div class="text-center text-mq-s500 text-sm py-2">No actions available</div>
+            }
+          </div>
+        </div>
+
+        <!-- Apply Discount Panel (Draft only) -->
+        @if (canApplyDiscount()) {
           <div class="mq-card-dark p-5">
             <h3 class="text-white font-semibold mb-4 text-sm">Apply Discount</h3>
             <div class="space-y-3">
               <div>
                 <label class="mq-label">Amount (EGP)</label>
-                <input type="number" [(ngModel)]="discountValue"
-                       class="mq-input" placeholder="0.00"/>
+                <input type="number" [(ngModel)]="discountAmount"
+                       class="mq-input" placeholder="0.00" min="0"/>
               </div>
-              <button (click)="applyDiscount()" class="btn-ghost w-full text-sm">
+              <button (click)="onApplyDiscount()" [disabled]="isApplyingDiscount() || !discountAmount()"
+                      class="btn-ghost w-full text-sm flex items-center justify-center gap-2">
+                @if (isApplyingDiscount()) {
+                  <lucide-icon name="loader-2" class="animate-spin" [size]="14"/>
+                }
                 Apply Discount
-              </button>
-            </div>
-          </div>
-
-          <!-- Payment -->
-          <div class="mq-card-dark p-5">
-            <h3 class="text-white font-semibold mb-4 text-sm">Record Payment</h3>
-            <div class="space-y-3">
-              <div>
-                <label class="mq-label">Amount (EGP)</label>
-                <input type="number" [(ngModel)]="payment.amount"
-                       class="mq-input" [max]="invoice().totalAmount"/>
-              </div>
-              <div>
-                <label class="mq-label">Payment Method</label>
-                <div class="grid grid-cols-3 gap-2">
-                  @for (m of paymentMethodKeys; track m.value) {
-                    <button (click)="payment.method = m.value"
-                            [class]="payment.method === m.value
-                              ? 'py-2 rounded-xl text-xs font-semibold bg-mq-teal text-white border-2 border-mq-teal'
-                              : 'py-2 rounded-xl text-xs font-medium border border-mq-700 text-mq-s400 hover:border-mq-teal/50 hover:text-white transition-all'">
-                      {{ m.label }}
-                    </button>
-                  }
-                </div>
-              </div>
-              <div>
-                <label class="mq-label">Notes</label>
-                <input type="text" [(ngModel)]="payment.notes"
-                       class="mq-input" placeholder="Optional notes..."/>
-              </div>
-              <button (click)="recordPayment()"
-                      class="btn-primary w-full flex items-center justify-center gap-2"
-                      [disabled]="!payment.amount">
-                <lucide-icon name="credit-card" [size]="14"/>
-                Record Payment
               </button>
             </div>
           </div>
         }
 
-        @if (invoice().status === 'Paid') {
-          <!-- Paid state -->
+        <!-- Payment Panel (shown when NOT Paid/Cancelled) -->
+        @if (canRecordPayment()) {
+          <div class="mq-card-dark p-5">
+            <button (click)="showPaymentForm.set(!showPaymentForm())"
+                    class="w-full flex items-center justify-between text-white font-semibold text-sm">
+              Record Payment
+              <lucide-icon [name]="showPaymentForm() ? 'chevron-up' : 'chevron-down'" [size]="16"/>
+            </button>
+
+            @if (showPaymentForm()) {
+              <div class="space-y-3 mt-4 pt-4 border-t border-mq-700">
+                <div>
+                  <label class="mq-label">Amount (EGP)</label>
+                  <input type="number" [ngModel]="paymentAmount()"
+                         (ngModelChange)="paymentAmount.set(+$event || 0)"
+                         class="mq-input" min="0" step="0.01"/>
+                </div>
+                <div>
+                  <label class="mq-label">Payment Method</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    @for (m of paymentMethodKeys; track m.value) {
+                      <button (click)="paymentMethod.set(m.value)"
+                              [class]="paymentMethod() === m.value
+                                ? 'py-2 rounded-xl text-xs font-semibold bg-mq-teal text-white border-2 border-mq-teal'
+                                : 'py-2 rounded-xl text-xs font-medium border border-mq-700 text-mq-s400 hover:border-mq-teal/50 hover:text-white transition-all'">
+                        {{ m.label }}
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div>
+                  <label class="mq-label">Date</label>
+                  <input type="date" [ngModel]="paymentDate()"
+                         (ngModelChange)="paymentDate.set($event)"
+                         class="mq-input"/>
+                </div>
+                <div>
+                  <label class="mq-label">Notes</label>
+                  <input type="text" [ngModel]="paymentNote()"
+                         (ngModelChange)="paymentNote.set($event)"
+                         class="mq-input" placeholder="Optional notes..."/>
+                </div>
+                <button (click)="onRecordPayment()"
+                        [disabled]="isProcessingPayment() || !paymentAmount()"
+                        class="btn-primary w-full flex items-center justify-center gap-2">
+                  @if (isProcessingPayment()) {
+                    <lucide-icon name="loader-2" class="animate-spin" [size]="14"/>
+                  }
+                  <lucide-icon name="credit-card" [size]="14"/>
+                  Record Payment
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (isPaid()) {
           <div class="mq-card-dark p-5 text-center border border-emerald-500/30">
             <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center
                         justify-center mx-auto mb-3">
