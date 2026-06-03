@@ -3,10 +3,10 @@
   <!-- Header -->
   <div class="flex items-start justify-between mb-6">
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight">Appointments</h1>
+      <h1 class="text-3xl font-black text-white tracking-tight" data-testid="page-title">Appointments</h1>
       <p class="text-mq-s400 text-sm mt-1">{{ appointments().length }} records</p>
     </div>
-    <button (click)="showModal.set(true)"
+    <button (click)="showModal.set(true)" data-testid="new-appointment-btn"
             class="btn-primary flex items-center gap-2">
       <lucide-icon name="plus" [size]="16"/>
       Book Appointment

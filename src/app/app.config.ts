@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor, refreshTokenInterceptor, apiResponseInterceptor])
+      withInterceptors([authInterceptor, refreshTokenInterceptor, apiResponseInterceptor, errorInterceptor])
     ),
     { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
     AuthClient, PatientsClient, DoctorsClient,

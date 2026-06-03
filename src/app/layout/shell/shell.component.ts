@@ -6,11 +6,12 @@ import { AuthService } from '../../core/auth/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
+import { CmdKComponent } from '../../shared/components/cmd-k/cmd-k.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent, CmdKComponent],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
   animations: [
@@ -48,6 +49,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       { label: 'Patients',    path: '/patients',      icon: 'users',            roles: ['Admin', 'Doctor', 'Receptionist'] },
       { label: 'Doctors',     path: '/doctors',       icon: 'stethoscope',      roles: ['Admin', 'Receptionist'] },
       { label: 'Invoices',    path: '/invoices',      icon: 'receipt',          roles: ['Admin', 'Receptionist'] },
+      { label: 'Reports',     path: '/reports',       icon: 'bar-chart-3',       roles: ['Admin', 'Doctor'] },
       { label: 'Staff Admin', path: '/super-admin',   icon: 'shield-check',     roles: ['Admin'] },
       { label: 'Settings',    path: '/settings',      icon: 'settings',         roles: ['Admin'] },
     ];

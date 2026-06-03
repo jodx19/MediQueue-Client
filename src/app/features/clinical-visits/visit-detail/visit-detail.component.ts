@@ -1,53 +1,45 @@
 import { Component, inject, signal, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { firstValueFrom, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import {
   UpdateSOAPNoteCommand,
   AddVitalSignCommand,
-  AddDiagnosisCommand,
-  CreatePrescriptionCommand,
-  PrescriptionItemDto,
   ClinicalVisitsClient,
   ClinicalVisitDetailDto
 } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import {
+  DiagnosesTabComponent,
+  PrescriptionsTabComponent,
+  LabRequestsTabComponent,
+  ImagingRequestsTabComponent,
+  ProceduresTabComponent,
+  ReferralsTabComponent,
+} from '../components';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { FormErrorComponent } from '../../../shared/components/form-error/form-error.component';
+import { SoapFormService, SoapFormShape } from '../services/soap-form.service';
+import { FormGroup } from '@angular/forms';
+import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
-type TabKey = 'soap' | 'vitals' | 'diagnoses' | 'prescriptions' | 'history';
+type TabKey = 'soap' | 'vitals' | 'diagnoses' | 'prescriptions' | 'labs' | 'imaging' | 'procedures' | 'referrals' | 'history';
 
 @Component({
   selector: 'app-visit-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, LucideAngularModule, EmptyStateComponent, FormErrorComponent, DiagnosesTabComponent, PrescriptionsTabComponent, LabRequestsTabComponent, ImagingRequestsTabComponent, ProceduresTabComponent, ReferralsTabComponent],
+  providers: [SoapFormService],
   templateUrl: './visit-detail.component.html',
-  styleUrls: ['./visit-detail.component.scss'],
-  animations: [
-    trigger('tabContent', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('staggerList', [
-      transition(':enter', [
-        query('.list-item', [
-          style({ opacity: 0, transform: 'translateX(-10px)' }),
-          stagger(50, [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ], { optional: true })
-      ])
-    ])
-  ]
+  styleUrls: ['./visit-detail.component.scss']
 })
-export class VisitDetailComponent implements OnInit {
+export class VisitDetailComponent implements OnInit, HasUnsavedChanges {
   private readonly visitsClient = inject(ClinicalVisitsClient);
   private readonly notifications = inject(NotificationService);
   private readonly route = inject(ActivatedRoute);
+  private readonly soapFormService = inject(SoapFormService);
   readonly router = inject(Router);
 
   visitId = '';
@@ -56,28 +48,26 @@ export class VisitDetailComponent implements OnInit {
   isLoading = signal(true);
   isSaving = signal(false);
   lastSaved = signal<Date | null>(null);
+  autoSaveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  // Form States
-  readonly soap = {
-    subjective: signal(''),
-    objective: signal(''),
-    assessment: signal(''),
-    plan: signal('')
-  };
+  readonly isReadonly = computed(() => {
+    const s = this.visit()?.status;
+    return s === 'Completed' || s === 'Finalized';
+  });
 
-  private soapUpdate$ = new Subject<void>();
+  soapForm!: FormGroup<SoapFormShape>;
 
   readonly vital = signal({ type: 'BloodPressure', value: '', unit: 'mmHg' });
-  readonly diagnosis = signal({ icdCode: '', description: '' });
-  readonly newRx = signal({ medicationName: '', dosage: '', frequency: '', duration: '', instructions: '' });
-  
-  showRxForm = signal(false);
 
   readonly tabs = [
     { key: 'soap' as TabKey, label: 'SOAP Notes', icon: 'file-text' },
     { key: 'vitals' as TabKey, label: 'Vitals', icon: 'activity' },
     { key: 'diagnoses' as TabKey, label: 'Diagnoses', icon: 'stethoscope' },
     { key: 'prescriptions' as TabKey, label: 'Prescriptions', icon: 'pill' },
+    { key: 'labs' as TabKey, label: 'Labs', icon: 'flask-conical' },
+    { key: 'imaging' as TabKey, label: 'Imaging', icon: 'scan' },
+    { key: 'procedures' as TabKey, label: 'Procedures', icon: 'syringe' },
+    { key: 'referrals' as TabKey, label: 'Referrals', icon: 'arrow-right-from-line' },
     { key: 'history' as TabKey, label: 'History', icon: 'history' },
   ];
 
@@ -90,11 +80,30 @@ export class VisitDetailComponent implements OnInit {
   ];
 
   constructor() {
-    // Auto-save logic for SOAP notes
-    this.soapUpdate$.pipe(
-      debounceTime(2000),
-      distinctUntilChanged()
-    ).subscribe(() => this.saveSOAP());
+    this.soapForm = this.soapFormService.buildSoapForm();
+
+    effect(() => {
+      const visit = this.visit();
+      if (visit) {
+        this.soapForm.patchValue({
+          subjective: visit.subjective ?? '',
+          objective: visit.objective ?? '',
+          assessment: visit.assessment ?? '',
+          plan: visit.plan ?? '',
+        }, { emitEvent: false });
+        this.soapFormService.lastSavedSnapshot.set(this.soapForm.getRawValue());
+      }
+    });
+
+    this.soapForm.valueChanges.subscribe(() => {
+      if (this.visit()?.status === 'Finalized') return;
+      this.autoSaveStatus.set('saving');
+      this.soapFormService.scheduleAutoSave(
+        this.visitId,
+        this.soapForm,
+        (dto: UpdateSOAPNoteCommand) => this.saveSoap(dto),
+      );
+    });
   }
 
   async ngOnInit() {
@@ -102,17 +111,17 @@ export class VisitDetailComponent implements OnInit {
     await this.loadVisit();
   }
 
+  canDeactivate(): boolean {
+    if (this.soapFormService.isDirty(this.soapForm)) {
+      return confirm('\u0644\u062F\u064A\u0643 \u062A\u063A\u064A\u064A\u0631\u0627\u062A \u063A\u064A\u0631 \u0645\u062D\u0641\u0648\u0638\u0629. \u0647\u0644 \u062A\u0631\u064A\u062F \u0627\u0644\u0645\u063A\u0627\u062F\u0631\u0629\u061F');
+    }
+    return true;
+  }
+
   private async loadVisit() {
     try {
       const result = await firstValueFrom(this.visitsClient.clinicalVisitsGET(this.visitId));
       this.visit.set(result);
-      
-      // Initialize form signals
-      this.soap.subjective.set(result.subjective || '');
-      this.soap.objective.set(result.objective || '');
-      this.soap.assessment.set(result.assessment || '');
-      this.soap.plan.set(result.plan || '');
-
     } catch (err) {
       this.notifications.error('Failed to load visit details.');
     } finally {
@@ -120,26 +129,20 @@ export class VisitDetailComponent implements OnInit {
     }
   }
 
-  onSoapChange() {
-    if (this.visit()?.status === 'Finalized') return;
-    this.soapUpdate$.next();
-  }
-
-  async saveSOAP() {
-    if (this.visit()?.status === 'Finalized') return;
-    
+  async saveSoap(dto: UpdateSOAPNoteCommand) {
     this.isSaving.set(true);
     try {
-      const command = new UpdateSOAPNoteCommand({ 
-        visitId: this.visitId, 
-        subjectiveNote: this.soap.subjective(),
-        objectiveNote: this.soap.objective(),
-        assessmentNote: this.soap.assessment(),
-        planNote: this.soap.plan()
-      });
-      await firstValueFrom(this.visitsClient.soap(this.visitId, command));
+      dto.visitId = this.visitId;
+      await firstValueFrom(this.visitsClient.soap(this.visitId, dto));
       this.lastSaved.set(new Date());
+      this.autoSaveStatus.set('saved');
+      this.soapFormService.lastSavedSnapshot.set(this.soapForm.getRawValue());
+      this.soapForm.markAsPristine();
+      setTimeout(() => {
+        if (this.autoSaveStatus() === 'saved') this.autoSaveStatus.set('idle');
+      }, 3000);
     } catch (err: any) {
+      this.autoSaveStatus.set('error');
       this.notifications.error('Auto-save failed');
     } finally {
       this.isSaving.set(false);
@@ -152,9 +155,9 @@ export class VisitDetailComponent implements OnInit {
 
     try {
       const command = new AddVitalSignCommand({
-        visitId: this.visitId, 
+        visitId: this.visitId,
         vitalSignType: v.type as any,
-        value: parseFloat(v.value) || 0, 
+        value: parseFloat(v.value) || 0,
         unit: v.unit,
       });
       await firstValueFrom(this.visitsClient.vitalSigns(this.visitId, command));
@@ -166,64 +169,17 @@ export class VisitDetailComponent implements OnInit {
     }
   }
 
-  async addDiagnosis() {
-    const d = this.diagnosis();
-    if (!d.icdCode || !d.description) return;
-
-    try {
-      const command = new AddDiagnosisCommand({ 
-        visitId: this.visitId, 
-        icD10Code: d.icdCode,
-        codeDescription: d.description
-      });
-      await firstValueFrom(this.visitsClient.diagnoses(this.visitId, command));
-      this.notifications.success('Diagnosis added.');
-      this.diagnosis.set({ icdCode: '', description: '' });
-      await this.loadVisit();
-    } catch (err) {
-      this.notifications.error('Failed to add diagnosis.');
-    }
-  }
-
-  async addPrescription() {
-    const rx = this.newRx();
-    if (!rx.medicationName) return;
-
-    try {
-      const item = new PrescriptionItemDto({
-        medicationName: rx.medicationName,
-        dosage: rx.dosage,
-        frequency: rx.frequency,
-        duration: rx.duration,
-        instructions: rx.instructions
-      });
-      
-      const command = new CreatePrescriptionCommand({
-        visitId: this.visitId,
-        items: [item]
-      });
-
-      await firstValueFrom(this.visitsClient.prescriptions(this.visitId, command));
-      this.notifications.success('Prescription added.');
-      this.newRx.set({ medicationName: '', dosage: '', frequency: '', duration: '', instructions: '' });
-      this.showRxForm.set(false);
-      await this.loadVisit();
-    } catch (err) {
-      this.notifications.error('Failed to add prescription.');
-    }
-  }
-
   async finalizeVisit() {
     if (this.visit()?.status === 'Finalized') return;
-    
-    // Quick validation
-    if (!this.soap.assessment() || !this.soap.plan()) {
-      this.notifications.warning('Assessment and Plan are required before finalizing.');
+
+    if (this.soapForm.invalid) {
+      this.soapForm.markAllAsTouched();
+      this.notifications.warning('Please fill all required SOAP fields before finalizing.');
       return;
     }
 
     if (!confirm('Finalize this clinical visit? This will lock the records and generate an invoice.')) return;
-    
+
     try {
       this.isSaving.set(true);
       await firstValueFrom(this.visitsClient.finalize(this.visitId));
@@ -251,11 +207,12 @@ export class VisitDetailComponent implements OnInit {
     this.vital.update(v => ({ ...v, [key]: value }));
   }
 
-  updateDiagnosis(key: string, value: any) {
-    this.diagnosis.update(d => ({ ...d, [key]: value }));
-  }
-
-  updateNewRx(key: string, value: any) {
-    this.newRx.update(r => ({ ...r, [key]: value }));
+  onAddToInvoice(procedure: any) {
+    this.router.navigate(['/invoices/create'], {
+      queryParams: {
+        visitId: this.visitId,
+        patientId: (this.visit() as any)?.patientId,
+      },
+    });
   }
 }

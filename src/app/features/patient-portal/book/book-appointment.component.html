@@ -28,17 +28,17 @@
     <div class="flex items-center justify-center gap-0 mb-10">
       @for (s of [1,2,3,4]; track s) {
         <div class="flex items-center">
-          <div [class]="state().step >= s
+          <div [class]="step() >= s
             ? 'w-9 h-9 rounded-full bg-mq-teal flex items-center justify-center text-white text-sm font-bold shadow-teal-glow-sm'
             : 'w-9 h-9 rounded-full bg-mq-800 border-2 border-mq-700 flex items-center justify-center text-mq-s400 text-sm'">
-            @if (state().step > s) {
+            @if (step() > s) {
               <lucide-icon name="check" [size]="16"/>
             } @else {
               {{ s }}
             }
           </div>
           @if (s < 4) {
-            <div [class]="state().step > s
+            <div [class]="step() > s
               ? 'w-16 h-0.5 bg-mq-teal'
               : 'w-16 h-0.5 bg-mq-700'"></div>
           }
@@ -48,14 +48,14 @@
 
     <!-- Step Labels -->
     <div class="flex justify-between text-xs text-mq-s400 mb-10 px-0">
-      <span [class]="state().step===1?'text-mq-t400 font-semibold':''">Identity</span>
-      <span [class]="state().step===2?'text-mq-t400 font-semibold':''">Specialty</span>
-      <span [class]="state().step===3?'text-mq-t400 font-semibold':''">Doctor & Slot</span>
-      <span [class]="state().step===4?'text-mq-t400 font-semibold':''">Confirm</span>
+      <span [class]="step()===1?'text-mq-t400 font-semibold':''">Identity</span>
+      <span [class]="step()===2?'text-mq-t400 font-semibold':''">Specialty</span>
+      <span [class]="step()===3?'text-mq-t400 font-semibold':''">Doctor &amp; Slot</span>
+      <span [class]="step()===4?'text-mq-t400 font-semibold':''">Confirm</span>
     </div>
 
     <!-- STEP 1: Identity -->
-    @if (state().step === 1) {
+    @if (step() === 1) {
       <div class="glass p-8 rounded-2xl">
         <h2 class="text-white font-bold text-xl mb-2">Who are you?</h2>
         <p class="text-mq-s400 text-sm mb-6">
@@ -63,29 +63,32 @@
           Don't have one?
           <a routerLink="/register" class="text-mq-t400 hover:underline">Register here</a>
         </p>
-        <div class="space-y-4">
+        <form [formGroup]="mrnForm" (ngSubmit)="findPatient()" class="space-y-4">
           <div>
             <label class="mq-label">MRN or National ID</label>
-            <input type="text" [(ngModel)]="state().mrn"
-                   class="mq-input" placeholder="MQ-2026-XXXXX"/>
+            <input type="text"
+                   formControlName="mrn"
+                   class="mq-input"
+                   placeholder="MQ-2026-XXXXX"/>
+            <app-form-error [control]="mrnForm.controls.mrn"/>
           </div>
-          <button (click)="findPatient()"
+          <button type="submit"
                   class="btn-primary w-full flex items-center justify-center gap-2"
-                  [disabled]="isLoading()||!state().mrn">
-            @if (isLoading()) {
+                  [disabled]="isLoadingPatient() || mrnForm.invalid">
+            @if (isLoadingPatient()) {
               <span class="w-4 h-4 rounded-full border-2 border-white/30
                            border-t-white animate-spin"></span>
             }
             Find My Record →
           </button>
-        </div>
+        </form>
 
-        @if (state().patient) {
+        @if (foundPatient()) {
           <div class="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
             <p class="text-emerald-400 font-semibold text-sm">
-              ✓ Welcome back, {{ state().patient.firstName }} {{ state().patient.lastName }}!
+              ✓ Welcome back, {{ foundPatient()!.firstName ?? foundPatient()!.fullName }}!
             </p>
-            <p class="text-mq-s400 text-xs mt-1">MRN: {{ state().patient.mrn }}</p>
+            <p class="text-mq-s400 text-xs mt-1">MRN: {{ foundPatient()!.mrn }}</p>
             <button (click)="setStep(2)"
                     class="btn-primary w-full mt-4">
               Continue →
@@ -96,28 +99,30 @@
     }
 
     <!-- STEP 2: Specialty -->
-    @if (state().step === 2) {
+    @if (step() === 2) {
       <div class="glass p-8 rounded-2xl">
         <h2 class="text-white font-bold text-xl mb-6">Select Specialty</h2>
         <div class="grid grid-cols-2 gap-3">
           @for (spec of specialties; track spec) {
-            <button (click)="selectSpecialty(spec)"
-                    [class]="state().specialty === spec
+            <button type="button"
+                    (click)="selectSpecialty(spec)"
+                    [class]="selectedSpecialty() === spec
                       ? 'p-4 rounded-xl border-2 border-mq-teal bg-mq-teal/10 text-white font-semibold text-sm text-left'
                       : 'p-4 rounded-xl border border-mq-700 bg-mq-navy/60 text-mq-s400 text-sm text-left hover:border-mq-teal/50 hover:text-white transition-all'">
               {{ spec }}
             </button>
           }
         </div>
-        <button (click)="setStep(1)"
+        <button type="button" (click)="setStep(1)"
                 class="btn-ghost w-full mt-6">← Back</button>
       </div>
     }
 
     <!-- STEP 3: Doctor + Slot -->
-    @if (state().step === 3) {
+    @if (step() === 3) {
       <div class="space-y-4">
-        @if (isLoading()) {
+
+        @if (isLoadingDoctors()) {
           <div class="glass p-8 text-center rounded-2xl">
             <span class="w-8 h-8 rounded-full border-2 border-mq-teal/30
                          border-t-mq-teal animate-spin inline-block"></span>
@@ -128,115 +133,137 @@
             <h3 class="text-white font-bold mb-4">Choose a Doctor</h3>
             <div class="space-y-3">
               @for (doc of doctors(); track doc.id) {
-                <button (click)="selectDoctor(doc)"
-                        [class]="state().doctor?.id===doc.id
+                <button type="button"
+                        (click)="selectDoctor(doc)"
+                        [class]="selectedDoctor()?.id === doc.id
                           ? 'w-full flex items-center gap-4 p-4 rounded-xl border-2 border-mq-teal bg-mq-teal/10'
                           : 'w-full flex items-center gap-4 p-4 rounded-xl border border-mq-700 hover:border-mq-teal/40 transition-all'">
+                  <!-- Avatar: DoctorSummaryDto only has fullName, no firstName/lastName -->
                   <div class="w-11 h-11 rounded-full bg-gradient-to-br from-mq-teal to-mq-t600
                               flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {{ doc.firstName?.[0] }}{{ doc.lastName?.[0] }}
+                    {{ doc.fullName?.[0] ?? 'D' }}
                   </div>
                   <div class="text-left">
                     <p class="text-white font-semibold text-sm">
-                      Dr. {{ doc.firstName }} {{ doc.lastName }}
+                      Dr. {{ doc.fullName }}
                     </p>
                     <p class="text-mq-s400 text-xs">{{ doc.specialty }}</p>
                   </div>
-                  @if (state().doctor?.id===doc.id) {
+                  @if (selectedDoctor()?.id === doc.id) {
                     <lucide-icon name="check-circle" class="text-mq-t400 ml-auto" [size]="18"/>
                   }
                 </button>
               }
+              @if (doctors().length === 0) {
+                <p class="text-mq-s400 text-sm text-center py-4">No doctors found for this specialty.</p>
+              }
             </div>
           </div>
 
-          <!-- Time slots -->
-          @if (state().doctor) {
-            <div class="glass p-6 rounded-2xl">
+          <!-- Date + Time slots — shown when doctor selected -->
+          @if (selectedDoctor()) {
+            <div class="glass p-6 rounded-2xl" [formGroup]="slotForm">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-white font-bold">Select Date & Slot</h3>
-                <input type="date" [value]="selectedDate()" (change)="onDateSelect($any($event.target).value)" 
+                <h3 class="text-white font-bold">Select Date &amp; Slot</h3>
+                <input type="date"
+                       data-testid="date-input"
+                       formControlName="date"
+                       [min]="tomorrow()"
+                       (change)="onDateChange($event)"
                        class="mq-input py-1 px-2 text-xs w-auto min-w-[130px] h-8 bg-mq-800 border-mq-700 text-white rounded-lg focus:border-mq-teal"/>
               </div>
-              
-              @if (slots().length) {
-                <div class="grid grid-cols-3 gap-2">
-                  @for (slot of slots(); track slot) {
-                    <button (click)="setSlot(slot)"
-                            [class]="state().slot?.startTime?.getTime()===slot.startTime?.getTime()
-                              ? 'py-2.5 rounded-xl text-sm font-semibold bg-mq-teal text-white'
-                              : 'py-2.5 rounded-xl text-sm font-medium border border-mq-700 text-mq-s400 hover:border-mq-teal/50 hover:text-white transition-all'">
-                      {{ slot.startTime | date:'h:mm a' }}
+              <app-form-error [control]="slotForm.controls.date"/>
+
+              <!-- Slots grid -->
+              @if (isLoadingSlots()) {
+                <div class="flex justify-center py-6">
+                  <span class="w-6 h-6 rounded-full border-2 border-mq-teal/30
+                               border-t-mq-teal animate-spin inline-block"></span>
+                </div>
+              } @else if (slotForm.controls.doctorId.value && slotForm.controls.date.value && slots().length === 0) {
+                <p class="text-sm py-3" style="color:var(--mq-danger-600,#dc2626)">
+                  لا توجد مواعيد متاحة في هذا اليوم
+                </p>
+              } @else {
+                <div class="slots-grid" data-testid="slots-grid">
+                  @for (slot of slots(); track slot.time) {
+                    <button type="button"
+                            class="slot-btn"
+                            [class.active]="slotForm.controls.timeSlot.value === slot.time"
+                            (click)="selectSlot(slot.time!)">
+                      {{ slot.time }}
                     </button>
                   }
                 </div>
-              } @else {
-                <p class="text-mq-s400 text-sm text-center py-4">No available slots for this date.</p>
               }
+              <app-form-error [control]="slotForm.controls.timeSlot"/>
             </div>
           }
 
-          <!-- Reason -->
-          @if (state().slot) {
-            <div class="glass p-6 rounded-2xl">
+          <!-- Reason + Continue -->
+          @if (slotForm.controls.timeSlot.value) {
+            <div class="glass p-6 rounded-2xl" [formGroup]="detailForm">
               <label class="mq-label">Reason for visit</label>
-              <textarea [ngModel]="state().reason"
-                        (ngModelChange)="updateReason($event)"
+              <textarea formControlName="chiefComplaint"
                         class="mq-input h-24 resize-none mt-1"
                         placeholder="Describe your symptoms briefly..."></textarea>
-              <button (click)="setStep(4)"
+              <button type="button"
+                      (click)="setStep(4)"
                       class="btn-primary w-full mt-4"
-                      [disabled]="!state().doctor||!state().slot">
-                Review & Confirm →
+                      [disabled]="slotForm.invalid">
+                Review &amp; Confirm →
               </button>
             </div>
           }
         }
-        <button (click)="setStep(2)"
+
+        <button type="button" (click)="setStep(2)"
                 class="btn-ghost w-full">← Back</button>
       </div>
     }
 
     <!-- STEP 4: Confirm -->
-    @if (state().step === 4 && !confirmed()) {
+    @if (step() === 4 && !confirmed()) {
       <div class="glass p-8 rounded-2xl">
-        <h2 class="text-white font-bold text-xl mb-6">Review & Confirm</h2>
+        <h2 class="text-white font-bold text-xl mb-6">Review &amp; Confirm</h2>
         <div class="space-y-3 mb-8">
           <div class="flex justify-between py-3 border-b border-mq-700">
             <span class="text-mq-s400 text-sm">Patient</span>
             <span class="text-white font-medium text-sm">
-              {{ state().patient?.firstName }} {{ state().patient?.lastName }}
+              {{ foundPatient()?.firstName ?? foundPatient()?.fullName }}
             </span>
           </div>
           <div class="flex justify-between py-3 border-b border-mq-700">
             <span class="text-mq-s400 text-sm">Doctor</span>
             <span class="text-white font-medium text-sm">
-              Dr. {{ state().doctor?.firstName }} {{ state().doctor?.lastName }}
+              Dr. {{ selectedDoctor()?.fullName }}
             </span>
           </div>
           <div class="flex justify-between py-3 border-b border-mq-700">
-            <span class="text-mq-s400 text-sm">Date & Time</span>
+            <span class="text-mq-s400 text-sm">Date &amp; Time</span>
             <span class="text-mq-t400 font-semibold text-sm">
-              {{ state().slot?.startTime | date:'EEE, MMM d · h:mm a' }}
+              {{ slotForm.controls.date.value }} · {{ slotForm.controls.timeSlot.value }}
             </span>
           </div>
           <div class="flex justify-between py-3">
             <span class="text-mq-s400 text-sm">Reason</span>
             <span class="text-white text-sm max-w-[60%] text-right">
-              {{ state().reason || '—' }}
+              {{ detailForm.controls.chiefComplaint.value || '—' }}
             </span>
           </div>
         </div>
-        <button (click)="confirmBooking()"
+        <button type="button"
+                (click)="confirmBooking()"
+                data-testid="submit-btn"
                 class="btn-primary w-full flex items-center justify-center gap-2"
-                [disabled]="isLoading()">
-          @if (isLoading()) {
+                [disabled]="isSaving() || isLoadingSlots()">
+          @if (isSaving()) {
             <span class="w-4 h-4 rounded-full border-2 border-white/30
                          border-t-white animate-spin"></span>
           }
           Confirm Booking →
         </button>
-        <button (click)="setStep(3)"
+        <button type="button" (click)="setStep(3)"
                 class="btn-ghost w-full mt-3">← Edit</button>
       </div>
     }
@@ -257,20 +284,21 @@
           <div class="flex justify-between text-sm">
             <span class="text-mq-s400">Reference</span>
             <span class="text-mq-t400 font-mono font-bold">
-              {{ confirmed().referenceNumber }}
+              {{ confirmed()!.referenceNumber }}
             </span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-mq-s400">Doctor</span>
-            <span class="text-white">{{ confirmed().doctorName }}</span>
+            <span class="text-white">{{ confirmed()!.doctorName }}</span>
           </div>
           <div class="flex justify-between text-sm">
-            <span class="text-mq-s400">Date & Time</span>
-            <span class="text-white">{{ confirmed().scheduledAt | date:'EEE, MMM d · h:mm a' }}</span>
+            <span class="text-mq-s400">Date &amp; Time</span>
+            <span class="text-white">{{ confirmed()!.scheduledAt | date:'EEE, MMM d · h:mm a' }}</span>
           </div>
         </div>
         <a routerLink="/" class="btn-ghost w-full block text-center">← Back to Home</a>
       </div>
     }
+
   </div>
 </div>

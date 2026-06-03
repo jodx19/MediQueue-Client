@@ -8,11 +8,13 @@ import {
   ClinicalVisitDetailDto 
 } from '../../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
+import { FileUploadComponent } from '../../../shared/components/file-upload/file-upload.component';
+import { AttachmentsListComponent } from '../../../shared/components/attachments-list/attachments-list.component';
 
 @Component({
   selector: 'app-my-records',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, FileUploadComponent, AttachmentsListComponent],
   templateUrl: './my-records.component.html',
 })
 export class MyRecordsComponent implements OnInit {
@@ -27,7 +29,7 @@ export class MyRecordsComponent implements OnInit {
   selectedVisit = signal<ClinicalVisitDetailDto | null>(null);
   isLoadingDetail = signal(false);
   showDetailModal = signal(false);
-  activeTab = signal<'summary' | 'vitals' | 'diagnoses' | 'prescriptions' | 'orders'>('summary');
+  activeTab = signal<'summary' | 'vitals' | 'diagnoses' | 'prescriptions' | 'orders' | 'attachments'>('summary');
 
   ngOnInit() {
     this.loadRecords();

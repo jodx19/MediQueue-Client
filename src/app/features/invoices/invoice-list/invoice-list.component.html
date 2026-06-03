@@ -3,10 +3,16 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight">Invoices</h1>
+      <h1 class="text-3xl font-black text-white tracking-tight" data-testid="page-title">Invoices</h1>
       <p class="text-mq-s400 text-sm mt-1">Billing & payment management</p>
     </div>
     <div class="flex items-center gap-2">
+      <button (click)="router.navigate(['/invoices/revenue'])"
+              *hasRole="['Admin']"
+              class="btn-ghost flex items-center gap-2 text-xs py-2 px-3 bg-mq-800 hover:bg-mq-700/80 border border-mq-700 text-white rounded-lg transition-colors">
+        <lucide-icon name="bar-chart-3" [size]="14"/>
+        Revenue Report
+      </button>
       <button (click)="exportCSV()" class="btn-ghost flex items-center gap-2 text-xs py-2 px-3 bg-mq-800 hover:bg-mq-700/80 border border-mq-700 text-white rounded-lg transition-colors">
         <lucide-icon name="download" [size]="14"/>
         Export CSV
@@ -19,6 +25,11 @@
               class="btn-ghost flex items-center gap-2 text-xs py-2 px-3 bg-mq-800 hover:bg-mq-700/80 border border-mq-700 text-white rounded-lg transition-colors">
         <lucide-icon name="refresh-cw" [size]="14" [class.animate-spin]="isLoading()"/>
         Refresh
+      </button>
+      <button (click)="router.navigate(['/invoices/create'])" data-testid="create-invoice-btn"
+              class="btn-primary flex items-center gap-2 text-xs py-2 px-4 rounded-lg transition-colors">
+        <lucide-icon name="plus" [size]="14"/>
+        Create Invoice
       </button>
     </div>
   </div>
@@ -42,14 +53,14 @@
   <!-- Filter tabs -->
   <div class="flex gap-1 mb-6 bg-mq-800/50 rounded-xl p-1 w-fit border border-mq-700">
     @for (tab of [
-      {value:'', label:'All'},
-      {value:'Pending', label:'Pending'},
-      {value:'Paid', label:'Paid'},
-      {value:'Overdue', label:'Overdue'},
-      {value:'Cancelled', label:'Cancelled'}
+      {value: '', label:'All'},
+      {value: '2', label:'Sent'},
+      {value: '3', label:'Paid'},
+      {value: '5', label:'Overdue'},
+      {value: '6', label:'Cancelled'}
     ]; track tab.value) {
-      <button (click)="filter.set(tab.value)"
-              [class]="filter() === tab.value
+      <button (click)="setFilter(tab.value)"
+              [class]="(filter()?.toString() ?? '') === tab.value
                 ? 'px-4 py-1.5 rounded-lg bg-mq-teal text-white text-sm font-semibold transition-all'
                 : 'px-4 py-1.5 rounded-lg text-mq-s400 hover:text-white text-sm transition-all'">
         {{ tab.label }}
@@ -104,7 +115,7 @@
                 </span>
               </td>
               <td class="px-4 py-3">
-                <span [class]="statusClass(inv.status)">{{ inv.status }}</span>
+                <span data-testid="invoice-status-badge" [class]="inv.status | invoiceStatus:'badge'">{{ inv.status | invoiceStatus:'label' }}</span>
               </td>
               <td class="px-4 py-3 text-mq-s400 text-sm">
                 {{ inv.createdAt | date:'MMM d, y' }}

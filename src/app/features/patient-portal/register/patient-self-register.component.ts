@@ -16,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 export class PatientSelfRegisterComponent {
   private patientsClient = inject(PatientsClient);
   private apiErrorHandler = inject(ApiErrorHandlerService);
+  private router = inject(Router);
 
   step = signal<1|2|3>(1);
   isLoading = signal(false);
@@ -75,6 +76,9 @@ export class PatientSelfRegisterComponent {
         })
       ));
       this.result.set(res);
+      this.router.navigate(['/auth/patient-login'], {
+        queryParams: { mrn: res.medicalRecordNumber }
+      });
     } catch(e:any) {
       this.apiErrorHandler.handle(e);
     } finally {
@@ -83,8 +87,8 @@ export class PatientSelfRegisterComponent {
   }
 
   copyMrn() {
-    if (this.result()?.mrn) {
-      navigator.clipboard.writeText(this.result().mrn);
+    if (this.result()?.medicalRecordNumber) {
+      navigator.clipboard.writeText(this.result().medicalRecordNumber);
     }
   }
 }

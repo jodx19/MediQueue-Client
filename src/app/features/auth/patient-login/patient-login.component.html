@@ -82,6 +82,7 @@
             </lucide-icon>
             <input
               id="mrn-input"
+              data-testid="mrn"
               type="text"
               name="mrn"
               [(ngModel)]="mrn"
@@ -106,6 +107,7 @@
             </lucide-icon>
             <input
               id="dob-input"
+              data-testid="dob"
               type="date"
               name="dateOfBirth"
               [(ngModel)]="dateOfBirth"
@@ -120,6 +122,7 @@
         <!-- Submit -->
         <button
           id="patient-login-btn"
+          data-testid="login-btn"
           type="submit"
           [disabled]="isLoading()"
           class="w-full bg-gradient-to-r from-mq-teal to-mq-t600 text-white font-bold
