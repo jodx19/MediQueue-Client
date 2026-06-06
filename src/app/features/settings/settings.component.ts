@@ -1,136 +1,114 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../core/services/notification.service';
-
-interface WorkingDay {
-  day: string;
-  active: boolean;
-  start: string;
-  end: string;
-}
+import { SettingsService, ClinicSettingsDto } from '../../core/services/settings.service';
+import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
+import { FormErrorComponent } from '../../shared/components/form-error/form-error.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    LucideAngularModule,
+    FormErrorComponent,
+    LoadingSkeletonComponent
+  ],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {
-  private readonly notifications = inject(NotificationService);
+  private settingsService = inject(SettingsService);
+  private notificationService = inject(NotificationService);
+  private apiErrorHandler = inject(ApiErrorHandlerService);
+  private fb = inject(FormBuilder);
+
+  // TODO Step 10: this component will read tenantId
+  // from AuthService.currentUser().tenantId
+  // and display tenant-specific settings only
 
   activeTab = signal<'profile' | 'hours' | 'medical' | 'specialties' | 'notifications' | 'integrations'>('profile');
+  isLoading = signal(false);
   isSaving = signal(false);
+  currentSettings = signal<ClinicSettingsDto | null>(null);
 
-  // Clinic Profile State
-  profileSettings = signal({
-    clinicName: 'MediQueue Clinic Hub',
-    slogan: 'Premium Multi-Specialty Electronic Health Systems',
-    address: '128 Medical Center Plaza, Downtown District',
-    phone: '+20 123 456 7890',
-    email: 'contact@mediqueue.clinic',
-    currency: 'USD',
-    taxNumber: 'TX-9876-5432-EMR',
-    logoGlowColor: 'teal',
+  form = this.fb.group({
+    clinicName:    ['', [Validators.required, Validators.maxLength(200)]],
+    clinicPhone:   ['', [Validators.required]],
+    clinicEmail:   ['', [Validators.email]],
+    clinicAddress: [''],
+    workStartTime: ['08:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+    workEndTime:   ['17:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+    appointmentDurationMinutes: [30, [Validators.required, Validators.min(10), Validators.max(120)]],
+    currency:     ['USD', [Validators.required, Validators.maxLength(3)]],
+    timeZone:     ['Egypt Standard Time'],
+    allowOnlineBooking:        [true],
+    requireDepositForBooking:  [false],
+    depositAmount: [0, [Validators.min(0)]],
   });
 
-  // Clinical Hours State
-  workingDays = signal<WorkingDay[]>([
-    { day: 'Sunday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Monday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Tuesday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Wednesday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Thursday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Friday', active: false, start: '09:00', end: '17:00' },
-    { day: 'Saturday', active: false, start: '10:00', end: '15:00' },
-  ]);
-
-  // Medical/Appointments State
-  medicalSettings = signal({
-    defaultDuration: 30,
-    emergencyFee: 150,
-    commissionRate: 15,
-    customInvoiceNotes: 'Thank you for choosing MediQueue Clinic. All billing is secured & encrypted.',
-    autoLockSoapNotes: true,
-  });
-
-  // Integration Keys State
-  integrationKeys = signal({
-    stripePublicKey: 'pk_test_51Nx...A890',
-    stripeSecretKey: 'sk_test_51Nx...B123',
-    paypalClientId: 'AaX_Y...P456',
-    enableSMSAlerts: true,
-    enableEmailReminders: true,
-  });
-
-  // Specialties State
-  specialties = signal<string[]>(['General Medicine', 'Cardiology', 'Pediatrics', 'Dermatology', 'Orthopedics']);
-
-  // Notification Preferences State
-  notificationPrefs = signal([
-    { id: 'sms_appointment', label: 'SMS on appointment booked', desc: 'Send SMS when a patient books', enabled: true },
-    { id: 'email_invoice', label: 'Email on invoice paid', desc: 'Send receipt via email', enabled: true },
-    { id: 'sms_reminder', label: 'SMS reminder 24h before', desc: 'Remind patients of upcoming appointments', enabled: false },
-  ]);
-
-  ngOnInit() {
-    this.loadSettings();
-  }
-
-  loadSettings() {
+  async ngOnInit(): Promise<void> {
+    this.isLoading.set(true);
     try {
-      const storedProfile = localStorage.getItem('mq_settings_profile');
-      if (storedProfile) this.profileSettings.set(JSON.parse(storedProfile));
-
-      const storedHours = localStorage.getItem('mq_settings_hours');
-      if (storedHours) this.workingDays.set(JSON.parse(storedHours));
-
-      const storedMedical = localStorage.getItem('mq_settings_medical');
-      if (storedMedical) this.medicalSettings.set(JSON.parse(storedMedical));
-
-      const storedIntegrations = localStorage.getItem('mq_settings_integrations');
-      if (storedIntegrations) this.integrationKeys.set(JSON.parse(storedIntegrations));
-
-      const storedSpecialties = localStorage.getItem('mq_settings_specialties');
-      if (storedSpecialties) this.specialties.set(JSON.parse(storedSpecialties));
-
-      const storedNotifPrefs = localStorage.getItem('mq_settings_notif_prefs');
-      if (storedNotifPrefs) this.notificationPrefs.set(JSON.parse(storedNotifPrefs));
-    } catch (e) {
-      this.notifications.error('Failed to load clinic settings from storage');
+      const settings = await firstValueFrom(this.settingsService.getSettings());
+      this.currentSettings.set(settings);
+      this.form.patchValue({
+        clinicName:    settings.clinicName,
+        clinicPhone:   settings.clinicPhone,
+        clinicEmail:   settings.clinicEmail,
+        clinicAddress: settings.clinicAddress,
+        workStartTime: settings.workStartTime,
+        workEndTime:   settings.workEndTime,
+        appointmentDurationMinutes: settings.appointmentDurationMinutes,
+        currency:      settings.currency,
+        timeZone:      settings.timeZone,
+        allowOnlineBooking:       settings.allowOnlineBooking,
+        requireDepositForBooking: settings.requireDepositForBooking,
+        depositAmount: settings.depositAmount,
+      });
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+      this.notificationService.error('Failed to load clinic settings');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
-  saveSettings() {
+  async onSave(): Promise<void> {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     this.isSaving.set(true);
-
-    setTimeout(() => {
-      try {
-        localStorage.setItem('mq_settings_profile', JSON.stringify(this.profileSettings()));
-        localStorage.setItem('mq_settings_hours', JSON.stringify(this.workingDays()));
-        localStorage.setItem('mq_settings_medical', JSON.stringify(this.medicalSettings()));
-        localStorage.setItem('mq_settings_integrations', JSON.stringify(this.integrationKeys()));
-        localStorage.setItem('mq_settings_specialties', JSON.stringify(this.specialties()));
-        localStorage.setItem('mq_settings_notif_prefs', JSON.stringify(this.notificationPrefs()));
-
-        this.notifications.success('Clinic configuration settings updated successfully!');
-      } catch (e) {
-        this.notifications.error('Failed to save clinic configurations. Storage quota exceeded.');
-      } finally {
-        this.isSaving.set(false);
-      }
-    }, 800);
-  }
-
-  addSpecialty() {
-    const name = prompt('Enter specialty name:');
-    if (name?.trim()) {
-      this.specialties.update(list => [...list, name.trim()]);
+    try {
+      const v = this.form.getRawValue();
+      const updated = await firstValueFrom(
+        this.settingsService.updateSettings({
+          clinicName:    v.clinicName!,
+          clinicPhone:   v.clinicPhone!,
+          clinicEmail:   v.clinicEmail ?? '',
+          clinicAddress: v.clinicAddress ?? '',
+          workStartTime: v.workStartTime!,
+          workEndTime:   v.workEndTime!,
+          appointmentDurationMinutes: v.appointmentDurationMinutes!,
+          currency:      v.currency!,
+          timeZone:      v.timeZone!,
+          allowOnlineBooking:       v.allowOnlineBooking ?? true,
+          requireDepositForBooking: v.requireDepositForBooking ?? false,
+          depositAmount: v.depositAmount ?? 0,
+        })
+      );
+      this.currentSettings.set(updated);
+      this.notificationService.success('تم حفظ الإعدادات بنجاح ✓');
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isSaving.set(false);
     }
-  }
-
-  removeSpecialty(index: number) {
-    this.specialties.update(list => list.filter((_, i) => i !== index));
   }
 }

@@ -37,6 +37,12 @@ export const routes: Routes = [
       import('./features/patient-portal/register/patient-self-register.component')
         .then(m => m.PatientSelfRegisterComponent),
   },
+  {
+    path: 'register-clinic',
+    loadComponent: () =>
+      import('./features/tenant-register/tenant-register.component')
+        .then(m => m.TenantRegisterComponent)
+  },
 
   // ══ PATIENT PORTAL — dedicated patient shell ══
   {
@@ -116,6 +122,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/super-admin/super-admin.component')
             .then(m => m.SuperAdminComponent),
+      },
+      {
+        path: 'super-admin/tenants',
+        canActivate: [roleGuard(['Admin', 'SuperAdmin'])],
+        loadComponent: () =>
+          import('./features/super-admin/tenant-list/tenant-list.component')
+            .then(m => m.TenantListComponent),
       },
       {
         path: 'reports',

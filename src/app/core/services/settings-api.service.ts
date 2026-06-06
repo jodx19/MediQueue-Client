@@ -1,32 +1,37 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { SettingsService } from './settings.service';
 
 /**
- * Typed service for the /api/settings endpoints.
- *
- * Uses raw HttpClient independently of the NSwag-generated client
- * (settings endpoints may not be covered by the swagger spec).
- * The api-response interceptor automatically unwraps the ApiResponse envelope.
- *
- * @remarks This is a stub — the backend /api/settings endpoints have not
- * yet been implemented. All methods currently fall back to localStorage
- * in the SettingsComponent.
+ * @deprecated For core clinic settings, use SettingsService instead.
+ * 
+ * TODO Step 10: The endpoints for hours and specialties need to be implemented 
+ * as separate controllers or grouped under the new Settings architecture, properly
+ * tenant-scoped with X-Tenant-Id headers.
  */
 @Injectable({ providedIn: 'root' })
 export class SettingsApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/settings';
+  private readonly settingsService = inject(SettingsService);
 
-  /** Fetch all clinic settings */
+  /** 
+   * @deprecated Delegate to typed SettingsService 
+   */
   getAll(): Observable<any> {
-    return this.http.get<any>(this.baseUrl);
+    return this.settingsService.getSettings();
   }
 
-  /** Update clinic settings */
-  update(settings: any): Observable<void> {
-    return this.http.put<void>(this.baseUrl, settings);
+  /** 
+   * @deprecated Delegate to typed SettingsService 
+   */
+  update(settings: any): Observable<any> {
+    return this.settingsService.updateSettings(settings);
   }
+
+  // --- THESE NEED SEPARATE API ENDPOINTS IN STEP 10 ---
+  // TODO Step 10: inject TenantId from TenantService when these endpoints are built
 
   /** Fetch working hours */
   getWorkingHours(): Observable<any[]> {
