@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../api/mediqueue-api';
+import { TenantService } from '../services/tenant.service';
 import { firstValueFrom } from 'rxjs';
 
 export interface UserSession {
@@ -32,6 +33,7 @@ function decodeJwt(token: string): any {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly authClient = inject(AuthClient);
+  private readonly tenantService = inject(TenantService);
 
   private _session = signal<UserSession | null>(this.loadSession());
 
@@ -65,6 +67,12 @@ export class AuthService {
       sessionStorage.setItem('mq_session', JSON.stringify(session));
       this._session.set(session);
       
+      const tenantIdStr = (decoded as any)?.TenantId || (decoded as any)?.tenantId;
+      const subdomainStr = (decoded as any)?.Subdomain || (decoded as any)?.subdomain;
+      if (tenantIdStr) {
+        this.tenantService.setFromJwt(tenantIdStr, subdomainStr ?? '');
+      }
+
       console.log('User logged in successfully:', session.email);
     } catch (error) {
       console.error('Login failed:', error);
@@ -90,12 +98,20 @@ export class AuthService {
 
     sessionStorage.setItem('mq_session', JSON.stringify(session));
     this._session.set(session);
+
+    const tenantIdStr = (decoded as any)?.TenantId || (decoded as any)?.tenantId;
+    const subdomainStr = (decoded as any)?.Subdomain || (decoded as any)?.subdomain;
+    if (tenantIdStr) {
+      this.tenantService.setFromJwt(tenantIdStr, subdomainStr ?? '');
+    }
+
     console.log('User logged in successfully from response:', session.email);
   }
 
   logout(): void {
     sessionStorage.removeItem('mq_session');
     this._session.set(null);
+    this.tenantService.clear();
   }
 
   getToken(): string | null {

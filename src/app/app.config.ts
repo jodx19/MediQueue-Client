@@ -9,6 +9,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { refreshTokenInterceptor } from './core/interceptors/refresh-token.interceptor';
 import { apiResponseInterceptor } from './core/interceptors/api-response.interceptor';
+import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { API_BASE_URL, AuthClient, PatientsClient, DoctorsClient, AppointmentsClient, ClinicalVisitsClient, InvoicesClient, DashboardClient } from './core/api/mediqueue-api';
 import { environment } from '../environments/environment';
 
@@ -18,7 +19,13 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(
-      withInterceptors([authInterceptor, refreshTokenInterceptor, apiResponseInterceptor, errorInterceptor])
+      withInterceptors([
+        authInterceptor,
+        tenantInterceptor,
+        refreshTokenInterceptor,
+        apiResponseInterceptor,
+        errorInterceptor
+      ])
     ),
     { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
     AuthClient, PatientsClient, DoctorsClient,
