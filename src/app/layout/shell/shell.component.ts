@@ -50,7 +50,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       { label: 'Doctors',     path: '/doctors',       icon: 'stethoscope',      roles: ['Admin', 'Receptionist'] },
       { label: 'Invoices',    path: '/invoices',      icon: 'receipt',          roles: ['Admin', 'Receptionist'] },
       { label: 'Reports',     path: '/reports',       icon: 'bar-chart-3',       roles: ['Admin', 'Doctor'] },
-      { label: 'Staff Admin', path: '/super-admin',   icon: 'shield-check',     roles: ['Admin'] },
+      { label: 'Staff Admin', path: '/super-admin',   icon: 'shield-check',     roles: ['Admin', 'SuperAdmin'] },
       { label: 'Settings',    path: '/settings',      icon: 'settings',         roles: ['Admin'] },
     ];
     return items.filter(item => role && item.roles.includes(role));

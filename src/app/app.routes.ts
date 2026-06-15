@@ -125,7 +125,7 @@ export const routes: Routes = [
       },
       {
         path: 'super-admin/tenants',
-        canActivate: [roleGuard(['Admin', 'SuperAdmin'])],
+        canActivate: [roleGuard(['Admin', 'SuperAdmin']), superAdminGuard],
         loadComponent: () =>
           import('./features/super-admin/tenant-list/tenant-list.component')
             .then(m => m.TenantListComponent),

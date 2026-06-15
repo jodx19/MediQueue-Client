@@ -2,8 +2,7 @@ import { Component, inject, input, output, signal, OnDestroy } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { FormsModule } from '@angular/forms';
-import { from, EMPTY, Subscription } from 'rxjs';
-import { concatMap, tap, catchError } from 'rxjs/operators';
+import { from, EMPTY, Subscription, concatMap, tap, catchError } from 'rxjs';
 import {
   AttachmentService,
   ATTACHMENT_CATEGORIES,

@@ -43,7 +43,7 @@ interface CmdItem {
             @if (filteredItems().length > 0) {
               @for (item of filteredItems(); track item.id; let i = $index) {
                 <button (click)="navigate(item)"
-                        [class.bg-mq-teal/10]="selectedIndex() === i"
+                        [ngClass]="{'bg-mq-teal/10': selectedIndex() === i}"
                         class="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-mq-700/50 transition-colors">
                   <lucide-icon [name]="item.icon" class="text-mq-t400 flex-shrink-0" [size]="16"/>
                   <span class="text-white text-sm flex-1">{{ item.label }}</span>

@@ -4,7 +4,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../core/services/notification.service';
-import { SettingsService, ClinicSettingsDto } from '../../core/services/settings.service';
+import { SettingsService } from '../../core/services/settings.service';
+import { ClinicSettingsDto, UpdateSettingsCommand } from '../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { FormErrorComponent } from '../../shared/components/form-error/form-error.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -35,6 +36,7 @@ export class SettingsComponent implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
   currentSettings = signal<ClinicSettingsDto | null>(null);
+  integrationKeys = signal({ paypalClientId: '', enableSMSAlerts: false, enableEmailReminders: false });
 
   form = this.fb.group({
     clinicName:    ['', [Validators.required, Validators.maxLength(200)]],
@@ -101,7 +103,7 @@ export class SettingsComponent implements OnInit {
           allowOnlineBooking:       v.allowOnlineBooking ?? true,
           requireDepositForBooking: v.requireDepositForBooking ?? false,
           depositAmount: v.depositAmount ?? 0,
-        })
+        } as UpdateSettingsCommand)
       );
       this.currentSettings.set(updated);
       this.notificationService.success('تم حفظ الإعدادات بنجاح ✓');

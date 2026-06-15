@@ -2,9 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, combineLatest } from 'rxjs';
-import { debounceTime, startWith, takeUntil } from 'rxjs/operators';
-import { firstValueFrom } from 'rxjs';
+import { Subject, combineLatest, firstValueFrom, debounceTime, startWith, takeUntil } from 'rxjs';
 import {
   BookAppointmentCommand, AppointmentsClient, DoctorsClient,
   VisitType, AppointmentPriority,

@@ -89,7 +89,7 @@ function makeItem(overrides?: Partial<InvoiceLineItemForm>): InvoiceLineItemForm
           } @else {
             <div class="relative">
               <input type="text" [ngModel]="patientSearchQuery()"
-                     (ngModelChange)="onPatientSearchChange($event)"
+                     (ngModelChange)="patientSearchQueryChanged($event)"
                      placeholder="Search by patient name or MRN..."
                      class="form-input w-full"/>
               @if (patientSearchResults().length > 0) {

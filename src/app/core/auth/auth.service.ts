@@ -1,13 +1,14 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../api/mediqueue-api';
 import { TenantService } from '../services/tenant.service';
+import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
 export interface UserSession {
   token: string;
   refreshToken: string;
   email: string;
-  role: 'Admin' | 'Doctor' | 'Receptionist' | 'Patient';
+  role: 'Admin' | 'Doctor' | 'Receptionist' | 'Patient' | 'SuperAdmin';
   name: string;
   doctorId?: string;
   patientId?: string;
@@ -40,7 +41,10 @@ export class AuthService {
   readonly currentUser  = this._session.asReadonly();
   readonly isLoggedIn   = computed(() => !!this._session());
   readonly userRole     = computed(() => this._session()?.role ?? null);
-  readonly isSuperAdmin = computed(() => this._session()?.role === 'Admin');
+  readonly isSuperAdmin = computed(() => {
+    const s = this._session();
+    return s?.role === 'SuperAdmin' || s?.email === environment.superAdminEmail;
+  });
   readonly refreshToken = computed(() => this._session()?.refreshToken ?? null);
 
   async login(email: string, password: string): Promise<void> {

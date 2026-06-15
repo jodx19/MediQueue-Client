@@ -4552,6 +4552,518 @@ export class PatientsClient implements IPatientsClient {
     }
 }
 
+export interface ISettingsClient {
+    /**
+     * @return OK
+     */
+    settingsGET(): Observable<ClinicSettingsDto>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    settingsPUT(body?: UpdateSettingsCommand | undefined): Observable<ClinicSettingsDto>;
+}
+
+@Injectable()
+export class SettingsClient implements ISettingsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @return OK
+     */
+    settingsGET(): Observable<ClinicSettingsDto> {
+        let url_ = this.baseUrl + "/api/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processSettingsGET(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processSettingsGET(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ClinicSettingsDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ClinicSettingsDto>;
+        }));
+    }
+
+    protected processSettingsGET(response: HttpResponseBase): Observable<ClinicSettingsDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ClinicSettingsDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    settingsPUT(body?: UpdateSettingsCommand | undefined): Observable<ClinicSettingsDto> {
+        let url_ = this.baseUrl + "/api/settings";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processSettingsPUT(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processSettingsPUT(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ClinicSettingsDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ClinicSettingsDto>;
+        }));
+    }
+
+    protected processSettingsPUT(response: HttpResponseBase): Observable<ClinicSettingsDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ClinicSettingsDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+export interface ITenantsClient {
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    provision(body?: ProvisionTenantCommand | undefined): Observable<ProvisionTenantResult>;
+    /**
+     * @return OK
+     */
+    available(subdomain: string): Observable<CheckSubdomainResponse>;
+    /**
+     * @return OK
+     */
+    tenants(): Observable<TenantDto[]>;
+    /**
+     * @return OK
+     */
+    suspend(id: string): Observable<void>;
+    /**
+     * @return OK
+     */
+    activate(id: string): Observable<void>;
+}
+
+@Injectable()
+export class TenantsClient implements ITenantsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    provision(body?: ProvisionTenantCommand | undefined): Observable<ProvisionTenantResult> {
+        let url_ = this.baseUrl + "/api/tenants/provision";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processProvision(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processProvision(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ProvisionTenantResult>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ProvisionTenantResult>;
+        }));
+    }
+
+    protected processProvision(response: HttpResponseBase): Observable<ProvisionTenantResult> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProvisionTenantResult.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    available(subdomain: string): Observable<CheckSubdomainResponse> {
+        let url_ = this.baseUrl + "/api/tenants/{subdomain}/available";
+        if (subdomain === undefined || subdomain === null)
+            throw new globalThis.Error("The parameter 'subdomain' must be defined.");
+        url_ = url_.replace("{subdomain}", encodeURIComponent("" + subdomain));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processAvailable(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processAvailable(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CheckSubdomainResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CheckSubdomainResponse>;
+        }));
+    }
+
+    protected processAvailable(response: HttpResponseBase): Observable<CheckSubdomainResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = CheckSubdomainResponse.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    tenants(): Observable<TenantDto[]> {
+        let url_ = this.baseUrl + "/api/tenants";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processTenants(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processTenants(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<TenantDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<TenantDto[]>;
+        }));
+    }
+
+    protected processTenants(response: HttpResponseBase): Observable<TenantDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(TenantDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    suspend(id: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/tenants/{id}/suspend";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processSuspend(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processSuspend(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processSuspend(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    activate(id: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/tenants/{id}/activate";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processActivate(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processActivate(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processActivate(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface IUsersClient {
     /**
      * @return OK
@@ -9061,6 +9573,386 @@ export interface IPatientSummaryDto {
     isActive?: boolean;
 }
 
+export class UpdateSettingsCommand implements IUpdateSettingsCommand {
+    clinicName?: string | undefined;
+    clinicPhone?: string | undefined;
+    clinicEmail?: string | undefined;
+    clinicAddress?: string | undefined;
+    workStartTime?: string | undefined;
+    workEndTime?: string | undefined;
+    appointmentDurationMinutes?: number;
+    currency?: string | undefined;
+    timeZone?: string | undefined;
+    allowOnlineBooking?: boolean;
+    requireDepositForBooking?: boolean;
+    depositAmount?: number;
+
+    constructor(data?: IUpdateSettingsCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.clinicName = _data["clinicName"];
+            this.clinicPhone = _data["clinicPhone"];
+            this.clinicEmail = _data["clinicEmail"];
+            this.clinicAddress = _data["clinicAddress"];
+            this.workStartTime = _data["workStartTime"];
+            this.workEndTime = _data["workEndTime"];
+            this.appointmentDurationMinutes = _data["appointmentDurationMinutes"];
+            this.currency = _data["currency"];
+            this.timeZone = _data["timeZone"];
+            this.allowOnlineBooking = _data["allowOnlineBooking"];
+            this.requireDepositForBooking = _data["requireDepositForBooking"];
+            this.depositAmount = _data["depositAmount"];
+        }
+    }
+
+    static fromJS(data: any): UpdateSettingsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateSettingsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["clinicName"] = this.clinicName;
+        data["clinicPhone"] = this.clinicPhone;
+        data["clinicEmail"] = this.clinicEmail;
+        data["clinicAddress"] = this.clinicAddress;
+        data["workStartTime"] = this.workStartTime;
+        data["workEndTime"] = this.workEndTime;
+        data["appointmentDurationMinutes"] = this.appointmentDurationMinutes;
+        data["currency"] = this.currency;
+        data["timeZone"] = this.timeZone;
+        data["allowOnlineBooking"] = this.allowOnlineBooking;
+        data["requireDepositForBooking"] = this.requireDepositForBooking;
+        data["depositAmount"] = this.depositAmount;
+        return data;
+    }
+}
+
+export interface IUpdateSettingsCommand {
+    clinicName?: string | undefined;
+    clinicPhone?: string | undefined;
+    clinicEmail?: string | undefined;
+    clinicAddress?: string | undefined;
+    workStartTime?: string | undefined;
+    workEndTime?: string | undefined;
+    appointmentDurationMinutes?: number;
+    currency?: string | undefined;
+    timeZone?: string | undefined;
+    allowOnlineBooking?: boolean;
+    requireDepositForBooking?: boolean;
+    depositAmount?: number;
+}
+
+export class ClinicSettingsDto implements IClinicSettingsDto {
+    id?: string;
+    clinicName?: string | undefined;
+    clinicPhone?: string | undefined;
+    clinicEmail?: string | undefined;
+    clinicAddress?: string | undefined;
+    logoUrl?: string | undefined;
+    workStartTime?: string | undefined;
+    workEndTime?: string | undefined;
+    appointmentDurationMinutes?: number;
+    currency?: string | undefined;
+    timeZone?: string | undefined;
+    allowOnlineBooking?: boolean;
+    requireDepositForBooking?: boolean;
+    depositAmount?: number;
+
+    constructor(data?: IClinicSettingsDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.clinicName = _data["clinicName"];
+            this.clinicPhone = _data["clinicPhone"];
+            this.clinicEmail = _data["clinicEmail"];
+            this.clinicAddress = _data["clinicAddress"];
+            this.logoUrl = _data["logoUrl"];
+            this.workStartTime = _data["workStartTime"];
+            this.workEndTime = _data["workEndTime"];
+            this.appointmentDurationMinutes = _data["appointmentDurationMinutes"];
+            this.currency = _data["currency"];
+            this.timeZone = _data["timeZone"];
+            this.allowOnlineBooking = _data["allowOnlineBooking"];
+            this.requireDepositForBooking = _data["requireDepositForBooking"];
+            this.depositAmount = _data["depositAmount"];
+        }
+    }
+
+    static fromJS(data: any): ClinicSettingsDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ClinicSettingsDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["clinicName"] = this.clinicName;
+        data["clinicPhone"] = this.clinicPhone;
+        data["clinicEmail"] = this.clinicEmail;
+        data["clinicAddress"] = this.clinicAddress;
+        data["logoUrl"] = this.logoUrl;
+        data["workStartTime"] = this.workStartTime;
+        data["workEndTime"] = this.workEndTime;
+        data["appointmentDurationMinutes"] = this.appointmentDurationMinutes;
+        data["currency"] = this.currency;
+        data["timeZone"] = this.timeZone;
+        data["allowOnlineBooking"] = this.allowOnlineBooking;
+        data["requireDepositForBooking"] = this.requireDepositForBooking;
+        data["depositAmount"] = this.depositAmount;
+        return data;
+    }
+}
+
+export interface IClinicSettingsDto {
+    id?: string;
+    clinicName?: string | undefined;
+    clinicPhone?: string | undefined;
+    clinicEmail?: string | undefined;
+    clinicAddress?: string | undefined;
+    logoUrl?: string | undefined;
+    workStartTime?: string | undefined;
+    workEndTime?: string | undefined;
+    appointmentDurationMinutes?: number;
+    currency?: string | undefined;
+    timeZone?: string | undefined;
+    allowOnlineBooking?: boolean;
+    requireDepositForBooking?: boolean;
+    depositAmount?: number;
+}
+
+export class ProvisionTenantCommand implements IProvisionTenantCommand {
+    clinicName?: string | undefined;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    adminPassword?: string | undefined;
+    adminFirstName?: string | undefined;
+    adminLastName?: string | undefined;
+    plan?: TenantPlan;
+
+    constructor(data?: IProvisionTenantCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.clinicName = _data["clinicName"];
+            this.subdomain = _data["subdomain"];
+            this.adminEmail = _data["adminEmail"];
+            this.adminPassword = _data["adminPassword"];
+            this.adminFirstName = _data["adminFirstName"];
+            this.adminLastName = _data["adminLastName"];
+            this.plan = _data["plan"];
+        }
+    }
+
+    static fromJS(data: any): ProvisionTenantCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProvisionTenantCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["clinicName"] = this.clinicName;
+        data["subdomain"] = this.subdomain;
+        data["adminEmail"] = this.adminEmail;
+        data["adminPassword"] = this.adminPassword;
+        data["adminFirstName"] = this.adminFirstName;
+        data["adminLastName"] = this.adminLastName;
+        data["plan"] = this.plan;
+        return data;
+    }
+}
+
+export interface IProvisionTenantCommand {
+    clinicName?: string | undefined;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    adminPassword?: string | undefined;
+    adminFirstName?: string | undefined;
+    adminLastName?: string | undefined;
+    plan?: TenantPlan;
+}
+
+export class ProvisionTenantResult implements IProvisionTenantResult {
+    tenantId?: string;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    portalUrl?: string | undefined;
+
+    constructor(data?: IProvisionTenantResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.tenantId = _data["tenantId"];
+            this.subdomain = _data["subdomain"];
+            this.adminEmail = _data["adminEmail"];
+            this.portalUrl = _data["portalUrl"];
+        }
+    }
+
+    static fromJS(data: any): ProvisionTenantResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProvisionTenantResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["tenantId"] = this.tenantId;
+        data["subdomain"] = this.subdomain;
+        data["adminEmail"] = this.adminEmail;
+        data["portalUrl"] = this.portalUrl;
+        return data;
+    }
+}
+
+export interface IProvisionTenantResult {
+    tenantId?: string;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    portalUrl?: string | undefined;
+}
+
+export class CheckSubdomainResponse implements ICheckSubdomainResponse {
+    available?: boolean;
+
+    constructor(data?: ICheckSubdomainResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.available = _data["available"];
+        }
+    }
+
+    static fromJS(data: any): CheckSubdomainResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new CheckSubdomainResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["available"] = this.available;
+        return data;
+    }
+}
+
+export interface ICheckSubdomainResponse {
+    available?: boolean;
+}
+
+export class TenantDto implements ITenantDto {
+    id?: string;
+    name?: string | undefined;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    plan?: string | undefined;
+    isActive?: boolean;
+    createdAt?: Date;
+    trialEndsAt?: Date;
+    subscriptionEndsAt?: Date | undefined;
+
+    constructor(data?: ITenantDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.subdomain = _data["subdomain"];
+            this.adminEmail = _data["adminEmail"];
+            this.plan = _data["plan"];
+            this.isActive = _data["isActive"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
+            this.trialEndsAt = _data["trialEndsAt"] ? new Date(_data["trialEndsAt"].toString()) : undefined as any;
+            this.subscriptionEndsAt = _data["subscriptionEndsAt"] ? new Date(_data["subscriptionEndsAt"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): TenantDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new TenantDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["subdomain"] = this.subdomain;
+        data["adminEmail"] = this.adminEmail;
+        data["plan"] = this.plan;
+        data["isActive"] = this.isActive;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : undefined as any;
+        data["trialEndsAt"] = this.trialEndsAt ? this.trialEndsAt.toISOString() : undefined as any;
+        data["subscriptionEndsAt"] = this.subscriptionEndsAt ? this.subscriptionEndsAt.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface ITenantDto {
+    id?: string;
+    name?: string | undefined;
+    subdomain?: string | undefined;
+    adminEmail?: string | undefined;
+    plan?: string | undefined;
+    isActive?: boolean;
+    createdAt?: Date;
+    trialEndsAt?: Date;
+    subscriptionEndsAt?: Date | undefined;
+}
+
 export enum AllergySeverity {
     _1 = 1,
     _2 = 2,
@@ -9176,6 +10068,12 @@ export enum PaymentMethod {
 }
 
 export enum ReferralUrgency {
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+}
+
+export enum TenantPlan {
     _1 = 1,
     _2 = 2,
     _3 = 3,

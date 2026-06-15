@@ -8,8 +8,14 @@ export const superAdminGuard: CanActivateFn = () => {
   const router = inject(Router);
   const user = auth.currentUser();
 
-  // Super Admin check: either special email or role Admin
-  const isSuper = user?.email === environment.superAdminEmail || auth.hasRole('Admin');
+  // Safety: if superAdminEmail is not configured → deny access
+  if (!environment.superAdminEmail ||
+      environment.superAdminEmail === 'REPLACE_WITH_SUPERADMIN_EMAIL') {
+    console.warn('[superAdminGuard] SuperAdmin email not configured — denying access');
+    return router.parseUrl('/dashboard');
+  }
+
+  const isSuper = user?.email === environment.superAdminEmail;
 
   if (isSuper) {
     return true;
