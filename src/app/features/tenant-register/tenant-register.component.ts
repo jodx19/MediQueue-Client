@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, Subject, of, firstValueFrom, tap } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import { TenantsClient, CheckSubdomainResponse, TenantPlan, ProvisionTenantCommand } from '../../core/api/mediqueue-api';
 import { NotificationService } from '../../core/services/notification.service';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { FormErrorComponent } from '../../shared/components/form-error/form-error.component';
@@ -125,83 +125,71 @@ import { FormErrorComponent } from '../../shared/components/form-error/form-erro
   `
 })
 export class TenantRegisterComponent implements OnInit {
-  private fb                  = inject(FormBuilder)
-  private http                = inject(HttpClient)
-  private router              = inject(Router)
+  private fb = inject(FormBuilder)
+  private tenantsClient = inject(TenantsClient)
+  private router = inject(Router)
   private notificationService = inject(NotificationService)
-  private apiErrorHandler     = inject(ApiErrorHandlerService)
+  private apiErrorHandler = inject(ApiErrorHandlerService)
 
   // State
-  isSaving          = signal(false)
-  subdomainStatus   = signal<'idle'|'checking'|'available'|'taken'>('idle')
-  registrationDone  = signal(false)
-  portalUrl         = signal('')
+  isSaving = signal(false)
+  subdomainStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  registrationDone = signal(false)
+  portalUrl = signal('')
 
   form = this.fb.nonNullable.group({
-    clinicName:     ['', [Validators.required, Validators.maxLength(200)]],
-    subdomain:      ['', [
+    clinicName: ['', [Validators.required, Validators.maxLength(200)]],
+    subdomain: ['', [
       Validators.required,
       Validators.minLength(4),
       Validators.maxLength(50),
       Validators.pattern(/^[a-z0-9][a-z0-9-]{2,48}[a-z0-9]$/)
     ]],
-    adminEmail:     ['', [Validators.required, Validators.email]],
-    adminPassword:  ['', [
+    adminEmail: ['', [Validators.required, Validators.email]],
+    adminPassword: ['', [
       Validators.required,
       Validators.minLength(8),
       Validators.pattern(/[A-Z]/),
       Validators.pattern(/[0-9]/)
     ]],
     adminFirstName: ['', Validators.required],
-    adminLastName:  ['', Validators.required],
-    plan:           ['Basic'],
-    agreeToTerms:   [false, Validators.requiredTrue]
+    adminLastName: ['', Validators.required],
+    plan: ['Basic'],
+    agreeToTerms: [false, Validators.requiredTrue]
   })
 
-  // Subdomain availability check with debounce
-  private subdomainCheck$ = new Subject<string>()
-
   ngOnInit() {
-    this.subdomainCheck$.pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-      tap(() => this.subdomainStatus.set('checking')),
-      switchMap(sub =>
-        this.http.get<{ available: boolean }>(
-          `/api/tenants/${sub}/available`
-        ).pipe(catchError(() => of({ available: false })))
-      )
-    ).subscribe(result => {
-      this.subdomainStatus.set(
-        result.available ? 'available' : 'taken'
-      )
-    })
-
-    // Trigger check on subdomain change
     this.form.controls.subdomain.valueChanges
-      .subscribe(v => {
-        if (v && v.length >= 4) {
-          this.subdomainCheck$.next(v)
-        } else {
+      .subscribe(async (v: string | null) => {
+        if (!v || v.length < 4) {
+          this.subdomainStatus.set('idle')
+          return
+        }
+        this.subdomainStatus.set('checking')
+        try {
+          const result = await firstValueFrom(this.tenantsClient.available(v))
+          this.subdomainStatus.set(
+            result.available ? 'available' : 'taken'
+          )
+        } catch {
           this.subdomainStatus.set('idle')
         }
       })
 
     // Auto-suggest subdomain from clinic name
     this.form.controls.clinicName.valueChanges
-      .pipe(debounceTime(300))
-      .subscribe(name => {
+      .subscribe((name: string | null) => {
         if (name && !this.form.controls.subdomain.dirty) {
           const suggested = name
             .toLowerCase()
-            .replace(/[^a-z0-9\u0600-\u06FF]/g, '-') // Allow Arabic initially, then remove
-            .replace(/[\u0600-\u06FF]/g, '') // Strip Arabic chars for subdomain
+            .replace(/[^a-z0-9\u0600-\u06FF]/g, '-')
+            .replace(/[\u0600-\u06FF]/g, '')
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '')
             .substring(0, 50)
-          
+
           if (suggested) {
-             this.form.controls.subdomain.setValue(suggested, { emitEvent: true })
+            this.form.controls.subdomain.setValue(suggested, { emitEvent: true })
           }
         }
       })
@@ -209,7 +197,7 @@ export class TenantRegisterComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
     if (this.form.invalid ||
-        this.subdomainStatus() === 'taken') {
+      this.subdomainStatus() === 'taken') {
       this.form.markAllAsTouched()
       return
     }
@@ -217,23 +205,24 @@ export class TenantRegisterComponent implements OnInit {
     this.isSaving.set(true)
     try {
       const v = this.form.getRawValue()
+      const planMap: Record<string, TenantPlan> = {
+        Basic: TenantPlan._1,
+        Pro: TenantPlan._2,
+        Enterprise: TenantPlan._3
+      }
       const result = await firstValueFrom(
-        this.http.post<{
-          tenantId: string
-          subdomain: string
-          portalUrl: string
-        }>('/api/tenants/provision', {
-          clinicName:     v.clinicName,
-          subdomain:      v.subdomain,
-          adminEmail:     v.adminEmail,
-          adminPassword:  v.adminPassword,
-          adminFirstName: v.adminFirstName,
-          adminLastName:  v.adminLastName,
-          plan:           v.plan
-        })
+        this.tenantsClient.provision({
+          clinicName: v.clinicName!,
+          subdomain: v.subdomain!,
+          adminEmail: v.adminEmail!,
+          adminPassword: v.adminPassword!,
+          adminFirstName: v.adminFirstName!,
+          adminLastName: v.adminLastName!,
+          plan: planMap[v.plan!] ?? TenantPlan._1
+        } as ProvisionTenantCommand)
       )
 
-      this.portalUrl.set(result.portalUrl)
+      this.portalUrl.set(result.portalUrl!)
       this.registrationDone.set(true)
       this.notificationService.success('تم تسجيل العيادة بنجاح!');
 

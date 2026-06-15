@@ -1,21 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { TenantsClient, TenantDto } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
-
-interface TenantDto {
-  id: string;
-  name: string;
-  subdomain: string;
-  adminEmail: string;
-  plan: string;
-  isActive: boolean;
-  createdAt: string;
-  trialEndsAt: string;
-  subscriptionEndsAt: string | null;
-}
 
 @Component({
   selector: 'app-tenant-list',
@@ -47,7 +35,7 @@ interface TenantDto {
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                @for (tenant of tenants(); track tenant.id) {
+                @for (tenant of tenants(); track tenant.id!) {
                   <tr>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm font-medium text-gray-900">{{ tenant.name }}</div>
@@ -82,7 +70,9 @@ interface TenantDto {
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       @if (tenant.isActive) {
-                        <button (click)="suspendTenant(tenant.id)" class="text-red-600 hover:text-red-900">إيقاف</button>
+                        <button (click)="suspendTenant(tenant.id!)" class="text-red-600 hover:text-red-900 ml-4">إيقاف</button>
+                      } @else {
+                        <button (click)="activateTenant(tenant.id!)" class="text-green-600 hover:text-green-900">تفعيل</button>
                       }
                     </td>
                   </tr>
@@ -96,7 +86,7 @@ interface TenantDto {
   `
 })
 export class TenantListComponent implements OnInit {
-  private http = inject(HttpClient);
+  private tenantsClient = inject(TenantsClient);
   private notificationService = inject(NotificationService);
   private apiErrorHandler = inject(ApiErrorHandlerService);
 
@@ -110,7 +100,7 @@ export class TenantListComponent implements OnInit {
   async loadTenants() {
     this.isLoading.set(true);
     try {
-      const response = await firstValueFrom(this.http.get<TenantDto[]>('/api/tenants'));
+      const response = await firstValueFrom(this.tenantsClient.tenants());
       this.tenants.set(response || []);
     } catch (err) {
       this.apiErrorHandler.handle(err);
@@ -123,9 +113,21 @@ export class TenantListComponent implements OnInit {
     if (!confirm('هل أنت متأكد من إيقاف هذه العيادة؟')) return;
 
     try {
-      await firstValueFrom(this.http.put(`/api/tenants/${id}/suspend`, {}));
+      await firstValueFrom(this.tenantsClient.suspend(id));
       this.notificationService.success('تم إيقاف العيادة بنجاح');
-      this.loadTenants(); // Reload list
+      this.loadTenants();
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    }
+  }
+
+  async activateTenant(id: string) {
+    if (!confirm('هل أنت متأكد من تفعيل هذه العيادة؟')) return;
+
+    try {
+      await firstValueFrom(this.tenantsClient.activate(id));
+      this.notificationService.success('تم تفعيل العيادة بنجاح ✓');
+      this.loadTenants();
     } catch (err) {
       this.apiErrorHandler.handle(err);
     }

@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { firstValueFrom, Subject, combineLatest, of } from 'rxjs';
-import { debounceTime, filter, tap, switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
+import { firstValueFrom, Subject, combineLatest, of, debounceTime, filter, tap, switchMap, catchError, finalize, takeUntil } from 'rxjs';
 import {
   PatientsClient,
   DoctorsClient,

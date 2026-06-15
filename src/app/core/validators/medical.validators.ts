@@ -1,6 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { Observable, of } from 'rxjs';
-import { map, catchError, debounceTime, take, switchMap } from 'rxjs/operators';
+import { Observable, of, map, catchError, debounceTime, take, switchMap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PatientsClient } from '../api/mediqueue-api';
 import { inject } from '@angular/core';
@@ -76,3 +75,4 @@ export class MedicalValidators {
     };
   }
 }
+
