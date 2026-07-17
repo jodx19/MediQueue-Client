@@ -11,9 +11,11 @@ export const loggedInGuard: CanActivateFn = () => {
     
     // Redirect based on role
     const redirectMap: Record<string, string> = {
-      'Admin': '/dashboard',
-      'Doctor': '/clinical-visits',
+      'Admin':        '/dashboard',
+      'Doctor':       '/my-queue',              // H-2: was /clinical-visits (404)
       'Receptionist': '/appointments',
+      'Patient':      '/my-portal',             // H-2: was missing → fell to /dashboard
+      'SuperAdmin':   '/super-admin/tenants',   // H-2: was missing → fell to /dashboard
     };
 
     const target = redirectMap[role!] ?? '/dashboard';
