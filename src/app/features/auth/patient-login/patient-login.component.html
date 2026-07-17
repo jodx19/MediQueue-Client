@@ -124,7 +124,7 @@
           id="patient-login-btn"
           data-testid="login-btn"
           type="submit"
-          [disabled]="isLoading()"
+          [disabled]="isLoading() || !mrn || !dateOfBirth"
           class="w-full bg-gradient-to-r from-mq-teal to-mq-t600 text-white font-bold
                  rounded-xl py-4 flex items-center justify-center gap-2
                  hover:opacity-90 active:scale-[0.98] transition-all

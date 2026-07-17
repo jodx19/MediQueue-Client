@@ -1,6 +1,7 @@
 import { Component, HostListener, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 
 interface CmdItem {
@@ -14,7 +15,7 @@ interface CmdItem {
 @Component({
   selector: 'app-cmd-k',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, FormsModule],
   template: `
     <!-- Backdrop -->
     @if (isOpen()) {

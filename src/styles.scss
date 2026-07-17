@@ -7,8 +7,7 @@
 /* ══════════════════════════════════════════════════════
    BASE
 ══════════════════════════════════════════════════════ */
-@layer base {
-  *, *::before, *::after { box-sizing: border-box; }
+@layer base {  *, *::before, *::after { box-sizing: border-box; }
 
   html {
     font-family: 'Inter', system-ui, sans-serif;

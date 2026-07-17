@@ -41,17 +41,21 @@ export class ShellComponent implements OnInit, OnDestroy {
   pageTitle = signal('Dashboard');
 
   navItems = computed(() => {
-    const role = this.role();
+    const role        = this.role();
+    const superAdmin  = this.auth.isSuperAdmin();
     const items = [
-      { label: 'Dashboard',   path: '/dashboard',     icon: 'layout-dashboard', roles: ['Admin'] },
-      { label: 'My Queue',    path: '/my-queue',      icon: 'activity',         roles: ['Doctor'] },
-      { label: 'Appointments', path: '/appointments', icon: 'calendar',         roles: ['Admin', 'Receptionist'] },
-      { label: 'Patients',    path: '/patients',      icon: 'users',            roles: ['Admin', 'Doctor', 'Receptionist'] },
-      { label: 'Doctors',     path: '/doctors',       icon: 'stethoscope',      roles: ['Admin', 'Receptionist'] },
-      { label: 'Invoices',    path: '/invoices',      icon: 'receipt',          roles: ['Admin', 'Receptionist'] },
-      { label: 'Reports',     path: '/reports',       icon: 'bar-chart-3',       roles: ['Admin', 'Doctor'] },
-      { label: 'Staff Admin', path: '/super-admin',   icon: 'shield-check',     roles: ['Admin', 'SuperAdmin'] },
-      { label: 'Settings',    path: '/settings',      icon: 'settings',         roles: ['Admin'] },
+      { label: 'Dashboard',         path: '/dashboard',              icon: 'layout-dashboard', roles: ['Admin'] },
+      { label: 'My Queue',          path: '/my-queue',               icon: 'activity',         roles: ['Doctor'] },
+      { label: 'Appointments',      path: '/appointments',           icon: 'calendar',         roles: ['Admin', 'Receptionist'] },
+      // H-4: Doctor removed — /patients list route blocks Doctor (detail /patients/:id still accessible)
+      { label: 'Patients',          path: '/patients',               icon: 'users',            roles: ['Admin', 'Receptionist'] },
+      { label: 'Doctors',           path: '/doctors',                icon: 'stethoscope',      roles: ['Admin', 'Receptionist'] },
+      { label: 'Invoices',          path: '/invoices',               icon: 'receipt',          roles: ['Admin', 'Receptionist'] },
+      { label: 'Reports',           path: '/reports',                icon: 'bar-chart-3',      roles: ['Admin', 'Doctor'] },
+      { label: 'Staff Admin',       path: '/super-admin',            icon: 'shield-check',     roles: ['Admin', 'SuperAdmin'] },
+      // H-5: Tenant Management — uses isSuperAdmin() to cover both role='SuperAdmin' and email-based superadmin
+      ...(superAdmin ? [{ label: 'Tenant Management', path: '/super-admin/tenants', icon: 'building-2', roles: ['Admin', 'SuperAdmin'] }] : []),
+      { label: 'Settings',          path: '/settings',               icon: 'settings',         roles: ['Admin'] },
     ];
     return items.filter(item => role && item.roles.includes(role));
   });
