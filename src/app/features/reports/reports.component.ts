@@ -7,12 +7,15 @@ import { LucideAngularModule } from 'lucide-angular';
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <div class="p-6 min-h-screen bg-mq-navy">
+    <div class="page-bg p-6 lg:p-8">
       <div class="max-w-7xl mx-auto space-y-6">
-        <!-- Header -->
-        <div class="border-b border-mq-700/60 pb-6">
-          <h1 class="text-3xl font-black text-white tracking-tight">Reports &amp; Analytics</h1>
-          <p class="text-mq-s400 text-sm mt-1">Generate and view clinic performance reports, revenue analytics, and operational insights.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Reports &amp; Analytics</h1>
+            <p class="page-subtitle">
+              Generate and view clinic performance reports, revenue analytics, and operational insights.
+            </p>
+          </div>
         </div>
 
         <!-- Stats Overview -->

@@ -38,8 +38,12 @@ export class LoginComponent {
     try {
       await this.auth.login(this.email, this.password);
       const ret = this.route.snapshot.queryParams['returnUrl'];
-      const map: Record<string,string> = {
-        Admin: '/dashboard', Doctor: '/my-queue', Receptionist: '/appointments'
+      const map: Record<string, string> = {
+        Admin:        '/dashboard',
+        Doctor:       '/my-queue',
+        Receptionist: '/appointments',
+        Patient:      '/my-portal',            // H-3: was missing → fell to /dashboard
+        SuperAdmin:   '/super-admin/tenants',  // H-3: was missing → fell to /dashboard
       };
       await this.router.navigateByUrl(ret || map[this.auth.userRole()??''] || '/dashboard');
     } catch(e:any) {

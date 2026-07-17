@@ -40,7 +40,6 @@ export class DashboardComponent {
   }
 
   handleAction(event: { action: string; row: any }) {
-    console.log('Action triggered:', event);
     // In real app: Navigate or open modal based on event.action
   }
 }

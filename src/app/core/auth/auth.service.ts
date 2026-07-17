@@ -76,10 +76,7 @@ export class AuthService {
       if (tenantIdStr) {
         this.tenantService.setFromJwt(tenantIdStr, subdomainStr ?? '');
       }
-
-      console.log('User logged in successfully:', session.email);
     } catch (error) {
-      console.error('Login failed:', error);
       throw error;
     }
   }
@@ -108,8 +105,6 @@ export class AuthService {
     if (tenantIdStr) {
       this.tenantService.setFromJwt(tenantIdStr, subdomainStr ?? '');
     }
-
-    console.log('User logged in successfully from response:', session.email);
   }
 
   logout(): void {

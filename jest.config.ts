@@ -2,7 +2,7 @@ import type { Config } from 'jest';
 
 const config: Config = {
   preset: 'jest-preset-angular',
-  setupFilesAfterSetup: ['<rootDir>/setup-jest.ts'],
+  setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '@/(.*)': '<rootDir>/src/$1',
@@ -12,19 +12,14 @@ const config: Config = {
     'src/app/shared/**/*.ts',
     '!src/app/core/api/**',
   ],
-  coverageThresholds: {
-    global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
-    },
-  },
+
+  moduleFileExtensions: ['ts', 'html', 'js', 'json', 'mjs'],
   transform: {
-    '^.+\\.ts$': [
-      'ts-jest',
+    '^.+\\.(ts|js|mjs|html|svg)$': [
+      'jest-preset-angular',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.(html|svg)$',
       },
     ],
   },

@@ -11,7 +11,6 @@ export const superAdminGuard: CanActivateFn = () => {
   // Safety: if superAdminEmail is not configured → deny access
   if (!environment.superAdminEmail ||
       environment.superAdminEmail === 'REPLACE_WITH_SUPERADMIN_EMAIL') {
-    console.warn('[superAdminGuard] SuperAdmin email not configured — denying access');
     return router.parseUrl('/dashboard');
   }
 

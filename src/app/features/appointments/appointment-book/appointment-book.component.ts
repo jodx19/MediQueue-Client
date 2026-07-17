@@ -90,7 +90,7 @@ import { pageEnter } from '../../../shared/animations/page-animations';
                 <span class="text-muted" style="font-weight:400"> — {{ c.date.value | date:'EEEE, MMM d' }}</span>
               </label>
               @if (availableSlots().length === 0) {
-                <p class="text-muted" style="font-size:var(--text-sm);margin-top:8px">
+                <p class="text-muted" style="font-size:13px;margin-top:8px">
                   No available slots for this date.
                 </p>
               } @else {
@@ -106,7 +106,7 @@ import { pageEnter } from '../../../shared/animations/page-animations';
               }
               <app-form-error [control]="c.timeSlot"/>
             } @else {
-              <p class="text-muted" style="font-size:var(--text-xs)">
+              <p class="text-muted" style="font-size:11px">
                 Select a doctor and a valid future date to see available slots.
               </p>
             }
@@ -134,58 +134,58 @@ import { pageEnter } from '../../../shared/animations/page-animations';
   `,
   styles: [`
     .form-card {
-      background: var(--color-surface); border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: var(--shadow-sm);
+      background: #1E293B; border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 20px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.30);
     }
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-5); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
     .field-group { display: flex; flex-direction: column; }
     .field-group--full { grid-column: 1 / -1; }
     .field-label {
-      font-size: var(--text-sm); font-weight: 500;
-      color: var(--color-text-primary); margin-bottom: var(--space-2);
+      font-size: 13px; font-weight: 500;
+      color: #F1F5F9; margin-bottom: 8px;
     }
-    .text-muted { color: var(--color-text-secondary); }
+    .text-muted { color: #94A3B8; }
     .field-input {
-      padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md); font-size: var(--text-sm); font-family: var(--font-family);
-      color: var(--color-text-primary); background: var(--color-surface); outline: none;
-      transition: border-color var(--duration-fast);
+      padding: 12px 16px; border: 1px solid rgba(148,163,184,0.20);
+      border-radius: 10px; font-size: 13px; font-family: 'Inter', system-ui, sans-serif;
+      color: #F1F5F9; background: #1E293B; outline: none;
+      transition: border-color 150ms;
     }
-    .field-input:focus  { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light); }
-    .field-input.error  { border-color: var(--mq-danger, #f43f5e); }
+    .field-input:focus  { border-color: #0D9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+    .field-input.error  { border-color: #EF4444; }
     .field-textarea { resize: vertical; }
     .slots-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-      gap: var(--space-2); margin-top: var(--space-2);
+      gap: 8px; margin-top: 8px;
     }
     .slot-btn {
-      padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
-      font-size: var(--text-xs); font-weight: 500; cursor: pointer;
-      border: 1px solid var(--color-border-strong); color: var(--color-text-secondary);
-      background: var(--color-surface); transition: all var(--duration-fast);
+      padding: 8px 12px; border-radius: 10px;
+      font-size: 11px; font-weight: 500; cursor: pointer;
+      border: 1px solid rgba(148,163,184,0.20); color: #94A3B8;
+      background: #1E293B; transition: all 150ms;
     }
-    .slot-btn:hover { border-color: var(--color-accent); color: var(--color-text-primary); }
+    .slot-btn:hover { border-color: #0D9488; color: #F1F5F9; }
     .slot-btn--active {
-      border-color: var(--color-accent); background: var(--color-accent-light);
-      color: var(--color-accent); font-weight: 600;
+      border-color: #0D9488; background: rgba(13,148,136,0.15);
+      color: #0D9488; font-weight: 600;
     }
     .form-actions {
-      display: flex; justify-content: flex-end; gap: var(--space-3);
-      padding-top: var(--space-6); border-top: 1px solid var(--color-border);
-      margin-top: var(--space-6);
+      display: flex; justify-content: flex-end; gap: 12px;
+      padding-top: 24px; border-top: 1px solid rgba(148,163,184,0.12);
+      margin-top: 24px;
     }
     .btn-primary {
-      display: inline-flex; align-items: center; gap: var(--space-2);
-      background: var(--color-accent); color: white; border: none;
-      border-radius: var(--radius-md); padding: var(--space-3) var(--space-6);
-      font-size: var(--text-sm); font-weight: 600; cursor: pointer; font-family: var(--font-family);
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #0D9488; color: white; border: none;
+      border-radius: 10px; padding: 12px 24px;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
     }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary {
-      background: var(--color-surface-2); color: var(--color-text-primary);
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      padding: var(--space-3) var(--space-5); font-size: var(--text-sm);
-      cursor: pointer; font-family: var(--font-family);
+      background: #293548; color: #F1F5F9;
+      border: 1px solid rgba(148,163,184,0.12); border-radius: 10px;
+      padding: 12px 20px; font-size: 13px;
+      cursor: pointer; font-family: 'Inter', system-ui, sans-serif;
     }
     .spinner {
       width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);

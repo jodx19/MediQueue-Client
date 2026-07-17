@@ -1,10 +1,10 @@
-<div class="p-6 bg-mq-navy min-h-screen">
+<div class="page-bg p-6 min-h-screen">
 
   <!-- Header -->
-  <div class="flex items-start justify-between mb-6">
+  <div class="page-header">
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight" data-testid="page-title">Appointments</h1>
-      <p class="text-mq-s400 text-sm mt-1">{{ appointments().length }} records</p>
+      <h1 class="page-title" data-testid="page-title">Appointments</h1>
+      <p class="page-subtitle">{{ appointments().length }} records</p>
     </div>
     <button (click)="showModal.set(true)" data-testid="new-appointment-btn"
             class="btn-primary flex items-center gap-2">

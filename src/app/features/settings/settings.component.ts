@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../core/services/notification.service';
@@ -16,6 +16,7 @@ import { LoadingSkeletonComponent } from '../../shared/components/loading-skelet
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
+    FormsModule,
     LucideAngularModule,
     FormErrorComponent,
     LoadingSkeletonComponent
@@ -36,7 +37,40 @@ export class SettingsComponent implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
   currentSettings = signal<ClinicSettingsDto | null>(null);
-  integrationKeys = signal({ paypalClientId: '', enableSMSAlerts: false, enableEmailReminders: false });
+  integrationKeys = signal({ stripePublicKey: '', stripeSecretKey: '', paypalClientId: '', enableSMSAlerts: false, enableEmailReminders: false });
+  
+  profileSettings = signal({
+    clinicName: '', slogan: '', address: '', phone: '', email: '', taxNumber: '', currency: 'USD', logoGlowColor: 'teal'
+  });
+  workingDays = signal([
+    { day: 'Monday', active: true, start: '09:00', end: '17:00' },
+    { day: 'Tuesday', active: true, start: '09:00', end: '17:00' },
+    { day: 'Wednesday', active: true, start: '09:00', end: '17:00' },
+    { day: 'Thursday', active: true, start: '09:00', end: '17:00' },
+    { day: 'Friday', active: true, start: '09:00', end: '17:00' },
+    { day: 'Saturday', active: false, start: '09:00', end: '14:00' },
+    { day: 'Sunday', active: false, start: '', end: '' },
+  ]);
+  medicalSettings = signal({
+    defaultDuration: 30, emergencyFee: 150, commissionRate: 40, autoLockSoapNotes: true, customInvoiceNotes: ''
+  });
+  specialties = signal<string[]>(['General Practice', 'Cardiology', 'Pediatrics']);
+  notificationPrefs = signal([
+    { id: '1', label: 'Email Confirmations', desc: 'Send email when booked', enabled: true },
+    { id: '2', label: 'SMS Reminders', desc: 'Send SMS 24h before', enabled: true },
+  ]);
+
+  removeSpecialty(index: number) {
+    this.specialties.update(s => s.filter((_, i) => i !== index));
+  }
+  
+  addSpecialty() {
+    this.specialties.update(s => [...s, 'New Specialty']);
+  }
+  
+  saveSettings() {
+    this.onSave();
+  }
 
   form = this.fb.group({
     clinicName:    ['', [Validators.required, Validators.maxLength(200)]],
@@ -74,7 +108,6 @@ export class SettingsComponent implements OnInit {
       });
     } catch (err) {
       this.apiErrorHandler.handle(err);
-      this.notificationService.error('Failed to load clinic settings');
     } finally {
       this.isLoading.set(false);
     }

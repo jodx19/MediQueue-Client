@@ -36,7 +36,7 @@ export class SignalRService {
         this.notificationCount.set(unreadCount);
       }
     } catch (e) {
-      console.error('Failed to load notifications from localStorage', e);
+      // ignore
     }
   }
 
@@ -46,7 +46,7 @@ export class SignalRService {
       const unreadCount = list.filter(n => !n.read).length;
       this.notificationCount.set(unreadCount);
     } catch (e) {
-      console.error('Failed to save notifications to localStorage', e);
+      // ignore
     }
   }
 
@@ -115,10 +115,8 @@ export class SignalRService {
     try {
       await this.hub.start();
       this.connectionState.set('connected');
-      console.log('SignalR Connected');
     } catch (err) {
       this.connectionState.set('disconnected');
-      console.error('SignalR failed to connect:', err);
     }
   }
 

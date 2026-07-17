@@ -40,24 +40,24 @@ import { pageEnter } from '../../../shared/animations/page-animations';
     }
   `,
   styles: [`
-    .visits-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .visits-list { display: flex; flex-direction: column; gap: 12px; }
     .visit-card {
-      display: flex; align-items: center; gap: var(--space-5);
-      background: var(--color-surface); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5);
-      cursor: pointer; transition: all var(--duration-fast); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 20px;
+      background: #1E293B; border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 14px; padding: 16px 20px;
+      cursor: pointer; transition: all 150ms; box-shadow: 0 1px 3px rgba(0,0,0,0.30);
     }
-    .visit-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-md); }
+    .visit-card:hover { border-color: #0D9488; box-shadow: 0 4px 16px rgba(0,0,0,0.30); }
     .visit-card__date {
       display: flex; flex-direction: column; align-items: center;
-      width: 44px; padding: var(--space-2); background: var(--color-accent-light);
-      border-radius: var(--radius-md); flex-shrink: 0;
+      width: 44px; padding: 8px; background: rgba(13,148,136,0.15);
+      border-radius: 10px; flex-shrink: 0;
     }
-    .day { font-size: var(--text-xl); font-weight: 700; color: var(--color-accent); line-height: 1; }
-    .month { font-size: var(--text-xs); color: var(--color-accent); font-weight: 600; text-transform: uppercase; }
+    .day { font-size: 24px; font-weight: 700; color: #0D9488; line-height: 1; }
+    .month { font-size: 11px; color: #0D9488; font-weight: 600; text-transform: uppercase; }
     .visit-card__info { flex: 1; }
-    .visit-patient { font-weight: 600; font-size: var(--text-base); color: var(--color-text-primary); }
-    .visit-reason { font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: 2px; }
+    .visit-patient { font-weight: 600; font-size: 15px; color: #F1F5F9; }
+    .visit-reason { font-size: 13px; color: #94A3B8; margin-top: 2px; }
   `],
 })
 export class VisitListComponent implements OnInit {

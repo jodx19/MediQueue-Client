@@ -26,37 +26,37 @@ import { AuthService } from '../../../core/auth/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--color-bg);
+      background: #0A0F1E;
       text-align: center;
-      padding: var(--space-6);
+      padding: 24px;
     }
     .content {
       max-width: 400px;
-      padding: var(--space-10);
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-2xl);
-      box-shadow: var(--shadow-xl);
+      padding: 40px;
+      background: #1E293B;
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 24px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.60);
     }
     .icon {
       font-size: 64px;
-      margin-bottom: var(--space-6);
+      margin-bottom: 24px;
     }
     h1 {
-      font-size: var(--text-2xl);
+      font-size: 28px;
       font-weight: 700;
-      color: var(--color-text-primary);
-      margin-bottom: var(--space-3);
+      color: #F1F5F9;
+      margin-bottom: 12px;
     }
     p {
-      color: var(--color-text-secondary);
-      margin-bottom: var(--space-8);
+      color: #94A3B8;
+      margin-bottom: 32px;
       line-height: 1.6;
     }
     .actions {
       display: flex;
       flex-direction: column;
-      gap: var(--space-3);
+      gap: 12px;
     }
   `]
 })

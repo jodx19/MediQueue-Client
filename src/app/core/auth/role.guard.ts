@@ -4,10 +4,11 @@ import { AuthService } from './auth.service';
 
 function roleHome(role: string | null | undefined): string {
   const map: Record<string, string> = {
-    Admin: '/dashboard',
-    Doctor: '/my-queue',
+    Admin:        '/dashboard',
+    Doctor:       '/my-queue',
     Receptionist: '/appointments',
-    Patient: '/my-portal',
+    Patient:      '/my-portal',
+    SuperAdmin:   '/super-admin/tenants',  // H-1: was missing → fell through to /auth/login
   };
   return map[role ?? ''] ?? '/auth/login';
 }

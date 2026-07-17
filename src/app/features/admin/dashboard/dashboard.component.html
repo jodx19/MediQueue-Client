@@ -1,13 +1,13 @@
 <div class="p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.5s_ease-out]">
   
   <!-- Header Section -->
-  <div class="flex justify-between items-end mb-8">
+  <div class="page-header">
     <div>
-      <h1 class="text-3xl font-bold text-mq-navy mb-1 tracking-tight">Admin Dashboard</h1>
-      <p class="text-gray-500 font-medium">Welcome back! Here is what's happening in the clinic today.</p>
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-subtitle">Welcome back! Here is what's happening in the clinic today.</p>
     </div>
     <div class="flex gap-3">
-      <button class="btn-ghost bg-white border border-gray-200">Export Report</button>
+      <button class="btn-ghost">Export Report</button>
       <button class="btn-primary flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
         New Patient
@@ -47,24 +47,24 @@
     </div>
 
     <!-- Small Stat Card: Patients -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
-      <div class="w-12 h-12 rounded-xl bg-teal-50 text-mq-teal flex items-center justify-center mb-4">
+    <div class="mq-card p-6 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+      <div class="w-12 h-12 rounded-xl bg-mq-teal/15 text-mq-teal flex items-center justify-center mb-4">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       </div>
-      <h3 class="text-gray-500 font-medium text-sm mb-1">Patients Today</h3>
-      <div class="text-3xl font-bold text-mq-navy">
+      <h3 class="text-mq-s400 font-medium text-sm mb-1">Patients Today</h3>
+      <div class="text-3xl font-bold text-white">
         @if (isLoading()) { <div class="h-8 w-16 animate-skeleton"></div> }
         @else { {{ stats().patientsToday }} }
       </div>
     </div>
 
     <!-- Small Stat Card: Doctors -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
-      <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+    <div class="mq-card p-6 flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+      <div class="w-12 h-12 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-4">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
-      <h3 class="text-gray-500 font-medium text-sm mb-1">Active Doctors</h3>
-      <div class="text-3xl font-bold text-mq-navy">
+      <h3 class="text-mq-s400 font-medium text-sm mb-1">Active Doctors</h3>
+      <div class="text-3xl font-bold text-white">
         @if (isLoading()) { <div class="h-8 w-16 animate-skeleton"></div> }
         @else { {{ stats().activeDoctors }} }
       </div>
@@ -73,7 +73,7 @@
     <!-- Interactive Table Section (Col Span 4) -->
     <div class="col-span-1 md:col-span-4 mt-6">
       <div class="flex justify-between items-center mb-4 px-1">
-        <h2 class="text-xl font-bold text-mq-navy tracking-tight">Recent Appointments</h2>
+        <h2 class="text-xl font-bold text-white tracking-tight">Recent Appointments</h2>
         <button class="text-mq-teal font-medium text-sm hover:underline">View All Queue</button>
       </div>
       
