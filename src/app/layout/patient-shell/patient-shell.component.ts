@@ -5,12 +5,11 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
-import { ToastComponent } from '../../shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-patient-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
   templateUrl: './patient-shell.component.html',
   styleUrls: ['./patient-shell.component.scss'],
   animations: [

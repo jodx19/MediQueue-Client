@@ -5,13 +5,12 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { SignalRService } from '../../core/services/signalr.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
-import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { CmdKComponent } from '../../shared/components/cmd-k/cmd-k.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, ToastComponent, CmdKComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, CmdKComponent],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
   animations: [

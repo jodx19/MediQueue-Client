@@ -1,27 +1,33 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthClient, AuthResponseDto } from '../../../core/api/mediqueue-api';
 import { AuthService } from '../../../core/auth/auth.service';
+import { MedicalValidators } from '../../../core/validators/medical.validators';
+import { FormErrorComponent } from '../../../shared/components/form-error/form-error.component';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-patient-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, FormErrorComponent],
   templateUrl: './patient-login.component.html',
 })
 export class PatientLoginComponent {
+  private readonly fb = inject(FormBuilder);
   private readonly authClient = inject(AuthClient);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  mrn = '';
-  dateOfBirth = '';
   isLoading = signal(false);
   errorMsg = signal('');
+
+  readonly form = this.fb.nonNullable.group({
+    mrn: ['', [Validators.required]],
+    dateOfBirth: ['', [Validators.required, MedicalValidators.pastDate()]],
+  });
 
   features = [
     { label: 'Live Queue Status & Updates', icon: 'clock' },
@@ -31,18 +37,20 @@ export class PatientLoginComponent {
   ];
 
   async onSubmit() {
-    if (!this.mrn.trim() || !this.dateOfBirth) {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       this.errorMsg.set('Please enter your MRN and Date of Birth.');
       return;
     }
+
+    const { mrn, dateOfBirth } = this.form.getRawValue();
     this.isLoading.set(true);
     this.errorMsg.set('');
     try {
-      const dob = new Date(this.dateOfBirth);
+      const dob = new Date(dateOfBirth);
       const response = await firstValueFrom(
-        this.authClient.patientLogin({ mrn: this.mrn.trim(), dateOfBirth: dob } as any)
+        this.authClient.patientLogin({ mrn: mrn.trim(), dateOfBirth: dob } as any)
       );
-      // Manually build session from response
       await this.authService.loginFromResponse(response as AuthResponseDto);
       this.router.navigate(['/my-portal']);
     } catch (err: any) {

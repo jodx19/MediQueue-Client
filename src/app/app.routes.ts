@@ -44,6 +44,38 @@ export const routes: Routes = [
         .then(m => m.TenantRegisterComponent)
   },
 
+  // ══ ERROR PAGES (public) ══
+  {
+    path: '403',
+    loadComponent: () =>
+      import('./shared/components/forbidden/forbidden.component')
+        .then(m => m.ForbiddenComponent),
+  },
+  {
+    path: '404',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found.component')
+        .then(m => m.NotFoundComponent),
+  },
+  {
+    path: '500',
+    loadComponent: () =>
+      import('./features/errors/server-error/server-error.component')
+        .then(m => m.ServerErrorComponent),
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./shared/components/forbidden/forbidden.component')
+        .then(m => m.ForbiddenComponent),
+  },
+  {
+    path: 'server-error',
+    loadComponent: () =>
+      import('./features/errors/server-error/server-error.component')
+        .then(m => m.ServerErrorComponent),
+  },
+
   // ══ PATIENT PORTAL — dedicated patient shell ══
   {
     path: '',
@@ -228,9 +260,19 @@ export const routes: Routes = [
             .then(m => m.VisitDetailComponent),
       },
 
-      { path: '**', redirectTo: 'dashboard' },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/errors/not-found/not-found.component')
+            .then(m => m.NotFoundComponent),
+      },
     ],
   },
 
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found.component')
+        .then(m => m.NotFoundComponent),
+  },
 ];

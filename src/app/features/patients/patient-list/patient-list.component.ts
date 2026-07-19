@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
-import { firstValueFrom } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, firstValueFrom } from 'rxjs';
 import { PatientsClient, PatientSummaryDto } from '../../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 
@@ -13,10 +13,18 @@ import { ApiErrorHandlerService } from '../../../core/services/api-error-handler
   imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './patient-list.component.html',
 })
-export class PatientListComponent implements OnInit {
+export class PatientListComponent implements OnInit, OnDestroy {
   private readonly patientsClient = inject(PatientsClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   public readonly router = inject(Router);
+
+  private readonly searchSubject = new Subject<string>();
+  private readonly searchSubscription = this.searchSubject.pipe(
+    debounceTime(300),
+    distinctUntilChanged(),
+  ).subscribe((query) => {
+    void this.performSearch(query);
+  });
 
   isLoading = signal(true);
   patients  = signal<PatientSummaryDto[]>([]);
@@ -24,6 +32,10 @@ export class PatientListComponent implements OnInit {
 
   async ngOnInit() {
     await this.loadPatients();
+  }
+
+  ngOnDestroy() {
+    this.searchSubscription.unsubscribe();
   }
 
   async loadPatients() {
@@ -38,9 +50,14 @@ export class PatientListComponent implements OnInit {
     }
   }
 
-  async onSearch() {
-    const q = this.searchTerm.trim();
+  onSearchInput(value: string) {
+    this.searchTerm = value;
+    this.searchSubject.next(value.trim());
+  }
+
+  private async performSearch(q: string) {
     if (q.length > 0 && q.length < 2) return;
+
     this.isLoading.set(true);
     try {
       if (!q) {

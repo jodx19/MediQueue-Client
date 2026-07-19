@@ -1,19 +1,22 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PatientsClient, SelfRegisterPatientCommand, Gender, BloodType } from '../../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
+import { MedicalValidators } from '../../../core/validators/medical.validators';
+import { FormErrorComponent } from '../../../shared/components/form-error/form-error.component';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-patient-self-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, FormErrorComponent],
   templateUrl: './patient-self-register.component.html',
 })
 export class PatientSelfRegisterComponent {
+  private readonly fb = inject(FormBuilder);
   private patientsClient = inject(PatientsClient);
   private apiErrorHandler = inject(ApiErrorHandlerService);
   private router = inject(Router);
@@ -22,21 +25,23 @@ export class PatientSelfRegisterComponent {
   isLoading = signal(false);
   result = signal<any>(null);
 
-  form = {
-    // Step 1
-    firstName: '', lastName: '',
-    dateOfBirth: '', gender: 'Male',
-    nationalId: '', bloodType: 'Unknown',
-    // Step 2
-    phone: '', email: '', address: '',
-  };
+  readonly form = this.fb.nonNullable.group({
+    firstName: ['', [Validators.required]],
+    lastName: ['', [Validators.required]],
+    dateOfBirth: ['', [Validators.required, MedicalValidators.pastDate()]],
+    gender: ['Male', [Validators.required]],
+    nationalId: ['', [Validators.required, MedicalValidators.nationalId()]],
+    bloodType: ['Unknown'],
+    phone: ['', [Validators.required, MedicalValidators.egyptianPhone()]],
+    email: ['', [Validators.email]],
+    address: [''],
+  });
 
   genders    = ['Male','Female'];
   bloodTypes = ['A+','A-','B+','B-','AB+','AB-','O+','O-','Unknown'];
 
   today = new Date().toISOString().split('T')[0];
 
-  // Map string labels to NSwag enums
   private genderMap: Record<string, Gender> = {
     'Male': Gender._1,
     'Female': Gender._2
@@ -50,29 +55,52 @@ export class PatientSelfRegisterComponent {
     'Unknown': BloodType._0
   };
 
-  reviewItems = computed(() => [
-    { label: 'Full Name', value: `${this.form.firstName} ${this.form.lastName}` },
-    { label: 'Date of Birth', value: this.form.dateOfBirth },
-    { label: 'Gender', value: this.form.gender },
-    { label: 'National ID', value: this.form.nationalId },
-    { label: 'Phone', value: this.form.phone },
-    { label: 'Blood Type', value: this.form.bloodType },
-  ]);
+  readonly step1Controls = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'nationalId', 'bloodType'] as const;
+  readonly step2Controls = ['phone', 'email', 'address'] as const;
+
+  reviewItems = computed(() => {
+    const v = this.form.getRawValue();
+    return [
+      { label: 'Full Name', value: `${v.firstName} ${v.lastName}` },
+      { label: 'Date of Birth', value: v.dateOfBirth },
+      { label: 'Gender', value: v.gender },
+      { label: 'National ID', value: v.nationalId },
+      { label: 'Phone', value: v.phone },
+      { label: 'Blood Type', value: v.bloodType },
+    ];
+  });
+
+  goToStep(next: 1 | 2 | 3) {
+    if (next === 2 && !this.isStepValid(this.step1Controls)) return;
+    if (next === 3 && !this.isStepValid(this.step2Controls)) return;
+    this.step.set(next);
+  }
+
+  private isStepValid(fields: readonly string[]): boolean {
+    fields.forEach(name => this.form.get(name)?.markAsTouched());
+    return fields.every(name => this.form.get(name)?.valid !== false);
+  }
 
   async submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const v = this.form.getRawValue();
     this.isLoading.set(true);
     try {
       const res = await firstValueFrom(this.patientsClient.selfRegister(
         new SelfRegisterPatientCommand({
-          firstName:   this.form.firstName,
-          lastName:    this.form.lastName,
-          dateOfBirth: new Date(this.form.dateOfBirth),
-          gender:      this.genderMap[this.form.gender] ?? Gender._1,
-          nationalId:  this.form.nationalId,
-          bloodType:   this.bloodTypeMap[this.form.bloodType] ?? BloodType._0,
-          phone:       this.form.phone,
-          email:       this.form.email || undefined,
-          address:     this.form.address || undefined,
+          firstName:   v.firstName,
+          lastName:    v.lastName,
+          dateOfBirth: new Date(v.dateOfBirth),
+          gender:      this.genderMap[v.gender] ?? Gender._1,
+          nationalId:  v.nationalId,
+          bloodType:   this.bloodTypeMap[v.bloodType] ?? BloodType._0,
+          phone:       v.phone,
+          email:       v.email || undefined,
+          address:     v.address || undefined,
         })
       ));
       this.result.set(res);

@@ -37,37 +37,41 @@
 
     <!-- STEP 1: Personal -->
     @if (step()===1 && !result()) {
-      <div class="glass p-8 space-y-5 rounded-2xl">
+      <div class="glass p-8 space-y-5 rounded-2xl" [formGroup]="form">
         <h2 class="text-white font-bold text-lg">Personal Information</h2>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="mq-label">First Name *</label>
-            <input type="text" [(ngModel)]="form.firstName"
+            <input type="text" formControlName="firstName"
                    class="mq-input" placeholder="Ahmed"/>
+            <app-form-error [control]="form.get('firstName')"/>
           </div>
           <div>
             <label class="mq-label">Last Name *</label>
-            <input type="text" [(ngModel)]="form.lastName"
+            <input type="text" formControlName="lastName"
                    class="mq-input" placeholder="Mohamed"/>
+            <app-form-error [control]="form.get('lastName')"/>
           </div>
         </div>
         <div>
           <label class="mq-label">Date of Birth *</label>
-          <input type="date" [(ngModel)]="form.dateOfBirth"
+          <input type="date" formControlName="dateOfBirth"
                  class="mq-input" [max]="today"/>
+          <app-form-error [control]="form.get('dateOfBirth')"/>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="mq-label">Gender *</label>
-            <select [(ngModel)]="form.gender" class="mq-input">
+            <select formControlName="gender" class="mq-input">
               @for (g of genders; track g) {
                 <option [value]="g">{{ g }}</option>
               }
             </select>
+            <app-form-error [control]="form.get('gender')"/>
           </div>
           <div>
             <label class="mq-label">Blood Type</label>
-            <select [(ngModel)]="form.bloodType" class="mq-input">
+            <select formControlName="bloodType" class="mq-input">
               @for (b of bloodTypes; track b) {
                 <option [value]="b">{{ b }}</option>
               }
@@ -76,12 +80,13 @@
         </div>
         <div>
           <label class="mq-label">National ID *</label>
-          <input type="text" [(ngModel)]="form.nationalId"
+          <input type="text" formControlName="nationalId"
                  class="mq-input" placeholder="14 digits" maxlength="14"/>
+          <app-form-error [control]="form.get('nationalId')"/>
         </div>
-        <button (click)="step.set(2)"
+        <button type="button" (click)="goToStep(2)"
                 class="btn-primary w-full"
-                [disabled]="!form.firstName||!form.lastName||!form.dateOfBirth||!form.nationalId">
+                [disabled]="form.get('firstName')?.invalid || form.get('lastName')?.invalid || form.get('dateOfBirth')?.invalid || form.get('nationalId')?.invalid">
           Next: Contact Info →
         </button>
       </div>
@@ -89,29 +94,31 @@
 
     <!-- STEP 2: Contact -->
     @if (step()===2 && !result()) {
-      <div class="glass p-8 space-y-5 rounded-2xl">
+      <div class="glass p-8 space-y-5 rounded-2xl" [formGroup]="form">
         <h2 class="text-white font-bold text-lg">Contact Information</h2>
         <div>
           <label class="mq-label">Phone Number *</label>
-          <input type="tel" [(ngModel)]="form.phone"
+          <input type="tel" formControlName="phone"
                  class="mq-input" placeholder="01x-xxxx-xxxx"/>
+          <app-form-error [control]="form.get('phone')"/>
         </div>
         <div>
           <label class="mq-label">Email (optional)</label>
-          <input type="email" [(ngModel)]="form.email"
+          <input type="email" formControlName="email"
                  class="mq-input" placeholder="your@email.com"/>
+          <app-form-error [control]="form.get('email')"/>
         </div>
         <div>
           <label class="mq-label">Address</label>
-          <textarea [(ngModel)]="form.address"
+          <textarea formControlName="address"
                     class="mq-input h-20 resize-none"
                     placeholder="Cairo, Egypt"></textarea>
         </div>
         <div class="flex gap-3">
-          <button (click)="step.set(1)" class="btn-ghost flex-1">← Back</button>
-          <button (click)="step.set(3)"
+          <button type="button" (click)="goToStep(1)" class="btn-ghost flex-1">← Back</button>
+          <button type="button" (click)="goToStep(3)"
                   class="btn-primary flex-1"
-                  [disabled]="!form.phone">
+                  [disabled]="form.get('phone')?.invalid || form.get('email')?.invalid">
             Review →
           </button>
         </div>
@@ -131,10 +138,10 @@
           }
         </div>
         <div class="flex gap-3">
-          <button (click)="step.set(2)" class="btn-ghost flex-1">← Edit</button>
-          <button (click)="submit()"
+          <button type="button" (click)="goToStep(2)" class="btn-ghost flex-1">← Edit</button>
+          <button type="button" (click)="submit()"
                   class="btn-primary flex-1 flex items-center justify-center gap-2"
-                  [disabled]="isLoading()">
+                  [disabled]="isLoading() || form.invalid">
             @if (isLoading()) {
               <span class="w-4 h-4 rounded-full border-2 border-white/30
                            border-t-white animate-spin"></span>

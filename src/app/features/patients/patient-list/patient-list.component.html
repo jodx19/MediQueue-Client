@@ -21,9 +21,7 @@
                    [size]="15"/>
       <input type="text"
              [value]="searchTerm"
-             (input)="onSearch()"
-             #searchInput
-             (change)="searchTerm = searchInput.value"
+             (input)="onSearchInput($any($event.target).value)"
              class="mq-input pl-10"
              placeholder="Search by name, MRN, phone..."/>
     </div>

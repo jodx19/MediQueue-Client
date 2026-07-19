@@ -17,29 +17,40 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 0) {
         errorMessage = 'Connection failed. Please check your internet connection.';
         notifications.error(errorMessage);
-      } 
+      }
       else if (error.status === 401) {
         errorMessage = 'Session expired. Please login again.';
         authService.logout();
         router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
         notifications.warning(errorMessage);
-      } 
+      }
       else if (error.status === 403) {
         errorMessage = 'You do not have permission to perform this action.';
         notifications.error(errorMessage);
-      } 
+        router.navigate(['/403']);
+      }
+      else if (error.status === 404) {
+        // Only navigate for non-API search/list endpoints to avoid
+        // redirecting on "not found" lookups that the component handles.
+        const isNavigationRequest = !req.url.includes('/search') &&
+                                    !req.url.includes('?');
+        if (isNavigationRequest) {
+          router.navigate(['/404']);
+        }
+      }
       else if (error.status === 422) {
-        // Validation errors
+        // Validation errors — handled by the component, no redirect
         const detail = error.error?.detail || 'Validation failed';
         notifications.error(detail);
-      } 
+      }
       else if (error.status === 429) {
         errorMessage = 'Too many requests. Please wait a moment.';
         notifications.warning(errorMessage);
-      } 
+      }
       else if (error.status >= 500) {
         errorMessage = 'Server error. Our team has been notified.';
         notifications.error(errorMessage);
+        router.navigate(['/500']);
       }
 
       return throwError(() => error);
