@@ -12,13 +12,16 @@ import {
   ClinicalVisitsClient
 } from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 type FilterTab = 'today' | 'upcoming' | 'past';
+
+const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-appointment-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, PaginationComponent],
   templateUrl: './appointment-list.component.html',
 })
 export class AppointmentListComponent implements OnInit {
@@ -30,9 +33,16 @@ export class AppointmentListComponent implements OnInit {
   public  readonly router             = inject(Router);
 
   isLoading    = signal(true);
-  appointments = signal<AppointmentListItemDto[]>([]);
+  allAppointments = signal<AppointmentListItemDto[]>([]);
+  page         = signal(1);
+  total        = signal(0);
   activeFilter = signal<FilterTab>('today');
   showModal    = signal(false);
+
+  readonly appointments = computed(() => {
+    const start = (this.page() - 1) * PAGE_SIZE;
+    return this.allAppointments().slice(start, start + PAGE_SIZE);
+  });
 
   // Modal state
   modalLoading    = signal(false);
@@ -55,9 +65,12 @@ export class AppointmentListComponent implements OnInit {
   async loadToday() {
     this.isLoading.set(true);
     this.activeFilter.set('today');
+    this.page.set(1);
     try {
       const data = await firstValueFrom(this.appointmentsClient.today());
-      this.appointments.set(data ?? []);
+      const items = data ?? [];
+      this.allAppointments.set(items);
+      this.total.set(items.length);
     } catch (err) {
       this.notify.error('Failed to load appointments');
     } finally {
@@ -68,9 +81,12 @@ export class AppointmentListComponent implements OnInit {
   async loadUpcoming() {
     this.isLoading.set(true);
     this.activeFilter.set('upcoming');
+    this.page.set(1);
     try {
       const data = await firstValueFrom(this.appointmentsClient.upcoming(7));
-      this.appointments.set(data ?? []);
+      const items = data ?? [];
+      this.allAppointments.set(items);
+      this.total.set(items.length);
     } catch (err) {
       this.notify.error('Failed to load upcoming');
     } finally {
@@ -78,9 +94,13 @@ export class AppointmentListComponent implements OnInit {
     }
   }
 
+  onPageChange(newPage: number) {
+    this.page.set(newPage);
+  }
+
   private async loadDoctors() {
     try {
-      const data = await firstValueFrom(this.doctorsClient.doctorsGET());
+      const data = await firstValueFrom(this.doctorsClient.doctorsGET(1, 100));
       this.doctors.set(data?.items ?? []);
     } catch { /* silent */ }
   }
@@ -150,7 +170,7 @@ export class AppointmentListComponent implements OnInit {
   }
 
   getStatusCount(status: string): number {
-    return this.appointments().filter(a => (a.status as any) === status).length;
+    return this.allAppointments().filter(a => (a.status as any) === status).length;
   }
 
   statusClass(status: any): string {

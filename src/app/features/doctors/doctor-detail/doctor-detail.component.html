@@ -1,11 +1,11 @@
 <div class="min-h-screen bg-mq-navy p-6 lg:p-8" @pageEnter>
-  
-  <!-- Header -->
+
+  <!-- ══ HEADER ══ -->
   <header class="flex items-center justify-between mb-8">
     <div class="flex items-center gap-4">
       <button class="w-10 h-10 rounded-xl bg-mq-800 border border-mq-700 flex items-center justify-center text-mq-s400 hover:text-white transition-colors"
               (click)="router.navigate(['/doctors'])">
-        <lucide-icon name="arrow-left" [size]="20"></lucide-icon>
+        <lucide-icon name="arrow-left" [size]="20"/>
       </button>
       <div>
         <h1 class="text-2xl font-black text-white tracking-tight">Doctor Profile</h1>
@@ -15,93 +15,269 @@
   </header>
 
   @if (isLoading()) {
-    <div class="space-y-4">
-      @for (i of [1,2,3]; track i) {
-        <div class="h-32 rounded-2xl bg-mq-800/80 animate-pulse border border-mq-700"></div>
-      }
-    </div>
+    <app-loading-skeleton/>
   } @else if (doctor()) {
     <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-      
-      <!-- Left Column (Profile & Availability) -->
+
+      <!-- ═══ LEFT — Profile card (unchanged) ═══ -->
       <div class="col-span-1 md:col-span-1 space-y-6">
-        
-        <!-- Profile Card -->
         <div class="mq-card-dark p-6 flex flex-col items-center text-center relative overflow-hidden">
           <div class="absolute -top-10 -right-10 w-32 h-32 bg-mq-teal/5 rounded-full blur-2xl"></div>
-          
+
           <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-mq-teal to-mq-t600 flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-mq-teal/20 mb-4 border-2 border-mq-800 relative z-10">
             {{ doctor()!.fullName?.[0] }}
           </div>
-          
+
           <h2 class="text-xl font-bold text-white relative z-10">Dr. {{ doctor()!.fullName }}</h2>
           <p class="text-mq-t400 text-sm font-semibold mt-1 mb-6 relative z-10">{{ doctor()!.specialty }}</p>
-          
+
           <div class="w-full flex items-center justify-between p-3 rounded-xl bg-mq-navy/50 border border-mq-700/50 mb-3">
             <span class="text-xs text-mq-s400 uppercase font-bold">Status</span>
             <div class="flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full" [class]="doctor()!.isAvailable ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,.8)]' : 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,.8)]'"></div>
-              <span class="text-xs font-bold" [class]="doctor()!.isAvailable ? 'text-emerald-400' : 'text-rose-400'">
+              <div class="w-2 h-2 rounded-full"
+                   [class]="doctor()!.isAvailable ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,.8)]' : 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,.8)]'"></div>
+              <span class="text-xs font-bold"
+                    [class]="doctor()!.isAvailable ? 'text-emerald-400' : 'text-rose-400'">
                 {{ doctor()!.isAvailable ? 'Available' : 'Unavailable' }}
               </span>
             </div>
           </div>
-          
+
           <div class="w-full flex items-center justify-between p-3 rounded-xl bg-mq-navy/50 border border-mq-700/50">
             <span class="text-xs text-mq-s400 uppercase font-bold">License #</span>
             <span class="text-white text-xs font-mono font-bold">{{ doctor()!.licenseNumber ?? 'N/A' }}</span>
           </div>
         </div>
       </div>
-      
-      <!-- Right Column (Financials & Details) -->
-      <div class="col-span-1 md:col-span-2 space-y-6">
-        
-        <!-- Bento Details -->
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Fee Card -->
-          <div class="mq-card-dark p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <lucide-icon name="dollar-sign" [size]="20"></lucide-icon>
-              </div>
-              <h3 class="text-white font-bold">Consultation Fee</h3>
-            </div>
-            <p class="text-3xl font-black text-white">
-              EGP {{ doctor()!.consultationFee }}
-            </p>
-          </div>
-          
-          <!-- Follow Up Card -->
-          <div class="mq-card-dark p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
-                <lucide-icon name="refresh-cw" [size]="20"></lucide-icon>
-              </div>
-              <h3 class="text-white font-bold">Follow-Up Fee</h3>
-            </div>
-            <p class="text-3xl font-black text-white">
-              EGP {{ doctor()!.followUpFee ?? (doctor()!.consultationFee ? doctor()!.consultationFee! / 2 : '0') }}
-            </p>
-          </div>
-          
-          <!-- Sub Specialty -->
-          <div class="col-span-2 mq-card-dark p-6">
-            <h3 class="text-xs font-black text-mq-s400 uppercase tracking-widest mb-4 border-l-2 border-mq-teal pl-3">Additional Details</h3>
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <p class="text-[10px] text-mq-s400 uppercase font-bold mb-1">Sub Specialty</p>
-                <p class="text-white font-medium">{{ doctor()!.subSpecialty ?? 'General ' + doctor()!.specialty }}</p>
-              </div>
-              <div>
-                <p class="text-[10px] text-mq-s400 uppercase font-bold mb-1">ID</p>
-                <p class="text-white font-mono text-xs">{{ doctor()!.id }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
+      <!-- ═══ RIGHT — Tabbed content ═══ -->
+      <div class="col-span-1 md:col-span-2 space-y-6">
+
+        <!-- Tabs -->
+        <div class="mq-tabs">
+          @for (tab of [
+            { id: 'profile',  label: 'Profile',  icon: 'user'      },
+            { id: 'schedule', label: 'Schedule', icon: 'calendar-clock' },
+          ]; track tab.id) {
+            <button (click)="activeTab.set($any(tab.id))"
+                    [class]="'mq-tab' + (activeTab() === tab.id ? ' active' : '')">
+              <lucide-icon [name]="tab.icon" [size]="13" class="mr-1.5"/>
+              {{ tab.label }}
+            </button>
+          }
+        </div>
+
+        <!-- ─── PROFILE TAB ─── -->
+        @if (activeTab() === 'profile') {
+          <div class="grid grid-cols-2 gap-4">
+            <div class="mq-card-dark p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <lucide-icon name="dollar-sign" [size]="20"/>
+                </div>
+                <h3 class="text-white font-bold">Consultation Fee</h3>
+              </div>
+              <p class="text-3xl font-black text-white">EGP {{ doctor()!.consultationFee }}</p>
+            </div>
+
+            <div class="mq-card-dark p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                  <lucide-icon name="refresh-cw" [size]="20"/>
+                </div>
+                <h3 class="text-white font-bold">Follow-Up Fee</h3>
+              </div>
+              <p class="text-3xl font-black text-white">
+                EGP {{ doctor()!.followUpFee ?? (doctor()!.consultationFee ? doctor()!.consultationFee! / 2 : '0') }}
+              </p>
+            </div>
+
+            <div class="col-span-2 mq-card-dark p-6">
+              <h3 class="text-xs font-black text-mq-s400 uppercase tracking-widest mb-4 border-l-2 border-mq-teal pl-3">Additional Details</h3>
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <p class="text-[10px] text-mq-s400 uppercase font-bold mb-1">Sub Specialty</p>
+                  <p class="text-white font-medium">{{ doctor()!.subSpecialty ?? 'General ' + doctor()!.specialty }}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] text-mq-s400 uppercase font-bold mb-1">ID</p>
+                  <p class="text-white font-mono text-xs">{{ doctor()!.id }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ─── SCHEDULE TAB ─── -->
+        @if (activeTab() === 'schedule') {
+          <div class="space-y-3">
+
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-white">
+                <lucide-icon name="calendar-clock" class="text-mq-t400 mr-1.5" [size]="16"/>
+                Working Schedule
+              </h3>
+              <button (click)="showAddShift.set(true)"
+                      class="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5">
+                <lucide-icon name="plus" [size]="14"/>
+                Add Shift
+              </button>
+            </div>
+
+            <!-- Loading shifts -->
+            @if (isShiftsLoading()) {
+              @for (i of [1,2,3]; track i) {
+                <div class="h-16 rounded-xl bg-mq-800/80 animate-pulse"></div>
+              }
+            }
+
+            <!-- Empty -->
+            @else if (!hasAnyShift()) {
+              <div class="empty-state !py-10 mq-card-dark">
+                <div class="empty-icon">
+                  <lucide-icon name="calendar-x" class="text-mq-s400" [size]="22"/>
+                </div>
+                <p class="empty-title text-sm">No shifts configured</p>
+                <p class="empty-desc text-xs">Add working hours for this doctor</p>
+              </div>
+            }
+
+            <!-- Existing shifts -->
+            @else {
+              <div class="space-y-2">
+                @for (day of sortedDays(); track day) {
+                  @if (shiftsByDay()[day]; as shift) {
+                    <div class="mq-card-dark p-4 flex items-center justify-between">
+                      <div class="flex items-center gap-4">
+                        <!-- Day badge -->
+                        <span class="inline-flex w-24 justify-center px-2 py-1 rounded-full text-xs
+                                     bg-mq-teal/15 text-mq-t400 border border-mq-teal/30 font-semibold">
+                          {{ dayLabel(day) }}
+                        </span>
+                        <!-- Time range -->
+                        <span class="text-white text-sm font-medium">
+                          {{ shift.startTime }} — {{ shift.endTime }}
+                        </span>
+                        <!-- Slot duration -->
+                        <span class="text-mq-s400 text-xs">
+                          {{ shift.slotDurationMinutes }}-min slots
+                        </span>
+                      </div>
+                      <!-- Delete -->
+                      <button (click)="confirmDelete(day)"
+                              class="w-8 h-8 rounded-lg border border-rose-500/30 text-rose-400
+                                     hover:bg-rose-500/10 transition-colors
+                                     flex items-center justify-center">
+                        <lucide-icon name="trash-2" [size]="14"/>
+                      </button>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div>
     </div>
   }
+
+  <!-- ══════ ADD SHIFT MODAL ══════ -->
+  @if (showAddShift()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style="background:rgba(0,0,0,.7);backdrop-filter:blur(8px)"
+         (click)="showAddShift.set(false)">
+      <div class="mq-card-dark w-full max-w-sm p-6 rounded-2xl relative"
+           style="animation:scaleIn .3s cubic-bezier(0.34,1.56,0.64,1) both"
+           (click)="$event.stopPropagation()">
+
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-white">Add Working Shift</h3>
+          <button (click)="showAddShift.set(false)"
+                  class="text-mq-s400 hover:text-white transition-colors">
+            <lucide-icon name="x" [size]="20"/>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <p class="mq-label">Day of Week</p>
+            <select [(ngModel)]="newShift.dayOfWeek"
+                    class="mq-input">
+              @for (d of dayLabels; track d.value) {
+                <option [value]="d.value">{{ d.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="mq-label">Start Time</p>
+              <input type="time" [(ngModel)]="newShift.startTime"
+                     class="mq-input [color-scheme:dark]"/>
+            </div>
+            <div>
+              <p class="mq-label">End Time</p>
+              <input type="time" [(ngModel)]="newShift.endTime"
+                     class="mq-input [color-scheme:dark]"/>
+            </div>
+          </div>
+
+          <div>
+            <p class="mq-label">Slot Duration (minutes)</p>
+            <input type="number" [(ngModel)]="newShift.slotDurationMinutes"
+                   class="mq-input" min="10" max="120" step="5"/>
+            <p class="text-mq-s500 text-[11px] mt-1">Recommended: 15 / 30 / 45 / 60.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button (click)="showAddShift.set(false)"
+                  class="btn-secondary flex-1">Cancel</button>
+          <button (click)="addShift()"
+                  class="btn-primary flex-1 flex items-center justify-center gap-2"
+                  [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            }
+            Add Shift
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══════ DELETE CONFIRMATION MODAL ══════ -->
+  @if (deleteTarget() !== null) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style="background:rgba(0,0,0,.7);backdrop-filter:blur(8px)"
+         (click)="cancelDelete()">
+      <div class="mq-card-dark w-full max-w-sm p-6 rounded-2xl"
+           (click)="$event.stopPropagation()">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center">
+            <lucide-icon name="alert-triangle" [size]="20"/>
+          </div>
+          <h3 class="text-lg font-bold text-white">Remove shift?</h3>
+        </div>
+        <p class="text-mq-s400 text-sm mb-6">
+          Remove the working shift for <span class="text-white font-semibold">{{ dayLabel(deleteTarget()!) }}</span>?
+          Existing appointments on this day are not affected.
+        </p>
+        <div class="flex gap-3">
+          <button (click)="cancelDelete()"
+                  class="btn-secondary flex-1">Cancel</button>
+          <button (click)="deleteShift()"
+                  class="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-sm flex items-center justify-center gap-2"
+                  [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            }
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>

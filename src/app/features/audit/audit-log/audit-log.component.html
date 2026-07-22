@@ -1,0 +1,71 @@
+<div class="page-bg p-6 min-h-screen space-y-5">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Audit Logs</h1>
+      <p class="page-subtitle">{{ total() }} events recorded</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3">
+    <input type="text"
+           [(ngModel)]="actionFilter"
+           (ngModelChange)="onFilterChange()"
+           class="mq-input max-w-xs"
+           placeholder="Filter by action..."/>
+    <input type="text"
+           [(ngModel)]="entityFilter"
+           (ngModelChange)="onFilterChange()"
+           class="mq-input max-w-xs"
+           placeholder="Filter by entity..."/>
+  </div>
+
+  @if (isLoading()) {
+    <div class="space-y-2">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="h-14 skeleton rounded-xl"></div>
+      }
+    </div>
+  } @else if (logs().length === 0) {
+    <div class="empty-state mq-card py-20">
+      <h3 class="empty-title">No audit logs found</h3>
+      <p class="empty-desc">Try adjusting your filters</p>
+    </div>
+  } @else {
+    <div class="mq-table-wrapper">
+      <table class="mq-table">
+        <thead>
+          <tr>
+            <th class="mq-th">Time</th>
+            <th class="mq-th">User</th>
+            <th class="mq-th">Action</th>
+            <th class="mq-th">Entity</th>
+            <th class="mq-th">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr class="mq-tr">
+              <td class="mq-td text-xs text-mq-s400">
+                {{ log.createdAt | date:'MMM d, y HH:mm' }}
+              </td>
+              <td class="mq-td text-sm">{{ log.userEmail }}</td>
+              <td class="mq-td text-sm font-mono text-mq-teal-400">{{ log.action }}</td>
+              <td class="mq-td text-sm">{{ log.entityName }}</td>
+              <td class="mq-td">
+                <span [class]="log.succeeded ? 'badge badge-success' : 'badge badge-neutral'">
+                  {{ log.succeeded ? 'OK' : 'Failed' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination
+        [total]="total"
+        [pageSize]="50"
+        [currentPage]="page"
+        (pageChange)="onPageChange($event)"/>
+    </div>
+  }
+</div>

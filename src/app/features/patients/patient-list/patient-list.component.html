@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Patients</h1>
-      <p class="page-subtitle">{{ patients().length }} registered patients</p>
+      <p class="page-subtitle">{{ total() }} registered patients</p>
     </div>
     <button (click)="router.navigate(['/patients/register'])"
             class="btn-primary">
@@ -125,6 +125,11 @@
           }
         </tbody>
       </table>
+      <app-pagination
+        [total]="total"
+        [pageSize]="20"
+        [currentPage]="page"
+        (pageChange)="onPageChange($event)"/>
     </div>
   }
 

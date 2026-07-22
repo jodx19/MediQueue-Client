@@ -1,16 +1,20 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
-import { AppointmentsClient, AppointmentDto, AppointmentStatus } from '../../../core/api/mediqueue-api';
+import {
+  AppointmentsClient, AppointmentDto, AppointmentStatus,
+  RescheduleAppointmentCommand,
+} from '../../../core/api/mediqueue-api';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ClinicalVisitsClient } from '../../../core/api/mediqueue-api';
 
 @Component({
   selector: 'app-appointment-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './appointment-detail.component.html',
 })
 export class AppointmentDetailComponent implements OnInit {
@@ -20,12 +24,43 @@ export class AppointmentDetailComponent implements OnInit {
   private readonly route              = inject(ActivatedRoute);
   public  readonly router             = inject(Router);
 
-  appointment = signal<AppointmentDto | null>(null);
-  isLoading   = signal(true);
-  id          = '';
+  appointment     = signal<AppointmentDto | null>(null);
+  isLoading       = signal(true);
+  isSubmitting    = signal(false);
+  id              = '';
+
+  // ── Reschedule ────────────────────────────────────────────────────────
+  // Only appointments still in the "Scheduled" state can be rescheduled —
+  // once the patient has checked in or the encounter has begun, the time
+  // is no longer movable. RescheduleAppointmentCommand carries only the
+  // new timestamp + appointmentId (no reason field on the backend), so we
+  // don't expose one in the UI.
+  showReschedule = signal(false);
+  newScheduledAt = '';
+
+  // Earliest selectable time = now + 30 min, formatted as the yyyy-MM-ddTHH:mm
+  // value a datetime-local input expects. This guards against rescheduling
+  // to a time in the past or in the immediate buffer window.
+  readonly minDate = computed(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 30);
+    return now.toISOString().slice(0, 16);
+  });
+
+  // Only Scheduled (_1) appointments are reschedulable. Other statuses are
+  // either already in progress, completed, or cancelled and would silently
+  // fail on the server.
+  readonly canReschedule = computed(() =>
+    this.appointment()?.status === AppointmentStatus._1
+  );
 
   async ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id')!;
+    await this.loadAppointment();
+  }
+
+  async loadAppointment() {
+    this.isLoading.set(true);
     try {
       const result = await firstValueFrom(this.appointmentsClient.appointmentsGET(this.id));
       this.appointment.set(result);
@@ -54,6 +89,28 @@ export class AppointmentDetailComponent implements OnInit {
       }
     } catch (err: any) {
       this.notify.error('Could not open visit');
+    }
+  }
+
+  async rescheduleAppointment() {
+    if (!this.newScheduledAt) return;
+    this.isSubmitting.set(true);
+    try {
+      await firstValueFrom(this.appointmentsClient.reschedule(
+        this.id,
+        new RescheduleAppointmentCommand({
+          appointmentId:   this.id,
+          newScheduledAt:  new Date(this.newScheduledAt),
+        }),
+      ));
+      this.notify.success('Appointment rescheduled');
+      this.showReschedule.set(false);
+      this.newScheduledAt = '';
+      await this.loadAppointment();
+    } catch (err: any) {
+      this.notify.error(err?.error?.detail ?? 'Failed to reschedule');
+    } finally {
+      this.isSubmitting.set(false);
     }
   }
 

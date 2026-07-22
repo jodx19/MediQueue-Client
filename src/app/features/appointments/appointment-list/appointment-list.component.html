@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title" data-testid="page-title">Appointments</h1>
-      <p class="page-subtitle">{{ appointments().length }} records</p>
+      <p class="page-subtitle">{{ total() }} records</p>
     </div>
     <button (click)="showModal.set(true)" data-testid="new-appointment-btn"
             class="btn-primary flex items-center gap-2">
@@ -16,7 +16,7 @@
   <!-- Stats row -->
   <div class="grid grid-cols-4 gap-4 mb-6">
     @for (stat of [
-      {label:'Total', count: appointments().length, color:'text-white'},
+      {label:'Total', count: total(), color:'text-white'},
       {label:'Waiting', count: getStatusCount('CheckedIn'), color:'text-amber-400'},
       {label:'In Session', count: getStatusCount('InSession'), color:'text-purple-400'},
       {label:'Completed', count: getStatusCount('Completed'), color:'text-emerald-400'}
@@ -54,7 +54,7 @@
   }
 
   <!-- Empty -->
-  @else if (appointments().length === 0) {
+  @else if (total() === 0) {
     <div class="flex flex-col items-center justify-center py-24 text-center mq-card-dark">
       <lucide-icon name="calendar" class="text-mq-s400 mb-4" [size]="40"/>
       <p class="text-white font-semibold">No appointments found</p>
@@ -117,6 +117,11 @@
         </div>
       }
     </div>
+    <app-pagination
+      [total]="total"
+      [pageSize]="20"
+      [currentPage]="page"
+      (pageChange)="onPageChange($event)"/>
   }
 </div>
 

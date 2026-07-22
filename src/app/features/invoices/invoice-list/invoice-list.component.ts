@@ -9,13 +9,15 @@ import { NotificationService } from '../../../core/services/notification.service
 import { InvoiceStatusPipe } from '../../../shared/pipes/invoice-status.pipe';
 import { invoiceStatusFromNumber } from '../../../core/utils/invoice-status.utils';
 import { HasRoleDirective } from '../../../shared/directives/has-role.directive';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const IS = InvoiceStatus;
+const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, InvoiceStatusPipe, HasRoleDirective],
+  imports: [CommonModule, FormsModule, LucideAngularModule, InvoiceStatusPipe, HasRoleDirective, PaginationComponent],
   templateUrl: './invoice-list.component.html',
 })
 export class InvoiceListComponent implements OnInit {
@@ -26,12 +28,8 @@ export class InvoiceListComponent implements OnInit {
   isLoading = signal(true);
   invoices  = signal<InvoiceListItemDto[]>([]);
   filter    = signal<InvoiceStatus | null>(null);
-
-  get filtered() {
-    const f = this.filter();
-    if (f == null) return this.invoices();
-    return this.invoices().filter(i => invoiceStatusFromNumber(i.status as any) === f);
-  }
+  page      = signal(1);
+  total     = signal(0);
 
   get totalRevenue(): number {
     return this.invoices()
@@ -52,9 +50,12 @@ export class InvoiceListComponent implements OnInit {
   async loadInvoices() {
     this.isLoading.set(true);
     try {
-      const response = await firstValueFrom(this.invoicesClient.invoicesGET(1, 50, undefined, undefined, undefined));
-      const data = response?.items ?? [];
-      this.invoices.set(Array.isArray(data) ? data : []);
+      const status = this.filter()?.toString();
+      const response = await firstValueFrom(
+        this.invoicesClient.invoicesGET(this.page(), PAGE_SIZE, status, undefined, undefined)
+      );
+      this.invoices.set(response?.items ?? []);
+      this.total.set(response?.totalCount ?? 0);
     } catch (err) {
       this.notify.error('Failed to load invoices');
     } finally {
@@ -63,18 +64,27 @@ export class InvoiceListComponent implements OnInit {
   }
 
   setFilter(value: string) {
-    if (!value) { this.filter.set(null); return; }
-    for (const key of Object.keys(IS)) {
-      if (IS[key as keyof typeof IS] === parseInt(value)) {
-        this.filter.set(parseInt(value) as InvoiceStatus);
-        return;
+    if (!value) {
+      this.filter.set(null);
+    } else {
+      for (const key of Object.keys(IS)) {
+        if (IS[key as keyof typeof IS] === parseInt(value)) {
+          this.filter.set(parseInt(value) as InvoiceStatus);
+          break;
+        }
       }
     }
-    this.filter.set(null);
+    this.page.set(1);
+    void this.loadInvoices();
+  }
+
+  onPageChange(newPage: number) {
+    this.page.set(newPage);
+    void this.loadInvoices();
   }
 
   exportCSV() {
-    const data = this.filtered;
+    const data = this.invoices();
     if (data.length === 0) {
       this.notify.warning('No invoice data available to export.');
       return;

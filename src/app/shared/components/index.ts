@@ -9,3 +9,4 @@ export { PageHeaderComponent } from './page-header/page-header.component';
 export { ToastComponent } from './toast/toast.component';
 export { FileUploadComponent } from './file-upload/file-upload.component';
 export { AttachmentsListComponent } from './attachments-list/attachments-list.component';
+export { PaginationComponent } from './pagination/pagination.component';
