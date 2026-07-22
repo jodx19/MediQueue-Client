@@ -75,6 +75,13 @@
           <lucide-icon name="calendar-plus" [size]="15"/>
           Book Appointment
         </button>
+        <button (click)="startEdit()"
+                *hasRole="['Admin', 'Receptionist']"
+                [disabled]="isEditing()"
+                class="btn-secondary w-full disabled:opacity-50">
+          <lucide-icon name="pencil" [size]="15"/>
+          Edit Contact Info
+        </button>
         <button (click)="router.navigate(['/patients'])"
                 class="btn-secondary w-full">
           <lucide-icon name="arrow-left" [size]="15"/>
@@ -90,6 +97,7 @@
       <div class="mq-tabs">
         @for (tab of [
           {id:'overview',      label:'Overview',       icon:'user'},
+          {id:'medical',       label:'Medical',        icon:'heart-pulse'},
           {id:'visits',        label:'Medical Visits', icon:'clipboard'},
           {id:'appointments',  label:'Appointments',   icon:'calendar'},
           {id:'files',         label:'Medical Files',  icon:'file'}
@@ -130,25 +138,76 @@
           </div>
 
           <div class="mq-card p-5">
-            <h3 class="text-sm font-semibold text-mq-text mb-4 pb-3 border-b border-mq-700">
-              Contact & Insurance
-            </h3>
-            <div class="space-y-3">
-              <div class="flex justify-between text-sm">
-                <span class="text-mq-s400">Phone</span>
-                <span class="text-mq-s300">{{ patient()!.phone || '—' }}</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-mq-s400">Email</span>
-                <span class="text-mq-s300">{{ patient()!.email || '—' }}</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-mq-s400">Status</span>
-                <span [class]="patient()!.isActive ? 'badge badge-success' : 'badge badge-neutral'">
-                  {{ patient()!.isActive ? 'Active' : 'Inactive' }}
-                </span>
-              </div>
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-mq-700">
+              <h3 class="text-sm font-semibold text-mq-text">
+                Contact & Insurance
+              </h3>
+              @if (!isEditing()) {
+                <button (click)="startEdit()"
+                        *hasRole="['Admin', 'Receptionist']"
+                        class="text-xs text-mq-teal hover:underline flex items-center gap-1">
+                  <lucide-icon name="pencil" [size]="12"/>
+                  Edit
+                </button>
+              }
             </div>
+
+            @if (!isEditing()) {
+              <!-- Display mode -->
+              <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                  <span class="text-mq-s400">Phone</span>
+                  <span class="text-mq-s300">{{ patient()!.phone || '—' }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-mq-s400">Email</span>
+                  <span class="text-mq-s300 truncate ml-3">{{ patient()!.email || '—' }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-mq-s400">Status</span>
+                  <span [class]="patient()!.isActive ? 'badge badge-success' : 'badge badge-neutral'">
+                    {{ patient()!.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+              </div>
+            } @else {
+              <!-- Edit mode: only phone / email / alternativePhone are backed
+                   by UpdatePatientCommand. Identity fields stay read-only. -->
+              <div class="space-y-4">
+                <div>
+                  <p class="mq-label">Phone</p>
+                  <input type="tel" [(ngModel)]="editForm.phone"
+                         class="mq-input"/>
+                </div>
+                <div>
+                  <p class="mq-label">Email</p>
+                  <input type="email" [(ngModel)]="editForm.email"
+                         class="mq-input"/>
+                </div>
+                <div>
+                  <p class="mq-label">Alternative Phone</p>
+                  <input type="tel" [(ngModel)]="editForm.alternativePhone"
+                         class="mq-input"/>
+                </div>
+                <p class="text-mq-s500 text-[11px]">
+                  Identity fields (name, DOB, national ID) aren't editable here —
+                  the API doesn't expose an update path for them yet.
+                </p>
+                <div class="flex gap-3">
+                  <button (click)="cancelEdit()"
+                          [disabled]="isSubmitting()"
+                          class="btn-secondary flex-1">Cancel</button>
+                  <button (click)="saveEdit()"
+                          [disabled]="isSubmitting()"
+                          class="btn-primary flex-1 flex items-center justify-center gap-2">
+                    @if (isSubmitting()) {
+                      <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    }
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            }
           </div>
 
           <div class="mq-card p-5">
@@ -292,6 +351,228 @@
           </div>
         </div>
       }
+
+      <!-- MEDICAL TAB (allergies + chronic conditions) -->
+      @if (activeTab() === 'medical') {
+        <div class="space-y-6">
+
+          <!-- ALLERGIES -->
+          <div class="mq-card p-5">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-mq-700">
+              <h3 class="text-sm font-semibold text-mq-text flex items-center gap-2">
+                <lucide-icon name="alert-circle" [size]="16" class="text-rose-400"/>
+                Allergies
+              </h3>
+              <button (click)="showAddAllergy.set(true)"
+                      *hasRole="['Admin', 'Doctor', 'Receptionist']"
+                      class="btn-ghost !py-1 !px-3 !text-xs flex items-center gap-1">
+                <lucide-icon name="plus" [size]="12"/>
+                Add
+              </button>
+            </div>
+
+            @if ((patient()?.allergies ?? []).length === 0) {
+              <p class="text-mq-s400 text-xs italic py-3">No allergies recorded</p>
+            } @else {
+              <div class="flex flex-wrap gap-2">
+                @for (a of patient()?.allergies ?? []; track a.id) {
+                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                              bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs">
+                    <lucide-icon name="shield-alert" [size]="11"/>
+                    <span class="font-medium">{{ a.allergen }}</span>
+                    @if (a.severity) {
+                      <span class="text-rose-400/60">· {{ a.severity }}</span>
+                    }
+                    @if (a.reaction) {
+                      <span class="text-rose-400/50 italic">— {{ a.reaction }}</span>
+                    }
+                    <button (click)="removeAllergy(a.id!)"
+                            *hasRole="['Admin', 'Doctor', 'Receptionist']"
+                            class="ml-0.5 hover:text-white transition-colors"
+                            aria-label="Remove allergy">
+                      <lucide-icon name="x" [size]="11"/>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- CHRONIC CONDITIONS -->
+          <div class="mq-card p-5">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-mq-700">
+              <h3 class="text-sm font-semibold text-mq-text flex items-center gap-2">
+                <lucide-icon name="heart-pulse" [size]="16" class="text-amber-400"/>
+                Chronic Conditions
+              </h3>
+              <button (click)="showAddCondition.set(true)"
+                      *hasRole="['Admin', 'Doctor', 'Receptionist']"
+                      class="btn-ghost !py-1 !px-3 !text-xs flex items-center gap-1">
+                <lucide-icon name="plus" [size]="12"/>
+                Add
+              </button>
+            </div>
+
+            @if ((patient()?.chronicConditions ?? []).length === 0) {
+              <p class="text-mq-s400 text-xs italic py-3">No chronic conditions recorded</p>
+            } @else {
+              <div class="space-y-2">
+                @for (c of patient()?.chronicConditions ?? []; track c.id) {
+                  <div class="flex items-start gap-3 p-3 rounded-xl bg-mq-800/40 border border-mq-700/50">
+                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex-shrink-0">
+                      <lucide-icon name="activity" [size]="14"/>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-mq-text text-sm font-semibold">{{ c.conditionName }}</span>
+                        @if (c.icD10Code) {
+                          <span class="text-mq-s400 text-xs font-mono">ICD-10: {{ c.icD10Code }}</span>
+                        }
+                        @if (c.diagnosedAt) {
+                          <span class="text-mq-s500 text-[11px]">
+                            · Diagnosed {{ c.diagnosedAt | date:'MMM d, y' }}
+                          </span>
+                        }
+                      </div>
+                      @if (c.notes) {
+                        <p class="text-mq-s400 text-xs mt-1">{{ c.notes }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+            <p class="text-mq-s500 text-[11px] mt-3 italic">
+              Chronic-condition removal is not yet supported by the API and is intentionally omitted.
+            </p>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ══════ ADD ALLERGY MODAL ══════ -->
+@if (showAddAllergy()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(8px)"
+       (click)="showAddAllergy.set(false)">
+    <div class="mq-card w-full max-w-md p-6 rounded-2xl"
+         style="animation:scaleIn .3s cubic-bezier(0.34,1.56,0.64,1) both"
+         (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center">
+            <lucide-icon name="alert-circle" [size]="18"/>
+          </div>
+          <h3 class="text-lg font-bold text-mq-text">Add Allergy</h3>
+        </div>
+        <button (click)="showAddAllergy.set(false)"
+                class="text-mq-s400 hover:text-mq-text transition-colors">
+          <lucide-icon name="x" [size]="20"/>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <p class="mq-label">Allergen *</p>
+          <input type="text"
+                 [(ngModel)]="newAllergy.allergen"
+                 class="mq-input"
+                 placeholder="e.g., Penicillin, Peanuts, Latex..."/>
+        </div>
+        <div>
+          <p class="mq-label">Severity</p>
+          <select [(ngModel)]="newAllergy.severity" class="mq-input">
+            @for (s of severityLabels; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <p class="mq-label">Reaction (optional)</p>
+          <input type="text"
+                 [(ngModel)]="newAllergy.reaction"
+                 class="mq-input"
+                 placeholder="e.g., Hives, Anaphylaxis..."/>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button (click)="showAddAllergy.set(false)"
+                class="btn-secondary flex-1">Cancel</button>
+        <button (click)="addAllergy()"
+                class="btn-primary flex-1 flex items-center justify-center gap-2"
+                [disabled]="isSubmitting() || !newAllergy.allergen.trim()">
+          @if (isSubmitting()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          }
+          Add Allergy
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══════ ADD CHRONIC CONDITION MODAL ══════ -->
+@if (showAddCondition()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       style="background:rgba(0,0,0,.7);backdrop-filter:blur(8px)"
+       (click)="showAddCondition.set(false)">
+    <div class="mq-card w-full max-w-md p-6 rounded-2xl"
+         style="animation:scaleIn .3s cubic-bezier(0.34,1.56,0.64,1) both"
+         (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+            <lucide-icon name="heart-pulse" [size]="18"/>
+          </div>
+          <h3 class="text-lg font-bold text-mq-text">Add Chronic Condition</h3>
+        </div>
+        <button (click)="showAddCondition.set(false)"
+                class="text-mq-s400 hover:text-mq-text transition-colors">
+          <lucide-icon name="x" [size]="20"/>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <p class="mq-label">Condition Name *</p>
+          <input type="text"
+                 [(ngModel)]="newCondition.conditionName"
+                 class="mq-input"
+                 placeholder="e.g., Type 2 Diabetes, Hypertension..."/>
+        </div>
+        <div>
+          <p class="mq-label">ICD-10 Code (optional)</p>
+          <input type="text"
+                 [(ngModel)]="newCondition.icD10Code"
+                 class="mq-input font-mono"
+                 placeholder="e.g., E11.9, I10..."/>
+        </div>
+        <div>
+          <p class="mq-label">Notes (optional)</p>
+          <textarea [(ngModel)]="newCondition.notes"
+                    class="mq-input resize-none h-20"
+                    placeholder="Clinical notes..."></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button (click)="showAddCondition.set(false)"
+                class="btn-secondary flex-1">Cancel</button>
+        <button (click)="addCondition()"
+                class="btn-primary flex-1 flex items-center justify-center gap-2"
+                [disabled]="isSubmitting() || !newCondition.conditionName.trim()">
+          @if (isSubmitting()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          }
+          Add Condition
+        </button>
+      </div>
     </div>
   </div>
 }

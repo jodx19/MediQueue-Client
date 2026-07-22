@@ -4,7 +4,7 @@
   <div class="flex items-start justify-between mb-8">
     <div>
       <h1 class="text-3xl font-black text-white tracking-tight">Clinical Staff</h1>
-      <p class="text-mq-s400 text-sm mt-1">{{ doctors().length }} doctors registered</p>
+      <p class="text-mq-s400 text-sm mt-1">{{ total() }} doctors registered</p>
     </div>
   </div>
 
@@ -69,5 +69,10 @@
         </div>
       }
     </div>
+    <app-pagination
+      [total]="total"
+      [pageSize]="20"
+      [currentPage]="page"
+      (pageChange)="onPageChange($event)"/>
   }
 </div>

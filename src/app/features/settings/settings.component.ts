@@ -1,110 +1,109 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../core/services/notification.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { ClinicSettingsDto, UpdateSettingsCommand } from '../../core/api/mediqueue-api';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
-import { FormErrorComponent } from '../../shared/components/form-error/form-error.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+
+type Tab = 'general' | 'hours' | 'notifications' | 'appearance';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
     LucideAngularModule,
-    FormErrorComponent,
-    LoadingSkeletonComponent
+    LoadingSkeletonComponent,
   ],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {
-  private settingsService = inject(SettingsService);
-  private notificationService = inject(NotificationService);
-  private apiErrorHandler = inject(ApiErrorHandlerService);
-  private fb = inject(FormBuilder);
+  private readonly settingsService     = inject(SettingsService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly apiErrorHandler     = inject(ApiErrorHandlerService);
+  private readonly fb                 = inject(FormBuilder);
 
-  // TODO Step 10: this component will read tenantId
-  // from AuthService.currentUser().tenantId
-  // and display tenant-specific settings only
-
-  activeTab = signal<'profile' | 'hours' | 'medical' | 'specialties' | 'notifications' | 'integrations'>('profile');
+  // ── View state ───────────────────────────────────────────────────────
+  activeTab  = signal<Tab>('general');
   isLoading = signal(false);
-  isSaving = signal(false);
-  currentSettings = signal<ClinicSettingsDto | null>(null);
-  integrationKeys = signal({ stripePublicKey: '', stripeSecretKey: '', paypalClientId: '', enableSMSAlerts: false, enableEmailReminders: false });
-  
-  profileSettings = signal({
-    clinicName: '', slogan: '', address: '', phone: '', email: '', taxNumber: '', currency: 'USD', logoGlowColor: 'teal'
-  });
-  workingDays = signal([
-    { day: 'Monday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Tuesday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Wednesday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Thursday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Friday', active: true, start: '09:00', end: '17:00' },
-    { day: 'Saturday', active: false, start: '09:00', end: '14:00' },
-    { day: 'Sunday', active: false, start: '', end: '' },
-  ]);
-  medicalSettings = signal({
-    defaultDuration: 30, emergencyFee: 150, commissionRate: 40, autoLockSoapNotes: true, customInvoiceNotes: ''
-  });
-  specialties = signal<string[]>(['General Practice', 'Cardiology', 'Pediatrics']);
-  notificationPrefs = signal([
-    { id: '1', label: 'Email Confirmations', desc: 'Send email when booked', enabled: true },
-    { id: '2', label: 'SMS Reminders', desc: 'Send SMS 24h before', enabled: true },
-  ]);
+  isSaving  = signal(false);
+  current   = signal<ClinicSettingsDto | null>(null);
 
-  removeSpecialty(index: number) {
-    this.specialties.update(s => s.filter((_, i) => i !== index));
-  }
-  
-  addSpecialty() {
-    this.specialties.update(s => [...s, 'New Specialty']);
-  }
-  
-  saveSettings() {
-    this.onSave();
-  }
+  // Currency options for the selectors — centralised so both General and
+  // Appearance tabs stay in sync without a separate source of truth.
+  readonly currencies: ReadonlyArray<{ code: string; label: string }> = [
+    { code: 'EGP', label: 'EGP — Egyptian Pound' },
+    { code: 'USD', label: 'USD — US Dollar' },
+    { code: 'EUR', label: 'EUR — Euro' },
+    { code: 'SAR', label: 'SAR — Saudi Riyal' },
+    { code: 'AED', label: 'AED — UAE Dirham' },
+  ];
 
+  // Common Egypt-only timezone list. The server stores IANA / Windows IDs;
+  // we expose the friendly subset the operators actually pick from.
+  readonly timezones: ReadonlyArray<string> = [
+    'Egypt Standard Time',
+    'UTC',
+    'Arabian Standard Time',
+    'Israel Standard Time',
+    'GMT Standard Time',
+  ];
+
+  // Approximate duration presets for the appearance slider. Stored on the
+  // server as an int (minutes); the slider snaps to these discrete values.
+  readonly durationSteps = [15, 30, 45, 60];
+
+  // ── Reactive form (single source of truth mirroring the API) ────────
+  // Every field here maps 1:1 to UpdateSettingsCommand properties. The
+  // four tabs all read/write this same form so a Save in any tab persists
+  // the entire settings document atomically via PUT /api/settings.
   form = this.fb.group({
+    // General tab
     clinicName:    ['', [Validators.required, Validators.maxLength(200)]],
     clinicPhone:   ['', [Validators.required]],
     clinicEmail:   ['', [Validators.email]],
     clinicAddress: [''],
-    workStartTime: ['08:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
-    workEndTime:   ['17:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+    // Working hours tab
+    workStartTime:  ['08:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+    workEndTime:    ['17:00', [Validators.required, Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
     appointmentDurationMinutes: [30, [Validators.required, Validators.min(10), Validators.max(120)]],
-    currency:     ['USD', [Validators.required, Validators.maxLength(3)]],
-    timeZone:     ['Egypt Standard Time'],
-    allowOnlineBooking:        [true],
-    requireDepositForBooking:  [false],
+    allowOnlineBooking:       [true],
+    // Notifications tab (server-side toggles — no separate sms/email fields yet)
+    requireDepositForBooking: [false],
     depositAmount: [0, [Validators.min(0)]],
+    // Appearance tab
+    currency: ['EGP', [Validators.required, Validators.maxLength(3)]],
+    timeZone: ['Egypt Standard Time', [Validators.required]],
   });
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    void this.load();
+  }
+
+  // ── Data ────────────────────────────────────────────────────────────
+  async load() {
     this.isLoading.set(true);
     try {
       const settings = await firstValueFrom(this.settingsService.getSettings());
-      this.currentSettings.set(settings);
+      this.current.set(settings);
       this.form.patchValue({
-        clinicName:    settings.clinicName,
-        clinicPhone:   settings.clinicPhone,
-        clinicEmail:   settings.clinicEmail,
-        clinicAddress: settings.clinicAddress,
-        workStartTime: settings.workStartTime,
-        workEndTime:   settings.workEndTime,
-        appointmentDurationMinutes: settings.appointmentDurationMinutes,
-        currency:      settings.currency,
-        timeZone:      settings.timeZone,
-        allowOnlineBooking:       settings.allowOnlineBooking,
-        requireDepositForBooking: settings.requireDepositForBooking,
-        depositAmount: settings.depositAmount,
+        clinicName:    settings.clinicName    ?? '',
+        clinicPhone:   settings.clinicPhone   ?? '',
+        clinicEmail:   settings.clinicEmail    ?? '',
+        clinicAddress: settings.clinicAddress  ?? '',
+        workStartTime: settings.workStartTime  ?? '08:00',
+        workEndTime:   settings.workEndTime    ?? '17:00',
+        appointmentDurationMinutes: settings.appointmentDurationMinutes ?? 30,
+        allowOnlineBooking:       settings.allowOnlineBooking       ?? true,
+        requireDepositForBooking: settings.requireDepositForBooking ?? false,
+        depositAmount: settings.depositAmount ?? 0,
+        currency: settings.currency ?? 'EGP',
+        timeZone: settings.timeZone ?? 'Egypt Standard Time',
       });
     } catch (err) {
       this.apiErrorHandler.handle(err);
@@ -113,33 +112,38 @@ export class SettingsComponent implements OnInit {
     }
   }
 
-  async onSave(): Promise<void> {
+  async save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.notificationService.warning('Please fix the highlighted fields before saving.');
       return;
     }
 
     this.isSaving.set(true);
     try {
       const v = this.form.getRawValue();
-      const updated = await firstValueFrom(
-        this.settingsService.updateSettings({
-          clinicName:    v.clinicName!,
-          clinicPhone:   v.clinicPhone!,
-          clinicEmail:   v.clinicEmail ?? '',
-          clinicAddress: v.clinicAddress ?? '',
-          workStartTime: v.workStartTime!,
-          workEndTime:   v.workEndTime!,
-          appointmentDurationMinutes: v.appointmentDurationMinutes!,
-          currency:      v.currency!,
-          timeZone:      v.timeZone!,
-          allowOnlineBooking:       v.allowOnlineBooking ?? true,
-          requireDepositForBooking: v.requireDepositForBooking ?? false,
-          depositAmount: v.depositAmount ?? 0,
-        } as UpdateSettingsCommand)
-      );
-      this.currentSettings.set(updated);
-      this.notificationService.success('تم حفظ الإعدادات بنجاح ✓');
+      // Compose the typed payload sent to PUT /api/settings. Every property
+      // below is backed by an UpdateSettingsCommand field on the server.
+      // NSwag generates UpdateSettingsCommand as a class (not a literal
+      // interface), so we must instantiate it via its constructor.
+      const payload = new UpdateSettingsCommand({
+        clinicName:    v.clinicName!,
+        clinicPhone:   v.clinicPhone!,
+        clinicEmail:   v.clinicEmail ?? '',
+        clinicAddress: v.clinicAddress ?? '',
+        workStartTime: v.workStartTime!,
+        workEndTime:   v.workEndTime!,
+        appointmentDurationMinutes: v.appointmentDurationMinutes!,
+        currency:      v.currency!,
+        timeZone:      v.timeZone!,
+        allowOnlineBooking:       v.allowOnlineBooking ?? true,
+        requireDepositForBooking: v.requireDepositForBooking ?? false,
+        depositAmount: v.depositAmount ?? 0,
+      });
+
+      const updated = await firstValueFrom(this.settingsService.updateSettings(payload));
+      this.current.set(updated);
+      this.notificationService.success('Settings saved successfully ✓');
     } catch (err) {
       this.apiErrorHandler.handle(err);
     } finally {

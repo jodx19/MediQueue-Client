@@ -144,6 +144,13 @@ export const routes: Routes = [
           import('./features/settings/settings.component')
             .then(m => m.SettingsComponent),
       },
+      {
+        path: 'audit-logs',
+        canActivate: [roleGuard(['Admin'])],
+        loadComponent: () =>
+          import('./features/audit/audit-log/audit-log.component')
+            .then(m => m.AuditLogComponent),
+      },
 
       // Admin + Receptionist
       {

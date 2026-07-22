@@ -46,7 +46,7 @@
     </div>
     <div class="mq-card-dark p-5 border-l-4 border-mq-teal">
       <p class="text-mq-s400 text-xs uppercase tracking-wider mb-1">Total Invoices</p>
-      <p class="text-2xl font-black text-white">{{ invoices().length }}</p>
+      <p class="text-2xl font-black text-white">{{ total() }}</p>
     </div>
   </div>
 
@@ -78,7 +78,7 @@
   }
 
   <!-- Empty -->
-  @else if (filtered.length === 0) {
+  @else if (invoices().length === 0) {
     <div class="flex flex-col items-center justify-center py-20 mq-card-dark text-center">
       <lucide-icon name="receipt" class="text-mq-s400 mb-3" [size]="36"/>
       <p class="text-white font-medium">No invoices found</p>
@@ -100,7 +100,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (inv of filtered; track inv.id) {
+          @for (inv of invoices(); track inv.id) {
             <tr class="mq-tr"
                 (click)="router.navigate(['/invoices', inv.id])">
               <td class="mq-td">
@@ -131,6 +131,11 @@
           }
         </tbody>
       </table>
+      <app-pagination
+        [total]="total"
+        [pageSize]="20"
+        [currentPage]="page"
+        (pageChange)="onPageChange($event)"/>
     </div>
   }
 </div>
