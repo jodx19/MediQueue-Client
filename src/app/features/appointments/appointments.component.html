@@ -56,7 +56,7 @@
                 <div class="icon-box-sm bg-mq-teal/10 text-mq-teal-400">
                   <lucide-icon name="clock" [size]="14"/>
                 </div>
-                <span class="font-bold text-mq-text font-mono">{{ apt.time }}</span>
+                <span class="font-bold text-mq-text font-mono">{{ apt.scheduledAt | date:'shortTime' }}</span>
               </div>
               <span [class]="apt.status === 'Completed' ? 'badge badge-success' :
                              apt.status === 'Cancelled'  ? 'badge badge-danger'  :
@@ -68,12 +68,12 @@
             <!-- Patient + doctor -->
             <div class="flex items-center gap-3 mb-4">
               <div class="mq-avatar-md text-sm flex-shrink-0">
-                {{ apt.patient[0] }}
+                {{ apt.patientName ? apt.patientName[0] : 'P' }}
               </div>
               <div>
-                <p class="font-semibold text-mq-text text-sm">{{ apt.patient }}</p>
+                <p class="font-semibold text-mq-text text-sm">{{ apt.patientName }}</p>
                 <p class="text-xs text-mq-s400 mt-0.5">
-                  {{ apt.doctor }} •
+                  {{ apt.doctorName }} •
                   <span class="text-mq-teal-400">{{ apt.type }}</span>
                 </p>
               </div>

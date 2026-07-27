@@ -206,7 +206,7 @@
           </div>
           <div>
             <label class="mq-label">Temp Password *</label>
-            <input type="password" name="password" [(ngModel)]="newStaff.password" required
+            <input type="password" name="password" [(ngModel)]="newStaff.password" required minlength="8" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$"
                    class="mq-input" placeholder="••••••••"/>
           </div>
         </div>

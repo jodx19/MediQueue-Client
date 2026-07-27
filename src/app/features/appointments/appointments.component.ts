@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppointmentsClient, AppointmentListItemDto } from '../../core/api/mediqueue-api';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { LucideAngularModule, Calendar as CalendarIcon, List, Clock, User, CheckCircle2, XCircle, CalendarPlus, ChevronLeft, ChevronRight, X } from 'lucide-angular';
 
@@ -41,12 +42,14 @@ export class AppointmentsComponent {
   
   isBookModalOpen = signal(false);
 
-  appointments = signal([
-    { id: 1, time: '10:00 AM', patient: 'Omar Tarek', doctor: 'Dr. Ahmed Samy', type: 'Follow Up', status: 'Scheduled' },
-    { id: 2, time: '11:30 AM', patient: 'Sara Ali', doctor: 'Dr. Mona Hassan', type: 'New Patient', status: 'Scheduled' },
-    { id: 3, time: '01:00 PM', patient: 'Khaled Hassan', doctor: 'Dr. Tarek Ziad', type: 'Consultation', status: 'Completed' },
-    { id: 4, time: '03:45 PM', patient: 'Nour Yasser', doctor: 'Dr. Ahmed Samy', type: 'Procedure', status: 'Cancelled' },
-  ]);
+  appointments = signal<AppointmentListItemDto[]>([]);
+  isLoading = signal(false);
+
+  private appointmentsClient = inject(AppointmentsClient);
+
+  constructor() {
+    this.loadAppointments();
+  }
 
   weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   calendarHours = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'];
@@ -57,6 +60,31 @@ export class AppointmentsComponent {
 
   setFilter(f: 'Today' | 'Upcoming' | 'Past' | 'Cancelled') {
     this.filter.set(f);
+    this.loadAppointments();
+  }
+
+  loadAppointments() {
+    this.isLoading.set(true);
+    if (this.filter() === 'Today') {
+      this.appointmentsClient.today().subscribe({
+        next: (data) => {
+          this.appointments.set(data);
+          this.isLoading.set(false);
+        },
+        error: () => this.isLoading.set(false)
+      });
+    } else if (this.filter() === 'Upcoming') {
+      this.appointmentsClient.upcoming(7).subscribe({
+        next: (data) => {
+          this.appointments.set(data);
+          this.isLoading.set(false);
+        },
+        error: () => this.isLoading.set(false)
+      });
+    } else {
+      this.appointments.set([]);
+      this.isLoading.set(false);
+    }
   }
 
   openBookModal() {

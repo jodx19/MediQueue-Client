@@ -21,7 +21,7 @@
                    [size]="15"/>
       <input type="text"
              [value]="searchTerm"
-             (input)="onSearch()"
+             (input)="onSearchInput(searchInput.value)"
              #searchInput
              (change)="searchTerm = searchInput.value"
              class="mq-input pl-10"

@@ -60,7 +60,7 @@ export class SuperAdminComponent implements OnInit {
   }
 
   openModal() {
-    this.newStaff = { firstName: '', lastName: '', email: '', password: 'TempPassword123!', role: 'Admin' };
+    this.newStaff = { firstName: '', lastName: '', email: '', password: '', role: 'Admin' };
     this.isModalOpen.set(true);
   }
 
