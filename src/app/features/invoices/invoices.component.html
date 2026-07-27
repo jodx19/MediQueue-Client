@@ -67,28 +67,28 @@
                 <div class="icon-box-sm bg-mq-teal/8 text-mq-s500">
                   <lucide-icon name="receipt" [size]="14"/>
                 </div>
-                <span class="font-mono text-[11px] text-mq-teal-400">{{ inv.id }}</span>
+                <span class="font-mono text-[11px] text-mq-teal-400">{{ inv.invoiceNumber }}</span>
               </div>
             </td>
 
             <!-- Patient -->
             <td class="mq-td">
               <div class="flex items-center gap-2.5">
-                <div class="mq-avatar-sm text-[10px]">{{ inv.patient[0] }}</div>
-                <span class="text-mq-text text-sm font-medium">{{ inv.patient }}</span>
+                <div class="mq-avatar-sm text-[10px]">{{ inv.patientName ? inv.patientName[0] : 'P' }}</div>
+                <span class="text-mq-text text-sm font-medium">{{ inv.patientName }}</span>
               </div>
             </td>
 
             <!-- Doctor -->
-            <td class="mq-td text-xs text-mq-s400">{{ inv.doctor }}</td>
+            <td class="mq-td text-xs text-mq-s400">{{ inv.doctorName }}</td>
 
             <!-- Date -->
-            <td class="mq-td text-xs text-mq-s400">{{ inv.date }}</td>
+            <td class="mq-td text-xs text-mq-s400">{{ inv.createdAt | date:'mediumDate' }}</td>
 
             <!-- Amount -->
             <td class="mq-td text-right">
               <span class="font-mono text-sm font-semibold text-mq-text">
-                EGP {{ inv.amount | number:'1.0-0' }}
+                EGP {{ inv.totalAmount | number:'1.0-0' }}
               </span>
             </td>
 

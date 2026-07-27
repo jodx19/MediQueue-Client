@@ -83,8 +83,11 @@
                   autocomplete="email" required data-testid="email"/>
         </div>
         <div>
-          <label class="mq-label">Password</label>
-          <div class="relative">
+          <div class="flex items-center justify-between">
+            <label class="mq-label !mb-0">Password</label>
+            <a routerLink="/auth/forgot-password" class="text-xs text-mq-t400 font-semibold hover:underline">Forgot password?</a>
+          </div>
+          <div class="relative mt-2">
              <input [type]="showPass ? 'text' : 'password'"
                     name="password" [(ngModel)]="password"
                     class="mq-input pr-16" placeholder="••••••••"

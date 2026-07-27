@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { LucideAngularModule, Receipt, Search, Filter, Printer, Download, Plus, CheckCircle, Clock } from 'lucide-angular';
+import { InvoicesClient, InvoiceListItemDto } from '../../core/api/mediqueue-api';
 
 @Component({
   selector: 'app-invoices',
@@ -21,20 +22,35 @@ export class InvoicesComponent {
   readonly LucideIcons = { Receipt, Search, Filter, Printer, Download, Plus, CheckCircle, Clock };
 
   filter = signal<'All' | 'Pending' | 'Paid' | 'Cancelled'>('All');
-  
-  invoices = signal([
-    { id: 'INV-2026-1042', patient: 'Omar Tarek', doctor: 'Dr. Ahmed Samy', amount: 450, status: 'Pending', date: '12 May 2026' },
-    { id: 'INV-2026-1041', patient: 'Sara Ali', doctor: 'Dr. Mona Hassan', amount: 300, status: 'Paid', date: '11 May 2026' },
-    { id: 'INV-2026-1040', patient: 'Khaled Hassan', doctor: 'Dr. Tarek Ziad', amount: 850, status: 'Paid', date: '10 May 2026' },
-    { id: 'INV-2026-1039', patient: 'Nour Yasser', doctor: 'Dr. Ahmed Samy', amount: 450, status: 'Cancelled', date: '09 May 2026' },
-  ]);
+  invoices = signal<InvoiceListItemDto[]>([]);
+  isLoading = signal(false);
+
+  private invoicesClient = inject(InvoicesClient);
+
+  constructor() {
+    this.loadInvoices();
+  }
 
   setFilter(f: 'All' | 'Pending' | 'Paid' | 'Cancelled') {
     this.filter.set(f);
+    this.loadInvoices();
+  }
+
+  loadInvoices() {
+    this.isLoading.set(true);
+    const statusFilter = this.filter() === 'All' ? undefined : this.filter();
+    this.invoicesClient.invoicesGET(1, 50, statusFilter, undefined, undefined).subscribe({
+      next: (res) => {
+        this.invoices.set(res.items || []);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      }
+    });
   }
 
   get filteredInvoices() {
-    if (this.filter() === 'All') return this.invoices();
-    return this.invoices().filter(i => i.status === this.filter());
+    return this.invoices();
   }
 }
