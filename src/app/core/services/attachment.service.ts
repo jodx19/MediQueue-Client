@@ -127,4 +127,29 @@ export class AttachmentService {
     if (!contentType) return false;
     return ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(contentType);
   }
+
+  /**
+   * Calls the /api/Attachments/{id}/download endpoint which returns a
+   * short-lived signed URL, then triggers a browser download.
+   */
+  downloadAttachment(attachmentId: string, fileName: string): void {
+    this.http.get<{ url: string; fileName: string; type: string }>(
+      `${this.baseUrl}/api/Attachments/${encodeURIComponent(attachmentId)}/download`
+    ).subscribe({
+      next: ({ url, fileName: name }) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name ?? fileName;
+        a.target   = '_blank';
+        a.rel      = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      },
+      error: () => {
+        this.notification.error('Failed to download file. Please try again.');
+      }
+    });
+  }
 }
+

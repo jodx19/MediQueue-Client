@@ -154,8 +154,29 @@ export class LabRequestsTabComponent {
     }
   }
 
-  markComplete(item: any) {
-    /** TODO: call lab-request update endpoint when available */
-    this.notify.info('Lab complete status update — endpoint pending');
+  async markComplete(item: any) {
+    const resultValue = prompt('Enter result value (required):');
+    if (!resultValue?.trim()) return;
+
+    this.isLoading.set(true);
+    try {
+      await firstValueFrom(
+        this.client.complete2(this.visitId, item.id, {
+          visitId: this.visitId,
+          labRequestId: item.id,
+          resultValue: resultValue.trim(),
+          status: 3, // LabResultStatus.Completed = 3
+        } as any)
+      );
+      this.notify.success('Lab request marked as completed');
+      // Update status locally
+      this.items.update(items => items.map(i =>
+        i.id === item.id ? { ...i, status: 'Completed', resultValue } : i
+      ));
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

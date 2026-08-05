@@ -245,7 +245,7 @@ export class PatientDetailComponent implements OnInit {
     if (!this.newCondition.conditionName.trim()) return;
     this.isSubmitting.set(true);
     try {
-      await firstValueFrom(this.patientsClient.chronicConditions(
+      await firstValueFrom(this.patientsClient.chronicConditionsPOST(
         this.patientId,
         new AddChronicConditionCommand({
           patientId:     this.patientId,
