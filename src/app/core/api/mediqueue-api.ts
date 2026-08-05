@@ -1039,6 +1039,102 @@ export class AttachmentsClient implements IAttachmentsClient {
     }
 }
 
+export interface IAuditLogsClient {
+    /**
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @param userId (optional) 
+     * @param from (optional) 
+     * @param to (optional) 
+     * @return OK
+     */
+    auditLogs(page?: number | undefined, pageSize?: number | undefined, userId?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<void>;
+}
+
+@Injectable()
+export class AuditLogsClient implements IAuditLogsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @param userId (optional) 
+     * @param from (optional) 
+     * @param to (optional) 
+     * @return OK
+     */
+    auditLogs(page?: number | undefined, pageSize?: number | undefined, userId?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/audit-logs?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (userId === null)
+            throw new globalThis.Error("The parameter 'userId' cannot be null.");
+        else if (userId !== undefined)
+            url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processAuditLogs(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processAuditLogs(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processAuditLogs(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface IAuthClient {
     /**
      * @param body (optional) 
@@ -1060,6 +1156,20 @@ export interface IAuthClient {
      * @return OK
      */
     refreshToken(body?: RefreshTokenCommand | undefined): Observable<AuthResponseDto>;
+    /**
+     * @return No Content
+     */
+    logout(): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    forgotPassword(body?: ForgotPasswordCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    resetPassword(body?: ResetPasswordCommand | undefined): Observable<void>;
 }
 
 @Injectable()
@@ -1292,6 +1402,157 @@ export class AuthClient implements IAuthClient {
         }
         return _observableOf(null as any);
     }
+
+    /**
+     * @return No Content
+     */
+    logout(): Observable<void> {
+        let url_ = this.baseUrl + "/api/Auth/logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processLogout(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processLogout(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processLogout(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    forgotPassword(body?: ForgotPasswordCommand | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/Auth/forgot-password";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processForgotPassword(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processForgotPassword(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processForgotPassword(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    resetPassword(body?: ResetPasswordCommand | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/Auth/reset-password";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processResetPassword(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processResetPassword(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processResetPassword(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
 }
 
 export interface IClinicalVisitsClient {
@@ -1358,6 +1619,11 @@ export interface IClinicalVisitsClient {
      * @return No Content
      */
     prescriptions(id: string, body?: CreatePrescriptionCommand | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    complete2(id: string, labRequestId: string, body?: CompleteLabRequestCommand | undefined): Observable<void>;
     /**
      * @return No Content
      */
@@ -2179,6 +2445,71 @@ export class ClinicalVisitsClient implements IClinicalVisitsClient {
             let resultData422 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result422 = ProblemDetails.fromJS(resultData422);
             return throwException("Unprocessable Content", status, _responseText, _headers, result422);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return No Content
+     */
+    complete2(id: string, labRequestId: string, body?: CompleteLabRequestCommand | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/ClinicalVisits/{id}/lab-requests/{labRequestId}/complete";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (labRequestId === undefined || labRequestId === null)
+            throw new globalThis.Error("The parameter 'labRequestId' must be defined.");
+        url_ = url_.replace("{labRequestId}", encodeURIComponent("" + labRequestId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processComplete2(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processComplete2(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processComplete2(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -3812,7 +4143,11 @@ export interface IPatientsClient {
      * @param body (optional) 
      * @return No Content
      */
-    chronicConditions(id: string, body?: AddChronicConditionCommand | undefined): Observable<void>;
+    chronicConditionsPOST(id: string, body?: AddChronicConditionCommand | undefined): Observable<void>;
+    /**
+     * @return No Content
+     */
+    chronicConditionsDELETE(id: string, conditionId: string): Observable<void>;
 }
 
 @Injectable()
@@ -4493,7 +4828,7 @@ export class PatientsClient implements IPatientsClient {
      * @param body (optional) 
      * @return No Content
      */
-    chronicConditions(id: string, body?: AddChronicConditionCommand | undefined): Observable<void> {
+    chronicConditionsPOST(id: string, body?: AddChronicConditionCommand | undefined): Observable<void> {
         let url_ = this.baseUrl + "/api/Patients/{id}/chronic-conditions";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4512,11 +4847,11 @@ export class PatientsClient implements IPatientsClient {
         };
 
         return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processChronicConditions(response_);
+            return this.processChronicConditionsPOST(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processChronicConditions(response_ as any);
+                    return this.processChronicConditionsPOST(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<void>;
                 }
@@ -4525,7 +4860,67 @@ export class PatientsClient implements IPatientsClient {
         }));
     }
 
-    protected processChronicConditions(response: HttpResponseBase): Observable<void> {
+    protected processChronicConditionsPOST(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    chronicConditionsDELETE(id: string, conditionId: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/Patients/{id}/chronic-conditions/{conditionId}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (conditionId === undefined || conditionId === null)
+            throw new globalThis.Error("The parameter 'conditionId' must be defined.");
+        url_ = url_.replace("{conditionId}", encodeURIComponent("" + conditionId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processChronicConditionsDELETE(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processChronicConditionsDELETE(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processChronicConditionsDELETE(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -5501,6 +5896,42 @@ export interface IAppointmentScheduleItemDto {
     chiefComplaint?: string | undefined;
 }
 
+export class ForgotPasswordCommand implements IForgotPasswordCommand {
+    email?: string | undefined;
+
+    constructor(data?: IForgotPasswordCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+        }
+    }
+
+    static fromJS(data: any): ForgotPasswordCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new ForgotPasswordCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        return data;
+    }
+}
+
+export interface IForgotPasswordCommand {
+    email?: string | undefined;
+}
+
 export class LoginCommand implements ILoginCommand {
     email?: string | undefined;
     password?: string | undefined;
@@ -5679,6 +6110,50 @@ export interface IRegisterCommand {
     lastName?: string | undefined;
     phoneNumber?: string | undefined;
     role?: string | undefined;
+}
+
+export class ResetPasswordCommand implements IResetPasswordCommand {
+    email?: string | undefined;
+    token?: string | undefined;
+    newPassword?: string | undefined;
+
+    constructor(data?: IResetPasswordCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+            this.token = _data["token"];
+            this.newPassword = _data["newPassword"];
+        }
+    }
+
+    static fromJS(data: any): ResetPasswordCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResetPasswordCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        data["token"] = this.token;
+        data["newPassword"] = this.newPassword;
+        return data;
+    }
+}
+
+export interface IResetPasswordCommand {
+    email?: string | undefined;
+    token?: string | undefined;
+    newPassword?: string | undefined;
 }
 
 export class AuthResponseDto implements IAuthResponseDto {
@@ -6083,6 +6558,58 @@ export interface IAddVitalSignCommand {
     vitalSignType?: VitalSignType;
     value?: number;
     unit?: string | undefined;
+}
+
+export class CompleteLabRequestCommand implements ICompleteLabRequestCommand {
+    visitId?: string;
+    labRequestId?: string;
+    resultValue?: string | undefined;
+    resultNotes?: string | undefined;
+    status?: LabResultStatus;
+
+    constructor(data?: ICompleteLabRequestCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.visitId = _data["visitId"];
+            this.labRequestId = _data["labRequestId"];
+            this.resultValue = _data["resultValue"];
+            this.resultNotes = _data["resultNotes"];
+            this.status = _data["status"];
+        }
+    }
+
+    static fromJS(data: any): CompleteLabRequestCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteLabRequestCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["visitId"] = this.visitId;
+        data["labRequestId"] = this.labRequestId;
+        data["resultValue"] = this.resultValue;
+        data["resultNotes"] = this.resultNotes;
+        data["status"] = this.status;
+        return data;
+    }
+}
+
+export interface ICompleteLabRequestCommand {
+    visitId?: string;
+    labRequestId?: string;
+    resultValue?: string | undefined;
+    resultNotes?: string | undefined;
+    status?: LabResultStatus;
 }
 
 export class CreateClinicalVisitCommand implements ICreateClinicalVisitCommand {
@@ -10026,6 +10553,14 @@ export enum InvoiceStatus {
     _4 = 4,
     _5 = 5,
     _6 = 6,
+}
+
+export enum LabResultStatus {
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+    _4 = 4,
+    _5 = 5,
 }
 
 export enum MaritalStatus {

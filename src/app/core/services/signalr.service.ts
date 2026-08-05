@@ -21,6 +21,7 @@ export class SignalRService {
   readonly connectionState = signal<'connected'|'connecting'|'disconnected'>('disconnected');
   readonly notificationCount = signal(0);
   readonly notificationsList = signal<NotificationItem[]>([]);
+  readonly onInvoicePaid = signal<any>(null);
 
   constructor() {
     this.loadFromStorage();
@@ -102,9 +103,10 @@ export class SignalRService {
     });
 
     this.hub.on('InvoicePaid', (data: any) => {
-      const msg = `Payment Received: Invoice #${data.invoiceNumber} — EGP ${data.amount.toLocaleString()}`;
+      const msg = `Payment Received: Invoice #${data.invoiceNumber || data.invoiceId?.substring(0,6)} — EGP ${(data.amount || 0).toLocaleString()}`;
       this.notifications.success(msg);
       this.addNotification(msg, 'success');
+      this.onInvoicePaid.set({ ...data, _ts: Date.now() });
     });
 
     // ═══ Reconnection handlers

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -11,6 +11,7 @@ import {
 } from '../../core/api/mediqueue-api';
 import { InteractiveTableComponent, TableColumn } from '../../shared/components/interactive-table/interactive-table.component';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
+import { SignalRService } from '../../core/services/signalr.service';
 import { CurrencyEgpPipe } from '../../shared/pipes/currency-egp.pipe';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
@@ -52,6 +53,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly dashboardClient = inject(DashboardClient);
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
+  private readonly signalRService = inject(SignalRService);
   private readonly router = inject(Router);
 
   // State Signals
@@ -63,6 +65,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Real-time Simulation
   readonly liveRevenue = signal(0);
   private revenueInterval: any;
+
+  constructor() {
+    // Listen for real-time InvoicePaid events to update dashboard stats
+    effect(() => {
+      const paidEvent = this.signalRService.onInvoicePaid();
+      if (paidEvent) {
+        // Automatically refresh stats when an invoice is paid
+        this.refreshStats();
+      }
+    });
+  }
 
   // Mock data for charts
   revenueBars = signal([40, 70, 45, 90, 65, 80, 55, 60, 40, 85, 50, 75]);

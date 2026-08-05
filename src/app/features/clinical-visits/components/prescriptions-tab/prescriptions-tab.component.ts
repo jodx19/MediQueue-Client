@@ -171,7 +171,6 @@ export class PrescriptionsTabComponent {
     if (!this.form.medicationName.trim() || !this.form.dosage.trim()) return;
     this.isLoading.set(true);
 
-    /** TODO Step 8 (AI features): call drug-interaction check API and set interactionWarning() */
     try {
       const item = new PrescriptionItemDto({
         medicationName: this.form.medicationName,
