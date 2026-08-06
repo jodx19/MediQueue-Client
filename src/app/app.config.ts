@@ -10,7 +10,7 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { refreshTokenInterceptor } from './core/interceptors/refresh-token.interceptor';
 import { apiResponseInterceptor } from './core/interceptors/api-response.interceptor';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
-import { API_BASE_URL, AuthClient, PatientsClient, DoctorsClient, AppointmentsClient, ClinicalVisitsClient, InvoicesClient, DashboardClient, AuditLogsClient, TenantsClient, SettingsClient, UsersClient, NotificationsClient, AttachmentsClient } from './core/api/mediqueue-api';
+import { API_BASE_URL, AuthClient, PatientsClient, DoctorsClient, AppointmentsClient, ClinicalVisitsClient, InvoicesClient, DashboardClient, AuditLogsClient, DrugInteractionsClient, ReportsClient, TenantsClient, SettingsClient, UsersClient, NotificationsClient, AttachmentsClient } from './core/api/mediqueue-api';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -31,8 +31,8 @@ export const appConfig: ApplicationConfig = {
     AuthClient, PatientsClient, DoctorsClient,
     AppointmentsClient, ClinicalVisitsClient,
     InvoicesClient, DashboardClient,
-    AuditLogsClient, TenantsClient, SettingsClient,
-    UsersClient, NotificationsClient, AttachmentsClient,
+    AuditLogsClient, DrugInteractionsClient, ReportsClient,
+    TenantsClient, SettingsClient, UsersClient, NotificationsClient, AttachmentsClient,
     importProvidersFrom(LucideAngularModule.pick(icons))
   ]
 };

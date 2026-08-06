@@ -28,20 +28,16 @@ interface AuditLogDto {
   templateUrl: './audit-log.component.html',
 })
 export class AuditLogComponent implements OnInit {
-  private readonly http             = inject(HttpClient);
-  private readonly apiErrorHandler  = inject(ApiErrorHandlerService);
+  private readonly apiErrorHandler = inject(ApiErrorHandlerService);
+  private readonly http = inject(HttpClient);
 
   isLoading = signal(false);
   logs      = signal<AuditLogDto[]>([]);
   page      = signal(1);
   total     = signal(0);
 
-  actionFilter = '';
-  fromFilter   = '';
-  toFilter     = '';
-
-  get pageSize() { return PAGE_SIZE; }
-  get totalPages() { return Math.ceil(this.total() / PAGE_SIZE); }
+  fromDate = '';
+  toDate = '';
 
   async ngOnInit() {
     await this.loadLogs();
@@ -54,20 +50,23 @@ export class AuditLogComponent implements OnInit {
         .set('page', this.page().toString())
         .set('pageSize', PAGE_SIZE.toString());
 
-      if (this.fromFilter) params = params.set('from', this.fromFilter);
-      if (this.toFilter)   params = params.set('to',   this.toFilter);
+      if (this.fromDate) {
+        params = params.set('from', new Date(this.fromDate).toISOString());
+      }
+      if (this.toDate) {
+        params = params.set('to', new Date(this.toDate).toISOString());
+      }
 
       const response = await firstValueFrom(
-        this.http.get<{ items: AuditLogDto[]; totalCount: number }>('/api/audit-logs', { params })
+        this.http.get<any>('/api/audit-logs', { params })
       );
 
-      // Filter by action client-side since backend doesn't have action filter yet
-      const filtered = this.actionFilter
-        ? (response.items ?? []).filter(l => l.action.toLowerCase().includes(this.actionFilter.toLowerCase()))
-        : (response.items ?? []);
-
-      this.logs.set(filtered);
-      this.total.set(response.totalCount ?? 0);
+      // The global interceptor unwraps the outer ApiResponse<T> by default in some setups,
+      // but let's handle both unwrapped and wrapped structures safely.
+      const data = response?.items !== undefined ? response : response?.data;
+      
+      this.logs.set(data?.items || []);
+      this.total.set(data?.totalCount || 0);
     } catch (err) {
       this.apiErrorHandler.handle(err);
     } finally {

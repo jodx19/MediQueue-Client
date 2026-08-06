@@ -1140,6 +1140,11 @@ export interface IAuthClient {
      * @param body (optional) 
      * @return OK
      */
+    logout(body?: any | undefined): Observable<void>;
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
     login(body?: LoginCommand | undefined): Observable<AuthResponseDto>;
     /**
      * @param body (optional) 
@@ -1181,6 +1186,56 @@ export class AuthClient implements IAuthClient {
     constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
         this.http = http;
         this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    logout(body?: any | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/Auth/logout";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processLogout(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processLogout(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processLogout(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204 || status === 200) {
+            return _observableOf(null as any);
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
     }
 
     /**
@@ -10820,4 +10875,227 @@ function blobToText(blob: any): Observable<string> {
             reader.readAsText(blob);
         }
     });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Supplemental clients — added to match controllers not captured in the previous
+// NSwag run (API required a live DB connection to start).
+// These follow the exact same pattern as all other generated clients above.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── AuditLogsClient ──────────────────────────────────────────────────────────
+
+export interface IAuditLogsClient {
+    getAuditLogs(page?: number | undefined, pageSize?: number | undefined, userId?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<any>;
+}
+
+@Injectable()
+export class AuditLogsClient implements IAuditLogsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Returns paginated audit log entries. Requires Admin role.
+     * @param page (optional)
+     * @param pageSize (optional)
+     * @param userId (optional)
+     * @param from (optional)
+     * @param to (optional)
+     * @return OK
+     */
+    getAuditLogs(page?: number | undefined, pageSize?: number | undefined, userId?: string | undefined, from?: Date | undefined, to?: Date | undefined): Observable<any> {
+        let url_ = this.baseUrl + "/api/audit-logs?";
+        if (page !== null && page !== undefined) url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize !== null && pageSize !== undefined) url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (userId !== null && userId !== undefined) url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        if (from !== null && from !== undefined) url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to !== null && to !== undefined) url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({ "Accept": "application/json" })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_: any) => {
+            return this.processGetAuditLogs(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try { return this.processGetAuditLogs(response_ as any); }
+                catch (e) { return _observableThrow(e) as any as Observable<any>; }
+            } else return _observableThrow(response_) as any as Observable<any>;
+        }));
+    }
+
+    protected processGetAuditLogs(response: HttpResponseBase): Observable<any> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); } }
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                return _observableOf(_responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver));
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+// ── DrugInteractionsClient ───────────────────────────────────────────────────
+
+export interface ICheckInteractionRequest {
+    currentDrugs: string[];
+    newDrug: string;
+}
+
+export interface IInteractionWarning {
+    drugA: string;
+    drugB: string;
+    warningText: string;
+    severity: string;
+}
+
+export interface IDrugInteractionsClient {
+    checkInteractions(body?: ICheckInteractionRequest | undefined): Observable<IInteractionWarning[]>;
+}
+
+@Injectable()
+export class DrugInteractionsClient implements IDrugInteractionsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Checks for potential drug interactions between a new drug and a list of current drugs.
+     * @param body (optional)
+     * @return OK — list of interaction warnings (may be empty)
+     */
+    checkInteractions(body?: ICheckInteractionRequest | undefined): Observable<IInteractionWarning[]> {
+        let url_ = this.baseUrl + "/api/DrugInteractions/check";
+
+        const content_ = JSON.stringify(body);
+        let options_: any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_: any) => {
+            return this.processCheckInteractions(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try { return this.processCheckInteractions(response_ as any); }
+                catch (e) { return _observableThrow(e) as any as Observable<IInteractionWarning[]>; }
+            } else return _observableThrow(response_) as any as Observable<IInteractionWarning[]>;
+        }));
+    }
+
+    protected processCheckInteractions(response: HttpResponseBase): Observable<IInteractionWarning[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); } }
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                const result: IInteractionWarning[] = _responseText === "" ? [] : JSON.parse(_responseText, this.jsonParseReviver);
+                return _observableOf(result);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf([] as any);
+    }
+}
+
+// ── ReportsClient ─────────────────────────────────────────────────────────────
+// Note: The ReportsComponent uses DashboardClient.revenueReport() and
+// DashboardClient.stats() directly. This client is provided for completeness
+// and future use if a dedicated /api/reports endpoint is added.
+
+export interface IReportsClient {
+    getRevenueReport(startDate?: Date | undefined, endDate?: Date | undefined): Observable<any>;
+}
+
+@Injectable()
+export class ReportsClient implements IReportsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * Returns revenue report data. Currently served via DashboardController.
+     * @param startDate (optional)
+     * @param endDate (optional)
+     * @return OK
+     */
+    getRevenueReport(startDate?: Date | undefined, endDate?: Date | undefined): Observable<any> {
+        let url_ = this.baseUrl + "/api/Dashboard/revenue-report?";
+        if (startDate !== null && startDate !== undefined)
+            url_ += "startDate=" + encodeURIComponent(startDate ? "" + startDate.toISOString() : "") + "&";
+        if (endDate !== null && endDate !== undefined)
+            url_ += "endDate=" + encodeURIComponent(endDate ? "" + endDate.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({ "Accept": "application/json" })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_: any) => {
+            return this.processGetRevenueReport(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try { return this.processGetRevenueReport(response_ as any); }
+                catch (e) { return _observableThrow(e) as any as Observable<any>; }
+            } else return _observableThrow(response_) as any as Observable<any>;
+        }));
+    }
+
+    protected processGetRevenueReport(response: HttpResponseBase): Observable<any> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); } }
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                return _observableOf(_responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver));
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
 }

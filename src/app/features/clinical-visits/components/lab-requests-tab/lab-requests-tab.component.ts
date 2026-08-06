@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import {
   ClinicalVisitsClient,
   AddLabRequestCommand,
@@ -109,6 +110,7 @@ export class LabRequestsTabComponent {
   @Input() set visitData(v: any) { if (v) this.loadFromVisit(v); }
 
   private readonly client = inject(ClinicalVisitsClient);
+  private readonly http = inject(HttpClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
@@ -160,18 +162,19 @@ export class LabRequestsTabComponent {
 
     this.isLoading.set(true);
     try {
-      await firstValueFrom(
-        this.client.complete2(this.visitId, item.id, {
-          visitId: this.visitId,
-          labRequestId: item.id,
-          resultValue: resultValue.trim(),
-          status: 3, // LabResultStatus.Completed = 3
-        } as any)
-      );
+      const command = {
+        visitId: this.visitId,
+        labRequestId: item.id,
+        status: 3, // 3 = Completed in LabResultStatus enum
+        resultValue: resultValue.trim(),
+        resultNotes: 'Completed via UI'
+      };
+      await firstValueFrom(this.http.put(`/api/clinicalvisits/${this.visitId}/lab-requests/${item.id}`, command));
+      
       this.notify.success('Lab request marked as completed');
       // Update status locally
       this.items.update(items => items.map(i =>
-        i.id === item.id ? { ...i, status: 'Completed', resultValue } : i
+        i.id === item.id ? { ...i, status: 'Completed', resultValue: resultValue.trim() } : i
       ));
     } catch (err) {
       this.apiErrorHandler.handle(err);

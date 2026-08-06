@@ -3,6 +3,7 @@ import { AuthClient, LoginCommand as LoginRequest, AuthResponseDto } from '../ap
 import { TenantService } from '../services/tenant.service';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 
 export interface UserSession {
   token: string;
@@ -35,6 +36,7 @@ function decodeJwt(token: string): any {
 export class AuthService {
   private readonly authClient = inject(AuthClient);
   private readonly tenantService = inject(TenantService);
+  private readonly router = inject(Router);
 
   private _session = signal<UserSession | null>(this.loadSession());
 
@@ -107,10 +109,26 @@ export class AuthService {
     }
   }
 
-  logout(): void {
-    sessionStorage.removeItem('mq_session');
-    this._session.set(null);
-    this.tenantService.clear();
+  async logout(): Promise<void> {
+    try {
+      const token = this.getToken();
+      let userId = '';
+      if (token) {
+        const decoded = decodeJwt(token);
+        userId = decoded?.sub || decoded?.nameid || decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || '';
+      }
+      
+      if (userId) {
+        await firstValueFrom(this.authClient.logout({ userId } as any));
+      }
+    } catch (error) {
+      console.warn('Logout API call failed, proceeding with local cleanup:', error);
+    } finally {
+      sessionStorage.removeItem('mq_session');
+      this._session.set(null);
+      this.tenantService.clear();
+      this.router.navigate(['/']);
+    }
   }
 
   getToken(): string | null {
