@@ -44,10 +44,11 @@ export const routes: Routes = [
         .then(m => m.TenantRegisterComponent)
   },
   {
+    // Public — linked from registration verification email
     path: 'verify-email',
     loadComponent: () =>
       import('./features/auth/verify-email/verify-email.component')
-        .then(m => m.VerifyEmailComponent)
+        .then(m => m.VerifyEmailComponent),
   },
 
   // ══ PATIENT PORTAL — dedicated patient shell ══
@@ -245,5 +246,17 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: '' },
+  {
+    path: 'not-found',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found.component')
+        .then(m => m.NotFoundComponent),
+  },
+  {
+    path: 'server-error',
+    loadComponent: () =>
+      import('./features/errors/server-error/server-error.component')
+        .then(m => m.ServerErrorComponent),
+  },
+  { path: '**', redirectTo: 'not-found' },
 ];

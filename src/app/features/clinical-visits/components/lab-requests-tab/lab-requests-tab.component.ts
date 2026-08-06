@@ -157,18 +157,25 @@ export class LabRequestsTabComponent {
   }
 
   async markComplete(item: any) {
+    const resultValue = prompt('Enter result value (required):');
+    if (!resultValue?.trim()) return;
+
+    this.isLoading.set(true);
     try {
-      this.isLoading.set(true);
       const command = {
         visitId: this.visitId,
         labRequestId: item.id,
         status: 3, // 3 = Completed in LabResultStatus enum
-        resultValue: 'Result received', // Default simple result
+        resultValue: resultValue.trim(),
         resultNotes: 'Completed via UI'
       };
       await firstValueFrom(this.http.put(`/api/clinicalvisits/${this.visitId}/lab-requests/${item.id}`, command));
-      item.status = 'Completed';
-      this.notify.success('Lab request marked as complete');
+      
+      this.notify.success('Lab request marked as completed');
+      // Update status locally
+      this.items.update(items => items.map(i =>
+        i.id === item.id ? { ...i, status: 'Completed', resultValue: resultValue.trim() } : i
+      ));
     } catch (err) {
       this.apiErrorHandler.handle(err);
     } finally {

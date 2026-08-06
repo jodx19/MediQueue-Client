@@ -8,77 +8,66 @@
   </div>
 
   <div class="flex flex-wrap gap-3">
-    <input type="date"
-           [(ngModel)]="fromDate"
-           (ngModelChange)="onFilterChange()"
-           class="mq-input max-w-xs"
-           title="From Date"
-           placeholder="From Date..."/>
-    <input type="date"
-           [(ngModel)]="toDate"
-           (ngModelChange)="onFilterChange()"
-           class="mq-input max-w-xs"
-           title="To Date"
-           placeholder="To Date..."/>
+    <input type="date" [(ngModel)]="fromDate" (ngModelChange)="onFilterChange()" class="mq-input max-w-xs"
+      placeholder="Filter by action..." />
+    <input type="text" [(ngModel)]="entityFilter" (ngModelChange)="onFilterChange()" class="mq-input max-w-xs"
+      placeholder="Filter by entity..." />
   </div>
 
   @if (isLoading()) {
-    <div class="space-y-2">
-      @for (i of [1,2,3,4,5]; track i) {
-        <div class="h-14 skeleton rounded-xl"></div>
-      }
-    </div>
+  <div class="space-y-2">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="h-14 skeleton rounded-xl"></div>
+    }
+  </div>
   } @else if (logs().length === 0) {
-    <div class="empty-state mq-card py-20">
-      <h3 class="empty-title">No audit logs found</h3>
-      <p class="empty-desc">Try adjusting your date filters</p>
-    </div>
+  <div class="empty-state mq-card py-20">
+    <h3 class="empty-title">No audit logs found</h3>
+    <p class="empty-desc">Try adjusting your date filters</p>
+  </div>
   } @else {
-    <div class="mq-table-wrapper">
-      <table class="mq-table">
-        <thead>
-          <tr>
-            <th class="mq-th">Time</th>
-            <th class="mq-th">User</th>
-            <th class="mq-th">Role</th>
-            <th class="mq-th">Action</th>
-            <th class="mq-th">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (log of logs(); track log.id) {
-            <tr class="mq-tr">
-              <td class="mq-td text-xs text-mq-s400">
-                {{ log.timestamp | date:'MMM d, y HH:mm' }}
-              </td>
-              <td class="mq-td text-sm">{{ log.userEmail }}</td>
-              <td class="mq-td text-sm">
-                @if (log.userRole) {
-                  <span class="badge badge-neutral text-xs">{{ log.userRole }}</span>
-                } @else {
-                  <span class="text-xs text-mq-s400">System</span>
-                }
-              </td>
-              <td class="mq-td text-sm font-mono text-mq-teal-400">{{ log.action }}</td>
-              <td class="mq-td">
-                <span [class]="log.isSuccess ? 'badge badge-success' : 'badge badge-neutral'">
-                  {{ log.isSuccess ? 'OK' : 'Failed' }}
-                </span>
-                @if (log.errorMessage) {
-                  <div class="text-[10px] text-rose-400 mt-1 max-w-[200px] truncate" [title]="log.errorMessage">
-                    {{ log.errorMessage }}
-                  </div>
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      <app-pagination
-        [total]="total"
-        [pageSize]="50"
-        [currentPage]="page"
-        (pageChange)="onPageChange($event)"/>
-    </div>
+  <div class="mq-table-wrapper">
+    <table class="mq-table">
+      <thead>
+        <tr>
+          <th class="mq-th">Time</th>
+          <th class="mq-th">User</th>
+          <th class="mq-th">Role</th>
+          <th class="mq-th">Action</th>
+          <th class="mq-th">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of logs(); track log.id) {
+        <tr class="mq-tr">
+          <td class="mq-td text-xs text-mq-s400">
+            {{ log.timestamp | date:'MMM d, y HH:mm' }}
+          </td>
+          <td class="mq-td text-sm">{{ log.userEmail }}</td>
+          <td class="mq-td text-sm">
+            @if (log.userRole) {
+            <span class="badge badge-neutral text-xs">{{ log.userRole }}</span>
+            } @else {
+            <span class="text-xs text-mq-s400">System</span>
+            }
+          </td>
+          <td class="mq-td text-sm font-mono text-mq-teal-400">{{ log.action }}</td>
+          <td class="mq-td text-sm">{{ log.entityName }}</td>
+          <td class="mq-td">
+            <span [class]="log.isSuccess ? 'badge badge-success' : 'badge badge-neutral'">
+              {{ log.isSuccess ? 'OK' : 'Failed' }}
+            </span>
+            @if (log.errorMessage) {
+            <div class="text-[10px] text-rose-400 mt-1 max-w-[200px] truncate" [title]="log.errorMessage">
+              {{ log.errorMessage }}
+            </div>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    <app-pagination [total]="total" [pageSize]="50" [currentPage]="page" (pageChange)="onPageChange($event)" />
+  </div>
   }
 </div>

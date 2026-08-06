@@ -10,6 +10,17 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 
 const PAGE_SIZE = 50;
 
+interface AuditLogDto {
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  userRole: string | null;
+  action: string;
+  timestamp: string;
+  isSuccess: boolean;
+  errorMessage: string | null;
+}
+
 @Component({
   selector: 'app-audit-log',
   standalone: true,
@@ -21,7 +32,7 @@ export class AuditLogComponent implements OnInit {
   private readonly http = inject(HttpClient);
 
   isLoading = signal(false);
-  logs      = signal<any[]>([]);
+  logs      = signal<AuditLogDto[]>([]);
   page      = signal(1);
   total     = signal(0);
 
@@ -71,5 +82,11 @@ export class AuditLogComponent implements OnInit {
   onPageChange(newPage: number) {
     this.page.set(newPage);
     void this.loadLogs();
+  }
+
+  statusBadge(isSuccess: boolean): string {
+    return isSuccess
+      ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400'
+      : 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400';
   }
 }

@@ -24,10 +24,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/auth/login'], { queryParams: { returnUrl: router.url } });
         notifications.warning(errorMessage);
       } 
+      else if (error.status === 402) {
+        errorMessage = error.error?.detail || error.error || 'Quota limit reached. Please upgrade your plan.';
+        notifications.warning(errorMessage);
+      }
       else if (error.status === 403) {
         errorMessage = 'You do not have permission to perform this action.';
         notifications.error(errorMessage);
       } 
+      else if (error.status === 404) {
+        router.navigate(['/not-found'], { skipLocationChange: true });
+      }
       else if (error.status === 422) {
         // Validation errors
         const detail = error.error?.detail || 'Validation failed';
@@ -39,6 +46,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       } 
       else if (error.status >= 500) {
         errorMessage = 'Server error. Our team has been notified.';
+        router.navigate(['/server-error'], { skipLocationChange: true });
         notifications.error(errorMessage);
       }
 
