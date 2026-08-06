@@ -43,6 +43,12 @@ export const routes: Routes = [
       import('./features/tenant-register/tenant-register.component')
         .then(m => m.TenantRegisterComponent)
   },
+  {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./features/auth/verify-email/verify-email.component')
+        .then(m => m.VerifyEmailComponent)
+  },
 
   // ══ PATIENT PORTAL — dedicated patient shell ══
   {

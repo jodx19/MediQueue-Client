@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import {
   ClinicalVisitsClient,
   AddLabRequestCommand,
@@ -109,6 +110,7 @@ export class LabRequestsTabComponent {
   @Input() set visitData(v: any) { if (v) this.loadFromVisit(v); }
 
   private readonly client = inject(ClinicalVisitsClient);
+  private readonly http = inject(HttpClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
@@ -154,8 +156,23 @@ export class LabRequestsTabComponent {
     }
   }
 
-  markComplete(item: any) {
-    /** TODO: call lab-request update endpoint when available */
-    this.notify.info('Lab complete status update — endpoint pending');
+  async markComplete(item: any) {
+    try {
+      this.isLoading.set(true);
+      const command = {
+        visitId: this.visitId,
+        labRequestId: item.id,
+        status: 3, // 3 = Completed in LabResultStatus enum
+        resultValue: 'Result received', // Default simple result
+        resultNotes: 'Completed via UI'
+      };
+      await firstValueFrom(this.http.put(`/api/clinicalvisits/${this.visitId}/lab-requests/${item.id}`, command));
+      item.status = 'Completed';
+      this.notify.success('Lab request marked as complete');
+    } catch (err) {
+      this.apiErrorHandler.handle(err);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

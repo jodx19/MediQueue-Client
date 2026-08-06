@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import {
   ClinicalVisitsClient,
   CreatePrescriptionCommand,
@@ -148,6 +149,7 @@ export class PrescriptionsTabComponent {
   @Input() set visitData(v: any) { if (v) this.loadFromVisit(v); }
 
   private readonly client = inject(ClinicalVisitsClient);
+  private readonly http = inject(HttpClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
@@ -157,6 +159,7 @@ export class PrescriptionsTabComponent {
   interactionWarning = signal<string | null>(null);
 
   form = { medicationName: '', dosage: '', frequency: 'Twice daily', duration: '', quantity: 0, instructions: '' };
+  lastCheckedDrug = '';
 
   loadFromVisit(visit: any) {
     this.prescriptions.set(visit?.prescriptions ?? []);
@@ -164,15 +167,46 @@ export class PrescriptionsTabComponent {
 
   cancelAdd() {
     this.isAdding.set(false);
+    this.interactionWarning.set(null);
+    this.lastCheckedDrug = '';
     this.form = { medicationName: '', dosage: '', frequency: 'Twice daily', duration: '', quantity: 0, instructions: '' };
   }
 
   async confirmAdd() {
     if (!this.form.medicationName.trim() || !this.form.dosage.trim()) return;
+    
+    const newDrug = this.form.medicationName.trim();
     this.isLoading.set(true);
 
-    /** TODO Step 8 (AI features): call drug-interaction check API and set interactionWarning() */
     try {
+      // 1. Check for drug interactions (AI / Database mock)
+      if (this.lastCheckedDrug !== newDrug) {
+        const currentDrugs = this.prescriptions()
+          .flatMap(rx => rx.items || [])
+          .map(item => item.medicationName);
+
+        if (currentDrugs.length > 0) {
+          const warnings = await firstValueFrom(
+            this.http.post<any[]>('/api/druginteractions/check', {
+              currentDrugs: currentDrugs,
+              newDrug: newDrug
+            })
+          );
+          
+          if (warnings && warnings.length > 0) {
+            const warningMsgs = warnings.map(w => `[${w.severity}] ${w.drugA} + ${w.drugB}: ${w.warningText}`).join(' | ');
+            this.interactionWarning.set(warningMsgs + ' — Click Save again to proceed anyway.');
+            this.lastCheckedDrug = newDrug;
+            this.isLoading.set(false);
+            return; // Wait for user to acknowledge warning
+          }
+        }
+      }
+
+      // 2. Clear warning and proceed if safe or acknowledged
+      this.interactionWarning.set(null);
+      this.lastCheckedDrug = '';
+
       const item = new PrescriptionItemDto({
         medicationName: this.form.medicationName,
         dosage: this.form.dosage,
