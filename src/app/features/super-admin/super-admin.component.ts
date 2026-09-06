@@ -6,13 +6,14 @@ import { AuthClient, RegisterCommand } from '../../core/api/mediqueue-api';
 import { UsersApiService } from '../../core/services/users-api.service';
 import { ApiErrorHandlerService } from '../../core/services/api-error-handler.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { TenantListComponent } from './tenant-list/tenant-list.component';
 import { firstValueFrom } from 'rxjs';
 import { pageEnter, fadeSlideIn } from '../../shared/animations/page-animations';
 
 @Component({
   selector: 'app-super-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, TenantListComponent],
   templateUrl: './super-admin.component.html',
   styleUrl: './super-admin.component.scss',
   animations: [pageEnter, fadeSlideIn]
@@ -23,6 +24,7 @@ export class SuperAdminComponent implements OnInit {
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly notify = inject(NotificationService);
 
+  activeTab = signal<'staff' | 'tenants'>('staff');
   staffList = signal<any[]>([]);
   isLoading = signal(false);
   isModalOpen = signal(false);

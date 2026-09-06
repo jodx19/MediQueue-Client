@@ -14,7 +14,7 @@ export const superAdminGuard: CanActivateFn = () => {
     return router.parseUrl('/dashboard');
   }
 
-  const isSuper = user?.email === environment.superAdminEmail;
+  const isSuper = user?.role === 'SuperAdmin' || user?.email === environment.superAdminEmail;
 
   if (isSuper) {
     return true;

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -24,7 +24,7 @@ import { trigger, transition, query, style, stagger, animate } from '@angular/an
     ])
   ]
 })
-export class LandingComponent implements OnInit, OnDestroy {
+export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Live ticker counter
   readonly patientCount = signal(247);
@@ -107,8 +107,10 @@ export class LandingComponent implements OnInit, OnDestroy {
       if (Math.random() > 0.6)
         this.patientCount.update(n => n + Math.floor(Math.random() * 2));
     }, 3000);
+  }
 
-    // Scroll reveal
+  ngAfterViewInit() {
+    // Scroll reveal observer
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
@@ -116,12 +118,12 @@ export class LandingComponent implements OnInit, OnDestroy {
           observer.unobserve(e.target);
         }
       });
-    }, { threshold: 0.15 });
+    }, { threshold: 0.1 }); // Reduced threshold slightly so it triggers earlier
 
     setTimeout(() => {
       document.querySelectorAll('[scroll-reveal]')
         .forEach(el => observer.observe(el));
-    }, 100);
+    }, 50);
   }
 
   ngOnDestroy() { clearInterval(this.tickerInterval); }

@@ -7,17 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { ApiError } from '../models/api-response.model';
 
-/** URLs whose responses must NEVER be unwrapped (auth flow reads the full payload). */
-const SKIP_URLS: readonly string[] = [
-  '/api/auth/login',
-  '/api/auth/refresh-token',
-  '/api/auth/patient-login',
-];
 
-function shouldSkip(url: string): boolean {
-  const lower = url.toLowerCase();
-  return SKIP_URLS.some((u) => lower.includes(u));
-}
 
 /**
  * Intercepts every HTTP response and unwraps the backend `ApiResponse<T>` envelope.
@@ -32,9 +22,7 @@ function shouldSkip(url: string): boolean {
  * Must be registered AFTER `refreshTokenInterceptor` in the interceptor chain.
  */
 export const apiResponseInterceptor: HttpInterceptorFn = (req, next) => {
-  if (shouldSkip(req.url)) {
-    return next(req);
-  }
+
 
   return new Observable<HttpEvent<unknown>>((subscriber) => {
     next(req).subscribe({
