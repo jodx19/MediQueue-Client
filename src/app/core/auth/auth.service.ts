@@ -32,6 +32,12 @@ function decodeJwt(token: string): any {
   }
 }
 
+// F-1: Use localStorage so the session persists across browser restarts / tab
+// closes while the refresh token is still valid. The refresh-token interceptor
+// will silently renew the access token on the next request, so the user never
+// needs to re-login until the refresh token itself expires (7 days by default).
+const SESSION_KEY = 'mq_session';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly authClient = inject(AuthClient);
@@ -70,9 +76,9 @@ export class AuthService {
         expiresAt:    new Date(response.expiryTime!),
       };
 
-      sessionStorage.setItem('mq_session', JSON.stringify(session));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       this._session.set(session);
-      
+
       const tenantIdStr = (decoded as any)?.TenantId || (decoded as any)?.tenantId;
       const subdomainStr = (decoded as any)?.Subdomain || (decoded as any)?.subdomain;
       if (tenantIdStr) {
@@ -99,7 +105,7 @@ export class AuthService {
       expiresAt:    new Date(response.expiryTime!),
     };
 
-    sessionStorage.setItem('mq_session', JSON.stringify(session));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     this._session.set(session);
 
     const tenantIdStr = (decoded as any)?.TenantId || (decoded as any)?.tenantId;
@@ -111,20 +117,14 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
-      const token = this.getToken();
-      let userId = '';
-      if (token) {
-        const decoded = decodeJwt(token);
-        userId = decoded?.sub || decoded?.nameid || decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || '';
-      }
-      
-      if (userId) {
-        await firstValueFrom(this.authClient.logout({ userId } as any));
-      }
+      // F-3: The backend's /logout endpoint is [Authorize] — it reads the userId
+      // directly from the Bearer token's NameIdentifier claim. No body needed;
+      // the previous `this.authClient.logout({ userId } as any)` was incorrect.
+      await firstValueFrom(this.authClient.logout());
     } catch (error) {
       console.warn('Logout API call failed, proceeding with local cleanup:', error);
     } finally {
-      sessionStorage.removeItem('mq_session');
+      localStorage.removeItem(SESSION_KEY);
       this._session.set(null);
       this.tenantService.clear();
       this.router.navigate(['/']);
@@ -150,7 +150,7 @@ export class AuthService {
       expiresAt: new Date(expiryTime),
     };
 
-    sessionStorage.setItem('mq_session', JSON.stringify(updated));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
     this._session.set(updated);
   }
 
@@ -161,16 +161,26 @@ export class AuthService {
 
   private loadSession(): UserSession | null {
     try {
-      const raw = sessionStorage.getItem('mq_session');
+      // Migrate any legacy sessionStorage data to localStorage on first load
+      const legacy = sessionStorage.getItem(SESSION_KEY);
+      if (legacy) {
+        localStorage.setItem(SESSION_KEY, legacy);
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+
+      const raw = localStorage.getItem(SESSION_KEY);
       if (!raw) return null;
-      
+
       const s = JSON.parse(raw) as UserSession;
-      
-      if (new Date(s.expiresAt) < new Date()) {
-        sessionStorage.removeItem('mq_session');
+
+      // F-2: Do NOT discard the session when the access token has expired.
+      // The refresh-token interceptor handles silent renewal on the next API call.
+      // Only discard when the refresh token itself is missing (fully logged out).
+      if (!s.refreshToken) {
+        localStorage.removeItem(SESSION_KEY);
         return null;
       }
-      
+
       return s;
     } catch {
       return null;

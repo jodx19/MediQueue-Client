@@ -8,6 +8,8 @@ import { firstValueFrom } from 'rxjs';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
+import { environment } from '../../../../environments/environment';
+
 const PAGE_SIZE = 50;
 
 interface AuditLogDto {
@@ -16,6 +18,7 @@ interface AuditLogDto {
   userEmail: string | null;
   userRole: string | null;
   action: string;
+  entityName: string | null;
   timestamp: string;
   isSuccess: boolean;
   errorMessage: string | null;
@@ -38,6 +41,7 @@ export class AuditLogComponent implements OnInit {
 
   fromDate = '';
   toDate = '';
+  entityFilter = '';
 
   async ngOnInit() {
     await this.loadLogs();
@@ -58,7 +62,7 @@ export class AuditLogComponent implements OnInit {
       }
 
       const response = await firstValueFrom(
-        this.http.get<any>('/api/audit-logs', { params })
+        this.http.get<any>(`${environment.apiBaseUrl}/api/audit-logs`, { params })
       );
 
       // The global interceptor unwraps the outer ApiResponse<T> by default in some setups,

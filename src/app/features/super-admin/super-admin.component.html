@@ -3,18 +3,39 @@
   <!-- ══ HEADER ══ -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Staff Management</h1>
+      <h1 class="page-title">Super Admin</h1>
       <p class="page-subtitle">
-        Manage clinic staff accounts, roles, and access control.
+        Manage clinic staff, access control, and tenant subscriptions.
       </p>
     </div>
-    <button (click)="openModal()" class="btn-primary flex items-center gap-2">
-      <lucide-icon name="user-plus" [size]="16"/>
-      Add Staff Member
+    @if (activeTab() === 'staff') {
+      <button (click)="openModal()" class="btn-primary flex items-center gap-2">
+        <lucide-icon name="user-plus" [size]="16"/>
+        Add Staff Member
+      </button>
+    }
+  </div>
+
+  <!-- ══ TAB NAVIGATION ══ -->
+  <div class="flex gap-1 mb-8 p-1 bg-mq-800/60 rounded-xl border border-mq-700/40 w-fit">
+    <button (click)="activeTab.set('staff')"
+            [class]="activeTab() === 'staff'
+              ? 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-mq-teal/20 text-mq-t400 border border-mq-teal/30'
+              : 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-mq-s400 hover:text-white transition-colors'">
+      <lucide-icon name="users" [size]="15"/>
+      Staff
+    </button>
+    <button (click)="activeTab.set('tenants')"
+            [class]="activeTab() === 'tenants'
+              ? 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-mq-teal/20 text-mq-t400 border border-mq-teal/30'
+              : 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-mq-s400 hover:text-white transition-colors'">
+      <lucide-icon name="building-2" [size]="15"/>
+      Tenants (Clinics)
     </button>
   </div>
 
-  <!-- ══ STATS ROW ══ -->
+  <!-- ══ STATS ROW — Staff tab only ══ -->
+  @if (activeTab() === 'staff') {
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     @for (s of [
       {label:'Total Staff', value: staffList().length, icon:'users', color:'#2DD4BF', bg:'rgba(13,148,136,.15)'},
@@ -147,8 +168,14 @@
       </table>
     </div>
   </div>
-</div>
+  } <!-- end @if (activeTab() === 'staff') -->
 
+  <!-- ══ TENANTS TAB ══ -->
+  @if (activeTab() === 'tenants') {
+    <app-tenant-list/>
+  }
+
+</div>
 
 <!-- ══ ADD STAFF MODAL ══ -->
 @if (isModalOpen()) {

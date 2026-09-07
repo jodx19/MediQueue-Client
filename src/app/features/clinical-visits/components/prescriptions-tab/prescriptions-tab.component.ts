@@ -9,6 +9,7 @@ import {
   CreatePrescriptionCommand,
   PrescriptionItemDto,
 } from '../../../../core/api/mediqueue-api';
+import { environment } from '../../../../../environments/environment';
 import { ApiErrorHandlerService } from '../../../../core/services/api-error-handler.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -34,11 +35,44 @@ import { LoadingSkeletonComponent } from '../../../../shared/components/loading-
         }
       </div>
 
-      <!-- Drug interaction warning placeholder -->
-      @if (interactionWarning()) {
-        <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm flex items-start gap-3">
-          <lucide-icon name="alert-triangle" class="flex-shrink-0 mt-0.5" [size]="16"/>
-          <span>{{ interactionWarning() }}</span>
+      <!-- Drug Interaction Result Modal -->
+      @if (interactionResult()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div class="mq-card-dark p-6 rounded-xl w-full max-w-lg space-y-4 shadow-2xl border border-amber-500/30">
+            <div class="flex items-center gap-3">
+              <lucide-icon name="alert-triangle" class="text-amber-400 flex-shrink-0" [size]="20"/>
+              <h4 class="text-white font-semibold text-base">Drug Interaction Warning</h4>
+            </div>
+            <p class="text-mq-s300 text-sm">{{ interactionResult()!.summary }}</p>
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+              @for (interaction of interactionResult()!.interactions; track $index) {
+                <div class="p-3 rounded-lg border" [ngClass]="severityClass(interaction.severity)">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-white font-semibold text-sm">
+                      {{ interaction.drug1 }} + {{ interaction.drug2 }}
+                    </span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded-full" [ngClass]="severityBadge(interaction.severity)">
+                      {{ interaction.severity }}
+                    </span>
+                  </div>
+                  <p class="text-mq-s300 text-xs">{{ interaction.description }}</p>
+                  @if (interaction.recommendation) {
+                    <p class="text-amber-300 text-xs mt-1 font-medium">⚕ {{ interaction.recommendation }}</p>
+                  }
+                </div>
+              }
+            </div>
+            <div class="flex gap-3 pt-2 border-t border-mq-700/40">
+              <button (click)="proceedAnyway()"
+                      class="btn-ghost px-4 py-2.5 text-sm text-amber-400 hover:text-white border border-amber-500/40 hover:border-amber-400 rounded-xl transition-colors">
+                ⚠ Proceed Anyway
+              </button>
+              <button (click)="cancelInteraction()"
+                      class="btn-primary px-4 py-2.5 text-sm flex-1">
+                Cancel — Choose Different Drug
+              </button>
+            </div>
+          </div>
         </div>
       }
 
@@ -156,7 +190,11 @@ export class PrescriptionsTabComponent {
   prescriptions = signal<any[]>([]);
   isLoading = signal(false);
   isAdding = signal(false);
-  interactionWarning = signal<string | null>(null);
+
+  /** Holds GPT-4 drug interaction result when interactions are found. Null = no modal. */
+  interactionResult = signal<any | null>(null);
+  /** Tracks the pending form data while user decides on interaction warning. */
+  private pendingSubmit: (() => Promise<void>) | null = null;
 
   form = { medicationName: '', dosage: '', frequency: 'Twice daily', duration: '', quantity: 0, instructions: '' };
   lastCheckedDrug = '';
@@ -174,58 +212,107 @@ export class PrescriptionsTabComponent {
 
   async confirmAdd() {
     if (!this.form.medicationName.trim() || !this.form.dosage.trim()) return;
-    
+
     const newDrug = this.form.medicationName.trim();
     this.isLoading.set(true);
 
     try {
-      // 1. Check for drug interactions (AI / Database mock)
+      // Step 8 (AI features): call drug-interaction check API — RESOLVED
+      // Check GPT-4 drug interactions when adding a new drug
       if (this.lastCheckedDrug !== newDrug) {
         const currentDrugs = this.prescriptions()
-          .flatMap(rx => rx.items || [])
-          .map(item => item.medicationName);
+          .flatMap((rx: any) => rx.items || [])
+          .map((item: any) => item.medicationName as string)
+          .filter(Boolean);
 
         if (currentDrugs.length > 0) {
-          const warnings = await firstValueFrom(
-            this.http.post<any[]>('/api/druginteractions/check', {
-              currentDrugs: currentDrugs,
-              newDrug: newDrug
+          const result = await firstValueFrom(
+            this.http.post<any>(`${environment.apiBaseUrl}/api/drug-interactions/check`, {
+              currentDrugNames: currentDrugs,
+              newDrugName: newDrug,
             })
           );
-          
-          if (warnings && warnings.length > 0) {
-            const warningMsgs = warnings.map(w => `[${w.severity}] ${w.drugA} + ${w.drugB}: ${w.warningText}`).join(' | ');
-            this.interactionWarning.set(warningMsgs + ' — Click Save again to proceed anyway.');
+
+          if (result?.hasInteractions && result.interactions?.length > 0) {
+            // Store result and a callback to proceed after user decision
+            this.interactionResult.set(result);
             this.lastCheckedDrug = newDrug;
+            this.pendingSubmit = () => this.savePrescription();
             this.isLoading.set(false);
-            return; // Wait for user to acknowledge warning
+            return; // Pause — wait for user decision in modal
           }
         }
       }
 
-      // 2. Clear warning and proceed if safe or acknowledged
-      this.interactionWarning.set(null);
-      this.lastCheckedDrug = '';
-
-      const item = new PrescriptionItemDto({
-        medicationName: this.form.medicationName,
-        dosage: this.form.dosage,
-        frequency: this.form.frequency,
-        duration: this.form.duration || undefined,
-        quantity: this.form.quantity || undefined,
-        instructions: this.form.instructions || undefined,
-      });
-      const command = new CreatePrescriptionCommand({
-        visitId: this.visitId,
-        items: [item],
-      });
-      await firstValueFrom(this.client.prescriptions(this.visitId, command));
-      this.notify.success('Prescription added');
-      this.cancelAdd();
+      // No interactions found or user acknowledged — save directly
+      await this.savePrescription();
     } catch (err) {
       this.apiErrorHandler.handle(err);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  /** User clicked 'Proceed Anyway' in the interaction warning modal. */
+  async proceedAnyway() {
+    this.interactionResult.set(null);
+    if (this.pendingSubmit) {
+      this.isLoading.set(true);
+      try {
+        await this.pendingSubmit();
+      } catch (err) {
+        this.apiErrorHandler.handle(err);
+      } finally {
+        this.isLoading.set(false);
+        this.pendingSubmit = null;
+      }
+    }
+  }
+
+  /** User clicked 'Cancel' in the interaction warning modal. */
+  cancelInteraction() {
+    this.interactionResult.set(null);
+    this.lastCheckedDrug = '';
+    this.pendingSubmit = null;
+  }
+
+  /** Saves the prescription to the backend. Called after interaction check passes or is acknowledged. */
+  private async savePrescription() {
+    const item = new PrescriptionItemDto({
+      medicationName: this.form.medicationName,
+      dosage: this.form.dosage,
+      frequency: this.form.frequency,
+      duration: this.form.duration || undefined,
+      quantity: this.form.quantity || undefined,
+      instructions: this.form.instructions || undefined,
+    });
+    const command = new CreatePrescriptionCommand({
+      visitId: this.visitId,
+      items: [item],
+    });
+    await firstValueFrom(this.client.prescriptions(this.visitId, command));
+    this.notify.success('Prescription added');
+    this.interactionResult.set(null);
+    this.lastCheckedDrug = '';
+    this.pendingSubmit = null;
+    this.cancelAdd();
+  }
+
+  severityClass(severity: string): string {
+    switch (severity?.toLowerCase()) {
+      case 'contraindicated': return 'bg-rose-500/10 border-rose-500/40';
+      case 'major': return 'bg-red-500/10 border-red-500/40';
+      case 'moderate': return 'bg-amber-500/10 border-amber-500/40';
+      default: return 'bg-yellow-500/10 border-yellow-500/30';
+    }
+  }
+
+  severityBadge(severity: string): string {
+    switch (severity?.toLowerCase()) {
+      case 'contraindicated': return 'bg-rose-600/30 text-rose-300';
+      case 'major': return 'bg-red-600/30 text-red-300';
+      case 'moderate': return 'bg-amber-600/30 text-amber-300';
+      default: return 'bg-yellow-600/30 text-yellow-300';
     }
   }
 
