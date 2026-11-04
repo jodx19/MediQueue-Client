@@ -34,6 +34,9 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   // Scroll state for navbar
   readonly scrolled = signal(false);
 
+  // Mobile menu state
+  readonly mobileMenuOpen = signal(false);
+
   // Active portal tab
   readonly activePortal = signal<'patient'|'doctor'|'admin'>('patient');
 

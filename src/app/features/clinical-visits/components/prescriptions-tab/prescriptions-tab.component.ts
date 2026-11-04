@@ -205,7 +205,7 @@ export class PrescriptionsTabComponent {
 
   cancelAdd() {
     this.isAdding.set(false);
-    this.interactionWarning.set(null);
+    this.interactionResult.set(null);
     this.lastCheckedDrug = '';
     this.form = { medicationName: '', dosage: '', frequency: 'Twice daily', duration: '', quantity: 0, instructions: '' };
   }
