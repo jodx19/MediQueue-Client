@@ -3,7 +3,8 @@ export const environment = {
   apiBaseUrl: 'http://localhost:5000',
   signalrHubUrl: 'http://localhost:5000/hubs/clinic',
   appName: 'MediQueue EMR',
-  superAdminEmail: 'ma7moudmostafa19@gmail.com',
+  superAdminEmail: 'admin@mediqueue.local',
   /** Seeded clinic id — used when booking appointments from the public portal */
   defaultClinicId: '00000000-0000-0000-0000-000000000100',
 };
+

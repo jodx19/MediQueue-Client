@@ -33,30 +33,30 @@
       </div>
     </div>
 
-    <!-- Nav Links -->
+    <!-- Desktop Nav Links -->
     <div class="hidden md:flex items-center gap-8">
-      <a href="#workflow" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+      <a href="#workflow" class="text-sm font-medium text-mq-s400 hover:text-white transition-colors duration-200 relative group">
         How it Works
         <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
       </a>
-      <a href="#features" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+      <a href="#features" class="text-sm font-medium text-mq-s400 hover:text-white transition-colors duration-200 relative group">
         Features
         <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
       </a>
-      <a href="#portals" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
+      <a href="#portals" class="text-sm font-medium text-mq-s400 hover:text-white transition-colors duration-200 relative group">
         Portals
         <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
       </a>
-      <a href="#stats" class="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 relative group">
-        Pricing
+      <a href="#testimonials" class="text-sm font-medium text-mq-s400 hover:text-white transition-colors duration-200 relative group">
+        Reviews
         <span class="absolute -bottom-0.5 left-0 w-0 h-px bg-teal-400 group-hover:w-full transition-all duration-300"></span>
       </a>
     </div>
 
-    <!-- CTA Buttons -->
-    <div class="flex items-center gap-3">
+    <!-- Desktop CTA Buttons -->
+    <div class="hidden md:flex items-center gap-3">
       <a routerLink="/auth/patient-login"
-         class="hidden sm:inline-flex text-sm font-semibold text-slate-300 hover:text-white
+         class="text-sm font-semibold text-mq-s300 hover:text-white
                 transition-colors px-4 py-2 rounded-lg hover:bg-white/5">
         Patient Portal
       </a>
@@ -65,8 +65,110 @@
         Clinic Login →
       </a>
     </div>
+
+    <!-- Mobile: CTA + Hamburger -->
+    <div class="flex md:hidden items-center gap-2">
+      <a routerLink="/auth/login"
+         class="btn-primary !py-2 !px-4 !text-xs shadow-[0_0_16px_rgba(13,148,136,.4)]">
+        Login
+      </a>
+      <button
+        id="mobile-menu-btn"
+        (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+        class="btn-icon"
+        [attr.aria-expanded]="mobileMenuOpen()"
+        aria-label="Toggle navigation menu">
+        @if (mobileMenuOpen()) {
+          <lucide-icon name="x" [size]="20" />
+        } @else {
+          <lucide-icon name="menu" [size]="20" />
+        }
+      </button>
+    </div>
   </div>
 </nav>
+
+<!-- ── Mobile Slide-Out Menu ── -->
+<div
+  id="mobile-menu-overlay"
+  class="fixed inset-0 z-40 md:hidden transition-all duration-300"
+  [class.pointer-events-none]="!mobileMenuOpen()"
+  [class.pointer-events-auto]="mobileMenuOpen()">
+
+  <!-- Backdrop -->
+  <div
+    class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+    [class.opacity-0]="!mobileMenuOpen()"
+    [class.opacity-100]="mobileMenuOpen()"
+    (click)="mobileMenuOpen.set(false)">
+  </div>
+
+  <!-- Drawer -->
+  <div
+    class="absolute top-0 right-0 h-full w-72 flex flex-col transition-transform duration-300 ease-out"
+    [class.translate-x-full]="!mobileMenuOpen()"
+    [class.translate-x-0]="mobileMenuOpen()"
+    style="background: rgba(6,13,26,0.98); backdrop-filter: blur(20px); border-left: 1px solid rgba(51,65,85,0.6);">
+
+    <!-- Drawer Header -->
+    <div class="flex items-center justify-between p-6 border-b border-mq-700">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-mq-teal animate-pulse"></span>
+        <span class="text-sm font-semibold text-mq-text">Navigation</span>
+      </div>
+      <button (click)="mobileMenuOpen.set(false)" class="btn-icon" aria-label="Close menu">
+        <lucide-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <!-- Drawer Links -->
+    <nav class="flex-1 px-4 py-6 flex flex-col gap-1">
+      <a href="#workflow" (click)="mobileMenuOpen.set(false)"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-mq-s400 hover:text-white hover:bg-white/5 transition-all duration-200">
+        <lucide-icon name="list-ordered" [size]="18" class="text-mq-teal" />
+        <span class="text-sm font-medium">How it Works</span>
+      </a>
+      <a href="#features" (click)="mobileMenuOpen.set(false)"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-mq-s400 hover:text-white hover:bg-white/5 transition-all duration-200">
+        <lucide-icon name="sparkles" [size]="18" class="text-purple-400" />
+        <span class="text-sm font-medium">Features</span>
+      </a>
+      <a href="#portals" (click)="mobileMenuOpen.set(false)"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-mq-s400 hover:text-white hover:bg-white/5 transition-all duration-200">
+        <lucide-icon name="layout-dashboard" [size]="18" class="text-blue-400" />
+        <span class="text-sm font-medium">Portals</span>
+      </a>
+      <a href="#testimonials" (click)="mobileMenuOpen.set(false)"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-mq-s400 hover:text-white hover:bg-white/5 transition-all duration-200">
+        <lucide-icon name="star" [size]="18" class="text-yellow-400" />
+        <span class="text-sm font-medium">Reviews</span>
+      </a>
+
+      <div class="my-3 border-t border-mq-700"></div>
+
+      <a routerLink="/auth/patient-login" (click)="mobileMenuOpen.set(false)"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl text-mq-s400 hover:text-white hover:bg-white/5 transition-all duration-200">
+        <lucide-icon name="user" [size]="18" class="text-mq-teal" />
+        <span class="text-sm font-medium">Patient Portal</span>
+      </a>
+    </nav>
+
+    <!-- Drawer Footer CTA -->
+    <div class="p-4 border-t border-mq-700">
+      <a routerLink="/auth/login" (click)="mobileMenuOpen.set(false)"
+         class="btn-primary w-full justify-center text-sm shadow-[0_0_20px_rgba(13,148,136,.3)]">
+        <lucide-icon name="log-in" [size]="16" />
+        Clinic Login
+      </a>
+      <a routerLink="/register-clinic" (click)="mobileMenuOpen.set(false)"
+         class="btn-ghost w-full justify-center text-sm mt-2">
+        Register Your Clinic →
+      </a>
+    </div>
+  </div>
+</div>
+
+
 
 
 <!-- ══════════════════════════════════════════════════════
