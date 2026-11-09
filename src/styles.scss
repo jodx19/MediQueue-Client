@@ -34,6 +34,13 @@
     background: rgba(13,148,136,.3);
     color: #fff;
   }
+
+  /* ACCESSIBLE FOCUS RING */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #00F2FE;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -171,6 +178,25 @@
            active:scale-95;
     &:hover { background: rgba(255,255,255,.04); }
   }
+
+  /* ─── BORDER-GRADIENT CARD ─── */
+  .border-gradient {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%),
+                var(--color-obsidian-900, #0B0F19);
+    &::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, #00F2FE, #4FACFE 35%, rgba(255,255,255,.06) 70%, #10F2A0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: .6; transition: opacity .3s ease; pointer-events: none;
+    }
+    &:hover::before, &:focus-within::before { opacity: 1; }
+  }
+
+  /* ─── CONTAINER-XL ─── */
+  .container-xl { @apply mx-auto px-6 sm:px-8 lg:px-12 max-w-[1440px] 2xl:max-w-[1680px]; }
 
   /* Icon button */
   .btn-icon {
@@ -594,11 +620,11 @@
   /* ─── UTILITY ALIASES (backward compat) ─── */
   .border-mq-750 { border-color: #293548; }
   .bg-mq-750     { background-color: #293548; }
-  .text-mq-s500  { color: #64748B; }
+  .text-mq-s500  { color: #94A3B8; } /* WCAG AA 4.5:1 on dark background */
   .bg-mq-s500    { background-color: #64748B; }
-  .text-mq-600   { color: #475569; }
+  .text-mq-600   { color: #94A3B8; }
   .bg-mq-600     { background-color: #475569; }
-  .text-mq-s600  { color: #475569; }
+  .text-mq-s600  { color: #CBD5E1; } /* Improved contrast on cards */
 
   /* ─── SCROLL REVEAL ─── */
   [scroll-reveal] {

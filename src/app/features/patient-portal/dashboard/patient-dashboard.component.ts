@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { 
   PatientsClient, 
   AppointmentsClient, 
@@ -34,6 +35,7 @@ export class PatientDashboardComponent implements OnInit {
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly visitsClient = inject(ClinicalVisitsClient);
   private readonly invoicesClient = inject(InvoicesClient);
+  private readonly signalr = inject(SignalRService);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
@@ -41,6 +43,18 @@ export class PatientDashboardComponent implements OnInit {
   upcomingAppointments = signal<AppointmentDto[]>([]);
   recentVisits = signal<ClinicalVisitSummaryDto[]>([]);
   invoices = signal<InvoiceDto[]>([]);
+
+  constructor() {
+    effect(() => {
+      const slot = this.signalr.onSlotUpdated();
+      const appt = this.signalr.onAppointmentChanged();
+      const paid = this.signalr.onInvoicePaid();
+      const rx = this.signalr.onPrescriptionReady();
+      if (slot || appt || paid || rx) {
+        this.loadData();
+      }
+    });
+  }
 
   isInvoiceUnpaid(inv: InvoiceDto): boolean {
     return inv.status === IS._2 || inv.status === IS._3 || inv.status === IS._5;
@@ -66,6 +80,10 @@ export class PatientDashboardComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
     const patientId = this.auth.currentUser()?.patientId;
     if (!patientId) {
       this.isLoading.set(false);

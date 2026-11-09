@@ -22,6 +22,9 @@ export class SignalRService {
   readonly notificationCount = signal(0);
   readonly notificationsList = signal<NotificationItem[]>([]);
   readonly onInvoicePaid = signal<any>(null);
+  readonly onSlotUpdated = signal<any>(null);
+  readonly onPrescriptionReady = signal<any>(null);
+  readonly onAppointmentChanged = signal<any>(null);
 
   constructor() {
     this.loadFromStorage();
@@ -109,16 +112,71 @@ export class SignalRService {
       this.onInvoicePaid.set({ ...data, _ts: Date.now() });
     });
 
+    this.hub.on('NotifySlotUpdated', (doctorId: string, date: string) => {
+      this.onSlotUpdated.set({ doctorId, date, _ts: Date.now() });
+    });
+
+    this.hub.on('NotifyPrescriptionReady', (patientId: string, visitId: string) => {
+      const msg = 'Your prescription is ready to download.';
+      this.notifications.success(msg);
+      this.addNotification(msg, 'success');
+      this.onPrescriptionReady.set({ patientId, visitId, _ts: Date.now() });
+    });
+
+    this.hub.on('NotifyAppointmentConfirmed', (appointmentId: string, patientName: string) => {
+      const msg = `Appointment confirmed for ${patientName}.`;
+      this.notifications.info(msg);
+      this.addNotification(msg, 'info');
+      this.onAppointmentChanged.set({ type: 'confirmed', appointmentId, patientName, _ts: Date.now() });
+    });
+
+    this.hub.on('NotifyAppointmentCancelled', (appointmentId: string, reason: string) => {
+      const msg = `Appointment cancelled: ${reason}`;
+      this.notifications.warning(msg);
+      this.addNotification(msg, 'warning');
+      this.onAppointmentChanged.set({ type: 'cancelled', appointmentId, reason, _ts: Date.now() });
+    });
+
+    this.hub.on('NotifyAppointmentRescheduled', (appointmentId: string, newDateTime: string) => {
+      const msg = `Appointment rescheduled to ${new Date(newDateTime).toLocaleString()}`;
+      this.notifications.info(msg);
+      this.addNotification(msg, 'info');
+      this.onAppointmentChanged.set({ type: 'rescheduled', appointmentId, newDateTime, _ts: Date.now() });
+    });
+
     // ═══ Reconnection handlers
     this.hub.onreconnecting(() => this.connectionState.set('connecting'));
-    this.hub.onreconnected(() => this.connectionState.set('connected'));
+    this.hub.onreconnected(async () => {
+      this.connectionState.set('connected');
+      await this.joinUserGroups();
+    });
     this.hub.onclose(() => this.connectionState.set('disconnected'));
 
     try {
       await this.hub.start();
       this.connectionState.set('connected');
+      await this.joinUserGroups();
     } catch (err) {
       this.connectionState.set('disconnected');
+    }
+  }
+
+  async joinUserGroups(): Promise<void> {
+    if (!this.hub || this.hub.state !== HubConnectionState.Connected) return;
+
+    try {
+      const user = this.auth.currentUser();
+      const role = this.auth.userRole();
+
+      if (role === 'Doctor' && user?.doctorId) {
+        await this.hub.invoke('JoinDoctorGroup', user.doctorId);
+      } else if (role === 'Patient' && user?.patientId) {
+        await this.hub.invoke('JoinPatientGroup', user.patientId);
+      } else if (role === 'Admin') {
+        await this.hub.invoke('JoinAdminGroup');
+      }
+    } catch (e) {
+      console.warn('Failed to join SignalR user groups:', e);
     }
   }
 

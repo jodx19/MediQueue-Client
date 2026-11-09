@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { 
   InvoicesClient, 
   InvoiceDto, 
@@ -23,10 +24,20 @@ const IS = InvoiceStatus;
 export class MyInvoicesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly invoicesClient = inject(InvoicesClient);
+  private readonly signalr = inject(SignalRService);
 
   isLoading = signal(true);
   invoices = signal<InvoiceDto[]>([]);
   activeFilter = signal<'all' | 'unpaid' | 'paid'>('all');
+
+  constructor() {
+    effect(() => {
+      const paid = this.signalr.onInvoicePaid();
+      if (paid) {
+        this.loadInvoices();
+      }
+    });
+  }
 
   // Payment Modal State
   showPayModal = signal(false);

@@ -116,7 +116,8 @@
       <div class="flex items-center gap-2">
 
         <!-- Search pill -->
-        <div class="hidden md:flex items-center gap-2 px-3 py-2
+        <div (click)="cmdK.open()"
+             class="hidden md:flex items-center gap-2 px-3 py-2
                     rounded-xl bg-mq-800 border border-mq-700
                     hover:border-mq-teal/30 transition-colors w-52 cursor-pointer">
           <lucide-icon name="search" class="text-mq-s400" [size]="14"/>
@@ -164,4 +165,4 @@
 </div>
 
   <!-- Cmd+K Quick Search -->
-  <app-cmd-k/>
+  <app-cmd-k #cmdK/>

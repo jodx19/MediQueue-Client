@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule, ArrowLeft, ArrowRight, AlertCircle, CheckCircle } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-forgot-password',
@@ -31,7 +32,7 @@ export class ForgotPasswordComponent {
 
     const payload = { email: this.email };
 
-    this.http.post('http://localhost:5000/api/Auth/forgot-password', payload).subscribe({
+    this.http.post(`${environment.apiBaseUrl}/api/Auth/forgot-password`, payload).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.success.set(true);

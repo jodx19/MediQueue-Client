@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { 
   ClinicalVisitsClient, 
   ClinicalVisitSummaryDto, 
@@ -20,10 +21,20 @@ import { AttachmentsListComponent } from '../../../shared/components/attachments
 export class MyRecordsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly visitsClient = inject(ClinicalVisitsClient);
+  private readonly signalr = inject(SignalRService);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
   visits = signal<ClinicalVisitSummaryDto[]>([]);
+
+  constructor() {
+    effect(() => {
+      const rx = this.signalr.onPrescriptionReady();
+      if (rx) {
+        this.loadRecords();
+      }
+    });
+  }
 
   // Detailed modal view
   selectedVisit = signal<ClinicalVisitDetailDto | null>(null);

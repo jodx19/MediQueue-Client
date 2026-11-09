@@ -26,6 +26,18 @@ export const routes: Routes = [
         .then(m => m.PatientLoginComponent),
   },
   {
+    path: 'auth/forgot-password',
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component')
+        .then(m => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component')
+        .then(m => m.ResetPasswordComponent),
+  },
+  {
     path: 'book',
     loadComponent: () =>
       import('./features/patient-portal/book/book-appointment.component')
@@ -234,8 +246,15 @@ export const routes: Routes = [
             .then(m => m.MyQueueComponent),
       },
       {
+        path: 'clinical-visits',
+        canActivate: [roleGuard(['Doctor', 'Admin'])],
+        loadComponent: () =>
+          import('./features/clinical-visits/visit-list/visit-list.component')
+            .then(m => m.VisitListComponent),
+      },
+      {
         path: 'clinical-visits/:id',
-        canActivate: [roleGuard(['Doctor'])],
+        canActivate: [roleGuard(['Doctor', 'Admin'])],
         canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/clinical-visits/visit-detail/visit-detail.component')

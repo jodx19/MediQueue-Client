@@ -44,6 +44,20 @@ module.exports = {
           'danger':   '#EF4444',
           'info':     '#3B82F6',
           'purple':   '#8B5CF6',
+        },
+        /* ─── Obsidian & Neon Palettes ─── */
+        obsidian: {
+          900: '#0B0F19',
+          800: '#111827',
+          750: '#172032',
+          700: '#1E293B',
+          600: '#243248',
+        },
+        neon: {
+          emerald: '#10F2A0',
+          cyan:    '#00F2FE',
+          blue:    '#4FACFE',
+          mint:    '#5EEAD4',
         }
       },
       fontFamily: {
@@ -100,6 +114,10 @@ module.exports = {
                       '100%': { transform: 'translateY(80px) rotate(360deg)', opacity: '0' } },
       },
       boxShadow: {
+        'neon-sm':      '0 0 10px rgba(0,242,254,.20)',
+        'neon':         '0 0 24px rgba(0,242,254,.28)',
+        'neon-lg':      '0 0 60px rgba(0,242,254,.35)',
+        'glow-emerald': '0 0 24px rgba(16,242,160,.25)',
         'teal-glow':    '0 0 30px rgba(13,148,136,.25)',
         'teal-glow-sm': '0 0 20px rgba(13,148,136,.2)',
         'teal-glow-md': '0 0 50px rgba(13,148,136,.4)',
