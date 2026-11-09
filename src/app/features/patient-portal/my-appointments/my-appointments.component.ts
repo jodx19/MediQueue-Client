@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { 
   AppointmentsClient, 
   DoctorsClient, 
@@ -28,12 +29,23 @@ export class MyAppointmentsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly appointmentsClient = inject(AppointmentsClient);
   private readonly doctorsClient = inject(DoctorsClient);
+  private readonly signalr = inject(SignalRService);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
 
   isLoading = signal(true);
   appointments = signal<AppointmentDto[]>([]);
   doctors = signal<DoctorSummaryDto[]>([]);
   activeFilter = signal<'all' | 'upcoming' | 'past' | 'cancelled'>('all');
+
+  constructor() {
+    effect(() => {
+      const slot = this.signalr.onSlotUpdated();
+      const appt = this.signalr.onAppointmentChanged();
+      if (slot || appt) {
+        this.loadData();
+      }
+    });
+  }
 
   // Booking Modal State
   showBookModal = signal(false);

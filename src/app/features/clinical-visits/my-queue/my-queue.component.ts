@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { AppointmentsClient, ClinicalVisitsClient, AppointmentListItemDto } from '../../../core/api/mediqueue-api';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SignalRService } from '../../../core/services/signalr.service';
 import { ApiErrorHandlerService } from '../../../core/services/api-error-handler.service';
 import { pageEnter, listStagger } from '../../../shared/animations/page-animations';
 
@@ -20,6 +21,7 @@ export class MyQueueComponent implements OnInit {
   private readonly visitsClient = inject(ClinicalVisitsClient);
   private readonly apiErrorHandler = inject(ApiErrorHandlerService);
   private readonly auth = inject(AuthService);
+  private readonly signalr = inject(SignalRService);
   private readonly router = inject(Router);
 
   readonly loading = signal(true);
@@ -28,6 +30,17 @@ export class MyQueueComponent implements OnInit {
   readonly appointments = signal<AppointmentListItemDto[]>([]);
 
   readonly waitingCount = computed(() => this.appointments().length);
+
+  constructor() {
+    // Automatically reload queue when real-time appointments or slot events occur
+    effect(() => {
+      const slot = this.signalr.onSlotUpdated();
+      const appt = this.signalr.onAppointmentChanged();
+      if (slot || appt) {
+        this.load();
+      }
+    });
+  }
 
   todayLabel(): string {
     return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });

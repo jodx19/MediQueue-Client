@@ -236,7 +236,7 @@
 
       <!-- CTA Buttons -->
       <div class="flex flex-wrap gap-4 mb-14 animate-fade-up" style="animation-delay:.42s">
-        <a routerLink="/register"
+        <a routerLink="/register-clinic"
            class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base text-white
                   transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
            style="background: linear-gradient(135deg, #0D9488, #0891B2);
@@ -801,7 +801,7 @@
     </div>
 
     <!-- Testimonials -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" scroll-reveal>
+    <div id="testimonials" class="grid grid-cols-1 md:grid-cols-3 gap-5" scroll-reveal>
       @for (t of testimonials; track t.name) {
         <div class="p-6 rounded-2xl border border-white/5 hover:border-teal-500/20
                     transition-all duration-300 group"
@@ -874,7 +874,7 @@
 
     <!-- CTA Buttons -->
     <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-      <a routerLink="/register"
+      <a routerLink="/register-clinic"
          class="inline-flex items-center justify-center gap-2 px-10 py-5 rounded-xl font-bold text-lg text-white
                 transition-all duration-200 hover:-translate-y-1 active:scale-95"
          style="background: linear-gradient(135deg, #0D9488, #0891B2);
@@ -933,29 +933,48 @@
           The complete Healthcare OS for modern clinics. Booking, EMR, billing — all in one platform.
         </p>
         <div class="flex gap-3">
-          @for (icon of ['twitter','linkedin','github']; track icon) {
-            <div class="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center
-                        text-slate-400 hover:text-white hover:border-teal-500/40 transition-all cursor-pointer
-                        hover:bg-white/5">
-              <lucide-icon [name]="icon" [size]="15"/>
-            </div>
+          @for (item of [{icon:'twitter', href:'https://twitter.com'},{icon:'linkedin', href:'https://linkedin.com'},{icon:'github', href:'https://github.com'}]; track item.icon) {
+            <a [href]="item.href" target="_blank" rel="noopener noreferrer"
+               [attr.aria-label]="item.icon"
+               class="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center
+                      text-slate-400 hover:text-white hover:border-teal-500/40 transition-all
+                      hover:bg-white/5">
+              <lucide-icon [name]="item.icon" [size]="15"/>
+            </a>
           }
         </div>
       </div>
 
       <!-- Links cols -->
       @for (col of [
-        {title:'Platform', links:['Dashboard','Patients','Appointments','Invoices','Clinical Records']},
-        {title:'Portals', links:['Patient Portal','Doctor Workspace','Admin Panel','Staff Management','Settings']},
-        {title:'Company', links:['About Us','Careers','Blog','Privacy Policy','Terms of Service']}
+        {title:'Platform', links:[
+          {name:'Dashboard', route:'/dashboard'},
+          {name:'Patients', route:'/patients'},
+          {name:'Appointments', route:'/appointments'},
+          {name:'Invoices', route:'/invoices'},
+          {name:'Doctor Queue', route:'/my-queue'}
+        ]},
+        {title:'Portals', links:[
+          {name:'Patient Portal', route:'/auth/patient-login'},
+          {name:'Doctor / Staff Login', route:'/auth/login'},
+          {name:'Book Appointment', route:'/book'},
+          {name:'Register Clinic', route:'/register-clinic'},
+          {name:'Patient Registration', route:'/register'}
+        ]},
+        {title:'Security & Access', links:[
+          {name:'Forgot Password', route:'/auth/forgot-password'},
+          {name:'Verify Email', route:'/verify-email'},
+          {name:'Patient Login', route:'/auth/patient-login'},
+          {name:'Admin Sign-in', route:'/auth/login'}
+        ]}
       ]; track col.title) {
         <div>
           <h5 class="text-white font-bold text-sm mb-5 tracking-wide">{{ col.title }}</h5>
           <ul class="space-y-3">
-            @for (link of col.links; track link) {
+            @for (link of col.links; track link.name) {
               <li>
-                <a href="#" class="text-slate-500 text-sm hover:text-teal-400 transition-colors duration-200">
-                  {{ link }}
+                <a [routerLink]="link.route" class="text-slate-500 text-sm hover:text-teal-400 transition-colors duration-200">
+                  {{ link.name }}
                 </a>
               </li>
             }

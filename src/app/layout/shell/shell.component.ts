@@ -46,6 +46,7 @@ export class ShellComponent implements OnInit, OnDestroy {
     const items = [
       { label: 'Dashboard',         path: '/dashboard',              icon: 'layout-dashboard', roles: ['Admin'] },
       { label: 'My Queue',          path: '/my-queue',               icon: 'activity',         roles: ['Doctor'] },
+      { label: 'Clinical Visits',   path: '/clinical-visits',        icon: 'file-text',        roles: ['Doctor', 'Admin'] },
       { label: 'Appointments',      path: '/appointments',           icon: 'calendar',         roles: ['Admin', 'Receptionist'] },
       // H-4: Doctor removed — /patients list route blocks Doctor (detail /patients/:id still accessible)
       { label: 'Patients',          path: '/patients',               icon: 'users',            roles: ['Admin', 'Receptionist'] },
